@@ -1,0 +1,41 @@
+{
+  "name": "budget-mate-backend",
+  "version": "1.0.0",
+  "description": "Backend for Budget Mate application",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:generate": "prisma generate",
+    "prisma:seed": "prisma db seed",
+    "test:api": "node test-api.js"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "keywords": [
+    "budget",
+    "finance",
+    "expense-tracker"
+  ],
+  "author": "Budget Mate Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "@prisma/client": "^5.20.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0",
+    "helmet": "^6.0.1",
+    "express-rate-limit": "^6.7.0",
+    "morgan": "^1.10.0",
+    "express-validator": "^6.15.0",
+    "cookie-parser": "^1.4.6"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22",
+    "prisma": "^5.20.0"
+  }
+}

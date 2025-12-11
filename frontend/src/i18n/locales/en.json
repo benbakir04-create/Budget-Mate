@@ -1,0 +1,40 @@
+{
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "confirmPassword": "Confirm Password",
+    "alreadyHaveAccount": "Already have an account?",
+    "noAccount": "Don't have an account?",
+    "loginSuccess": "Logged in successfully",
+    "registerSuccess": "Account created successfully",
+    "invalidCredentials": "Invalid credentials",
+    "userExists": "User already exists"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "totalIncome": "Total Income",
+    "totalExpense": "Total Expenses",
+    "balance": "Balance",
+    "savingsRate": "Savings Rate"
+  },
+  "transactions": {
+    "add": "Add Transaction",
+    "income": "Income",
+    "expense": "Expense",
+    "title": "Transactions"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "submit": "Submit"
+  }
+}
+

@@ -1,0 +1,40 @@
+{
+  "auth": {
+    "login": "تسجيل الدخول",
+    "register": "إنشاء حساب",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "name": "الاسم",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "alreadyHaveAccount": "لديك حساب بالفعل؟",
+    "noAccount": "ليس لديك حساب؟",
+    "loginSuccess": "تم تسجيل الدخول بنجاح",
+    "registerSuccess": "تم إنشاء الحساب بنجاح",
+    "invalidCredentials": "بيانات الدخول غير صحيحة",
+    "userExists": "المستخدم موجود بالفعل"
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "totalIncome": "إجمالي الدخل",
+    "totalExpense": "إجمالي المصروفات",
+    "balance": "الرصيد",
+    "savingsRate": "معدل الادخار"
+  },
+  "transactions": {
+    "add": "إضافة معاملة",
+    "income": "دخل",
+    "expense": "مصروف",
+    "title": "المعاملات"
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "error": "حدث خطأ",
+    "success": "نجح",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "submit": "إرسال"
+  }
+}
+
