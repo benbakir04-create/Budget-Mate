@@ -35,7 +35,7 @@ cp env.example .env
 DATABASE_URL="postgresql://user:password@localhost:5432/budgetmate"
 JWT_SECRET="your-super-secret-jwt-key-change-in-production"
 JWT_REFRESH_SECRET="your-refresh-token-secret"
-FRONTEND_URL="http://localhost:5173"
+FRONTEND_URL="http://localhost:3000"
 ```
 
 4. Generate Prisma Client:
