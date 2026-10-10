@@ -3,14 +3,18 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Prisma's query engine needs OpenSSL on Alpine
+RUN apk add --no-cache openssl
+
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies (dev deps included: nodemon and the prisma CLI are used by docker-compose)
+RUN npm ci
 
-# Copy source code
+# Copy source code and generate the Prisma client
 COPY . .
+RUN npx prisma generate
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs

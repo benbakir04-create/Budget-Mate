@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
   test:
@@ -15,47 +15,52 @@ jobs:
         node-version: [18.x, 20.x]
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
 
-    - name: Install dependencies
-      run: npm run install:all
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm run install:all
 
-    - name: Lint code
-      run: npm run lint
+      - name: Lint code
+        run: npm run lint
 
-    - name: Format check
-      run: npm run format:check
+      - name: Format check
+        run: npm run format:check
 
-    - name: Build frontend
-      run: npm run build:frontend
+      - name: Build frontend
+        run: npm run build:frontend
 
   docker:
     runs-on: ubuntu-latest
     needs: test
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Build Docker images
-      run: |
-        docker-compose build --no-cache
-        docker images
+      - name: Build Docker images
+        run: |
+          docker compose build --no-cache
+          docker images
 
-    - name: Test Docker containers
-      run: |
-        docker-compose up -d
-        sleep 30
-        docker-compose ps
-        curl -f http://localhost:5000/api/health || exit 1
-        docker-compose down
+      - name: Test Docker containers
+        run: |
+          docker compose up -d
+          for i in $(seq 1 30); do
+            curl -fs http://localhost:5000/api/health && break
+            sleep 3
+          done
+          docker compose ps
+          curl -f http://localhost:5000/api/health || { docker compose logs backend; exit 1; }
+          docker compose down

@@ -6,7 +6,7 @@ module.exports = {
   },
   extends: [
     'eslint:recommended',
-    '@typescript-eslint/recommended', // For future TypeScript support
+    'plugin:@typescript-eslint/recommended', // For future TypeScript support
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -15,16 +15,16 @@ module.exports = {
   },
   plugins: ['@typescript-eslint'],
   rules: {
-    // Code style
-    'indent': ['error', 2],
+    // Code style (indentation is owned by Prettier)
     'linebreak-style': ['error', 'unix'],
-    'quotes': ['error', 'single'],
-    'semi': ['error', 'always'],
+    quotes: ['error', 'single'],
+    semi: ['error', 'always'],
 
     // Best practices
     'no-console': 'warn',
     'no-debugger': 'error',
     'no-unused-vars': 'warn',
+    '@typescript-eslint/no-unused-vars': 'warn',
     'no-undef': 'error',
 
     // React specific (for frontend)
@@ -33,13 +33,7 @@ module.exports = {
     // Allow async/await
     'no-async-promise-executor': 'warn',
   },
-  ignorePatterns: [
-    'node_modules/',
-    'dist/',
-    'build/',
-    '*.config.js',
-    '*.config.ts',
-  ],
+  ignorePatterns: ['node_modules/', 'dist/', 'build/', '*.config.js', '*.config.ts'],
   overrides: [
     {
       files: ['*.js'],
