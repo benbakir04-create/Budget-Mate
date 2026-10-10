@@ -77,7 +77,14 @@ async function refresh(refreshToken) {
 }
 
 function buildTokens(user) {
-  const payload = { id: user.id, email: user.email, name: user.name };
+  // role and parentId are read by every controller (owner/partner access rules)
+  const payload = {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    parentId: user.parentId,
+  };
   return {
     accessToken: generateAccessToken(payload),
     refreshToken: generateRefreshToken(payload),
