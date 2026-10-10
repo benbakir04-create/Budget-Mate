@@ -32,7 +32,8 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen bg-gray-50 flex">
+      <div className="flex-1 flex items-center justify-center px-4" style={{ minHeight: 'calc(100vh - 64px)' }}>
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -98,6 +99,7 @@ const Login = () => {
           </div>
         </form>
       </div>
+    </div>
     </div>
   );
 };

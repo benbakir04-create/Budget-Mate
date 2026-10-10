@@ -1,84 +1,171 @@
-# دليل البدء السريع - Budget Mate
+# 🚀 دليل البدء السريع - Budget Mate
 
-## ⚡ البدء السريع (5 دقائق)
+## ⚡ الإعداد في دقيقتين
 
-### 1️⃣ إعداد قاعدة البيانات
+### الخطوة 1: تشغيل السكريبت التلقائي
 
-```sql
--- افتح PostgreSQL واشغل هذا الأمر
-CREATE DATABASE budgetmate;
+**على Windows:**
+```cmd
+setup.bat
+REM أو استخدم الأوامر البسيطة:
+make setup
 ```
 
-### 2️⃣ إعداد الباكند
+**على Linux/Mac:**
+```bash
+chmod +x setup.sh
+./setup.sh
+# أو استخدم make:
+make setup
+```
 
+**استخدام Docker (الأسهل):**
+```bash
+docker-compose up --build
+```
+
+### الخطوة 2: اختيار وضع التشغيل
+
+#### 🎯 للتجربة السريعة (Demo Mode):
+```bash
+# في مجلد frontend، أنشئ ملف .env
+echo "VITE_DEMO_MODE=true" > .env
+
+# شغّل التطبيق
+run.bat    # على Windows
+./run.sh   # على Linux/Mac
+```
+
+#### 🛠️ للتطوير الكامل (مع قاعدة بيانات):
+
+1. **تثبيت PostgreSQL:**
+   - Windows: حمل من https://www.postgresql.org/download/windows/
+   - Linux: `sudo apt install postgresql postgresql-contrib`
+   - Mac: `brew install postgresql`
+
+2. **إنشاء قاعدة البيانات:**
+   ```sql
+   CREATE DATABASE budgetmate;
+   ```
+
+3. **تحديث إعدادات قاعدة البيانات:**
+   - افتح `backend/.env`
+   - غيّر `DATABASE_URL` ببياناتك
+
+4. **تشغيل قاعدة البيانات:**
+   ```bash
+   cd backend
+   npm run prisma:migrate
+   npm run prisma:seed
+   ```
+
+5. **تشغيل التطبيق:**
+   ```bash
+   run-backend.bat  # على Windows
+   ./run-backend.sh # على Linux/Mac
+
+   run.bat          # على Windows
+   ./run.sh         # على Linux/Mac
+   ```
+
+#### 🐳 للإعداد المتقدم (Docker):
+```bash
+# تأكد من تثبيت Docker و Docker Compose
+docker --version
+docker-compose --version
+
+# شغّل التطبيق
+docker-compose up --build
+```
+
+## 🌐 فتح التطبيق
+
+بعد التشغيل، افتح المتصفح واذهب إلى:
+- **http://localhost:5173** - الواجهة الأمامية
+
+## 📝 أول استخدام
+
+### في وضع Demo:
+- ستجد حساباً تجريبياً جاهزاً
+- يمكنك تصفح الميزات دون تسجيل
+
+### في الوضع الكامل:
+1. اضغط "إنشاء حساب"
+2. املأ البيانات:
+   - الاسم: أحمد محمد
+   - البريد: ahmed@test.com
+   - كلمة المرور: password123
+3. اضغط "إنشاء حساب"
+
+## 🔧 استكشاف الأخطاء
+
+### خطأ "Port already in use":
+```bash
+# على Windows
+netstat -ano | findstr :5173
+taskkill /PID <PID> /F
+
+# على Linux/Mac
+lsof -ti:5173 | xargs kill -9
+```
+
+### خطأ في قاعدة البيانات:
 ```bash
 cd backend
-npm install
-Copy-Item env.example .env
-# عدّل ملف .env بالقيم الصحيحة
-npm run prisma:generate
-npm run prisma:migrate
-npm run prisma:seed
-npm run dev
+npm run prisma:studio  # لمراجعة البيانات
 ```
 
-### 3️⃣ إعداد الواجهة الأمامية
+### خطأ في التثبيت:
+```bash
+# حذف node_modules وإعادة التثبيت
+rm -rf node_modules package-lock.json
+npm install
+```
+
+## 🛠️ أوامر التطوير السريعة
+
+### استخدام Make (موصى به)
 
 ```bash
-# في terminal جديد
-cd frontend
-npm install
-npm run dev
+# إعداد المشروع لأول مرة
+make setup
+
+# تشغيل وضع demo
+make run-demo
+
+# تشغيل التطبيق الكامل
+make run
+
+# تشغيل الباك إند فقط
+make run-backend
+
+# تنظيف المشروع
+make clean
+
+# عرض جميع الأوامر
+make help
 ```
 
-### 4️⃣ افتح المتصفح
+### أوامر قاعدة البيانات
 
+```bash
+# تطبيق تغييرات قاعدة البيانات
+make db-migrate
+
+# إضافة البيانات الأولية
+make db-seed
+
+# فتح واجهة إدارة البيانات
+make db-studio
 ```
-http://localhost:5173
-```
+
+## 📞 تحتاج مساعدة؟
+
+- راجع `DEVELOPMENT.md` للتطوير المفصل
+- راجع `TESTING_GUIDE.md` لاختبار مفصل
+- راجع `TROUBLESHOOTING.md` لحل المشاكل
+- راجع `FIX_FRONTEND.md` و `FIX_REGISTRATION.md` للمشاكل المعروفة
 
 ---
 
-## 📝 ملف .env للباكند
-
-أنشئ ملف `backend/.env` بهذا المحتوى:
-
-```env
-DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/budgetmate"
-JWT_SECRET="your-super-secret-jwt-key-change-in-production-12345"
-JWT_REFRESH_SECRET="your-refresh-token-secret-67890"
-JWT_EXPIRE="24h"
-JWT_REFRESH_EXPIRE="7d"
-PORT=5000
-NODE_ENV="development"
-FRONTEND_URL="http://localhost:5173"
-```
-
-**⚠️ مهم:** استبدل `YOUR_PASSWORD` بكلمة مرور PostgreSQL الخاصة بك!
-
----
-
-## ✅ اختبار سريع
-
-1. افتح: `http://localhost:5173/register`
-2. سجّل حساب جديد
-3. يجب أن يتم توجيهك إلى Dashboard
-
-**🎉 إذا نجح، كل شيء يعمل!**
-
----
-
-## 🐛 مشاكل شائعة
-
-**خطأ في الاتصال بقاعدة البيانات:**
-- تأكد من أن PostgreSQL يعمل
-- تحقق من كلمة المرور في `DATABASE_URL`
-
-**الباكند لا يعمل:**
-- تحقق من أن المنفذ 5000 غير مستخدم
-- تأكد من وجود ملف `.env`
-
-**الواجهة لا تتصل بالباكند:**
-- تأكد من أن الباكند يعمل
-- تحقق من console المتصفح (F12)
-
+**💡 نصيحة:** ابدأ بوضع Demo للتعرف على التطبيق، ثم انتقل للوضع الكامل للتطوير!

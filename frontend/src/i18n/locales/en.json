@@ -2,6 +2,7 @@
   "auth": {
     "login": "Login",
     "register": "Register",
+    "logout": "Logout",
     "email": "Email",
     "password": "Password",
     "name": "Name",
@@ -11,20 +12,75 @@
     "loginSuccess": "Logged in successfully",
     "registerSuccess": "Account created successfully",
     "invalidCredentials": "Invalid credentials",
-    "userExists": "User already exists"
+    "userExists": "User already exists",
+    "passwordsNotMatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 8 characters"
   },
   "dashboard": {
     "title": "Dashboard",
     "totalIncome": "Total Income",
     "totalExpense": "Total Expenses",
     "balance": "Balance",
-    "savingsRate": "Savings Rate"
+    "savingsRate": "Savings Rate",
+    "welcome": "Welcome back, {{name}}!",
+    "recentTransactions": "Recent Transactions",
+    "quickActions": "Quick Actions",
+    "addTransaction": "Add Transaction",
+    "manageBudget": "Manage Budget",
+    "recordIncomeExpense": "Record income or expense",
+    "setSpendingLimits": "Set spending limits",
+    "activeBudgets": "Active Budgets",
+    "viewAll": "View All"
   },
   "transactions": {
+    "title": "Transactions",
     "add": "Add Transaction",
+    "addNew": "Add New Transaction",
     "income": "Income",
     "expense": "Expense",
-    "title": "Transactions"
+    "noTransactions": "No transactions yet.",
+    "addFirstTransaction": "Add your first transaction",
+    "filterTitle": "Filter Transactions",
+    "type": "Type",
+    "category": "Category",
+    "search": "Search",
+    "searchPlaceholder": "Search by description or category...",
+    "all": "All",
+    "amount": "Amount",
+    "date": "Date",
+    "description": "Description",
+    "confirmDelete": "Are you sure you want to delete this transaction?",
+    "selectCategory": "Select Category"
+  },
+  "budget": {
+    "title": "Budgets",
+    "add": "Add Budget",
+    "addNew": "Add New Budget",
+    "totalBudget": "Total Budget",
+    "totalSpent": "Total Spent",
+    "remaining": "Remaining",
+    "period": "Period",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "currentBudgets": "Current Budgets",
+    "confirmDelete": "Are you sure you want to delete this budget?",
+    "label": "Budget",
+    "spent": "Spent",
+    "usedPercentage": "Used {{percentage}}% of budget",
+    "overBudget": "Over budget!",
+    "nearLimit": "Near limit",
+    "noBudgets": "No budgets found. Create your first budget to get started.",
+    "periodLabel": "Period: {{period}}",
+    "selectCategory": "Select Category"
+  },
+  "profile": {
+    "title": "Profile"
+  },
+  "settings": {
+    "title": "Settings"
   },
   "common": {
     "loading": "Loading...",
@@ -37,4 +93,3 @@
     "submit": "Submit"
   }
 }
-

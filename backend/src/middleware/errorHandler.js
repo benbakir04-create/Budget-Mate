@@ -3,15 +3,14 @@ function errorHandler(err, req, res, next) {
   console.error(err);
 
   const status = err.status || 500;
-  const code = err.code || 'SERVER_ERROR';
-  const message =
-    process.env.NODE_ENV === 'production' && status === 500
-      ? 'Internal server error'
-      : err.message || 'Internal server error';
+  // Unexpected errors (e.g. Prisma) are logged above but never sent to the client.
+  const isServerError = status >= 500;
 
   res.status(status).json({
     success: false,
-    error: { code, message, details: err.details || undefined }
+    error: isServerError
+      ? { code: 'SERVER_ERROR', message: 'Internal server error' }
+      : { code: err.code || 'ERROR', message: err.message, details: err.details || undefined }
   });
 }
 

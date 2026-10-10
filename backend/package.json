@@ -9,6 +9,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate",
     "prisma:seed": "prisma db seed",
+    "clear:users": "node scripts/clear-users.js",
     "test:api": "node test-api.js"
   },
   "prisma": {

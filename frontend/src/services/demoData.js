@@ -1,0 +1,164 @@
+// بيانات تجريبية لوضع Demo - تطبيق وازن
+export const DEMO_CATEGORIES = [
+  { 
+    id: 'cat-1', name: 'Groceries', nameAr: 'بقالة ومقاضي', icon: 'shopping-cart', color: '#1D9E75', type: 'expense', isPrivate: false,
+    subcategories: [
+      { id: 'sub-1-1', nameAr: 'خضار وفواكه' },
+      { id: 'sub-1-2', nameAr: 'لحوم وأسماك' },
+      { id: 'sub-1-3', nameAr: 'ألبان وأجبان' }
+    ]
+  },
+  { 
+    id: 'cat-2', name: 'Dining', nameAr: 'مطاعم ووجبات', icon: 'restaurant', color: '#F59E0B', type: 'expense', isPrivate: false,
+    subcategories: [
+      { id: 'sub-2-1', nameAr: 'وجبات سريعة' },
+      { id: 'sub-2-2', nameAr: 'مقاهي وحلويات' }
+    ]
+  },
+  { 
+    id: 'cat-3', name: 'Transport', nameAr: 'مواصلات', icon: 'car', color: '#3B82F6', type: 'expense', isPrivate: false,
+    subcategories: [
+      { id: 'sub-3-1', nameAr: 'بنزين وقود' },
+      { id: 'sub-3-2', nameAr: 'صيانة السيارة' }
+    ]
+  },
+  { 
+    id: 'cat-4', name: 'Utilities', nameAr: 'فواتير ومرافق', icon: 'bolt', color: '#8B5CF6', type: 'expense', isPrivate: false,
+    subcategories: [
+      { id: 'sub-4-1', nameAr: 'كهرباء ومياه' },
+      { id: 'sub-4-2', nameAr: 'إنترنت وهاتف' }
+    ]
+  },
+  { id: 'cat-5', name: 'Entertainment', nameAr: 'ترفيه', icon: 'movie', color: '#EC4899', type: 'expense', isPrivate: false, subcategories: [] },
+  { id: 'cat-6', name: 'Children', nameAr: 'مستلزمات الأطفال', icon: 'child-care', color: '#06B6D4', type: 'expense', isPrivate: false, subcategories: [] },
+  { id: 'cat-7', name: 'Salary', nameAr: 'راتب', icon: 'payments', color: '#10B981', type: 'income', isPrivate: false, subcategories: [] },
+  { id: 'cat-8', name: 'Personal (Private)', nameAr: 'شخصي (خاص)', icon: 'lock', color: '#6B7280', type: 'expense', isPrivate: true, subcategories: [] },
+];
+
+const today = new Date();
+const d = (daysAgo) => new Date(today.getTime() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
+
+export const DEMO_TRANSACTIONS = [
+  {
+    id: 'tx-1', amount: 12000, type: 'income',
+    description: 'راتب شهر مايو', date: d(25),
+    userId: 'demo-user', categoryId: 'cat-7',
+    category: DEMO_CATEGORIES[6], user: { id: 'demo-user', name: 'المالك الرئيسي', role: 'owner' }, fund: null
+  },
+  {
+    id: 'tx-2', amount: 340, type: 'expense',
+    description: 'بقالة الأسبوع - مارت', date: d(2),
+    userId: 'demo-user', categoryId: 'cat-1',
+    category: DEMO_CATEGORIES[0], user: { id: 'demo-user', name: 'المالك الرئيسي', role: 'owner' }, fund: { id: 'fund-1', name: 'مصروف البيت' }
+  },
+  {
+    id: 'tx-3', amount: 75, type: 'expense',
+    description: 'حفلة عيد ميلاد - مطعم البحر', date: d(4),
+    userId: 'demo-partner', categoryId: 'cat-2',
+    category: DEMO_CATEGORIES[1], user: { id: 'demo-partner', name: 'الشريك', role: 'partner' }, fund: { id: 'fund-1', name: 'مصروف البيت' }
+  },
+  {
+    id: 'tx-4', amount: 120, type: 'expense',
+    description: 'بنزين السيارة', date: d(5),
+    userId: 'demo-user', categoryId: 'cat-3',
+    category: DEMO_CATEGORIES[2], user: { id: 'demo-user', name: 'المالك الرئيسي', role: 'owner' }, fund: null
+  },
+  {
+    id: 'tx-5', amount: 230, type: 'expense',
+    description: 'فاتورة الكهرباء والماء', date: d(7),
+    userId: 'demo-user', categoryId: 'cat-4',
+    category: DEMO_CATEGORIES[3], user: { id: 'demo-user', name: 'المالك الرئيسي', role: 'owner' }, fund: { id: 'fund-1', name: 'مصروف البيت' }
+  },
+  {
+    id: 'tx-6', amount: 200, type: 'expense',
+    description: 'اشتراك نتفلكس وسبوتيفاي', date: d(10),
+    userId: 'demo-user', categoryId: 'cat-5',
+    category: DEMO_CATEGORIES[4], user: { id: 'demo-user', name: 'المالك الرئيسي', role: 'owner' }, fund: null
+  },
+  {
+    id: 'tx-7', amount: 450, type: 'expense',
+    description: 'حفاضات وحليب أطفال', date: d(12),
+    userId: 'demo-partner', categoryId: 'cat-6',
+    category: DEMO_CATEGORIES[5], user: { id: 'demo-partner', name: 'الشريك', role: 'partner' }, fund: { id: 'fund-1', name: 'مصروف البيت' }
+  },
+  {
+    id: 'tx-8', amount: 180, type: 'expense',
+    description: 'بقالة مدد الأسبوع الثاني', date: d(9),
+    userId: 'demo-partner', categoryId: 'cat-1',
+    category: DEMO_CATEGORIES[0], user: { id: 'demo-partner', name: 'الشريك', role: 'partner' }, fund: { id: 'fund-1', name: 'مصروف البيت' }
+  },
+  {
+    id: 'tx-9', amount: 95, type: 'expense',
+    description: 'غداء عائلي - مطعم الريف', date: d(14),
+    userId: 'demo-user', categoryId: 'cat-2',
+    category: DEMO_CATEGORIES[1], user: { id: 'demo-user', name: 'المالك الرئيسي', role: 'owner' }, fund: { id: 'fund-1', name: 'مصروف البيت' }
+  },
+  {
+    id: 'tx-10', amount: 60, type: 'expense',
+    description: 'اشتراك صالة الرياضة', date: d(18),
+    userId: 'demo-user', categoryId: 'cat-3',
+    category: DEMO_CATEGORIES[2], user: { id: 'demo-user', name: 'المالك الرئيسي', role: 'owner' }, fund: null
+  },
+];
+
+export const DEMO_BUDGETS = [
+  {
+    id: 'bud-1', amount: 1500, spent: 520, period: 'monthly',
+    startDate: new Date(today.getFullYear(), today.getMonth(), 1).toISOString(),
+    endDate: new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString(),
+    userId: 'demo-user', categoryId: 'cat-1',
+    category: DEMO_CATEGORIES[0]
+  },
+  {
+    id: 'bud-2', amount: 400, spent: 170, period: 'monthly',
+    startDate: new Date(today.getFullYear(), today.getMonth(), 1).toISOString(),
+    endDate: new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString(),
+    userId: 'demo-user', categoryId: 'cat-2',
+    category: DEMO_CATEGORIES[1]
+  },
+  {
+    id: 'bud-3', amount: 500, spent: 180, period: 'monthly',
+    startDate: new Date(today.getFullYear(), today.getMonth(), 1).toISOString(),
+    endDate: new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString(),
+    userId: 'demo-user', categoryId: 'cat-3',
+    category: DEMO_CATEGORIES[2]
+  },
+  {
+    id: 'bud-4', amount: 300, spent: 230, period: 'monthly',
+    startDate: new Date(today.getFullYear(), today.getMonth(), 1).toISOString(),
+    endDate: new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString(),
+    userId: 'demo-user', categoryId: 'cat-4',
+    category: DEMO_CATEGORIES[3]
+  },
+  {
+    id: 'bud-5', amount: 600, spent: 450, period: 'monthly',
+    startDate: new Date(today.getFullYear(), today.getMonth(), 1).toISOString(),
+    endDate: new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString(),
+    userId: 'demo-user', categoryId: 'cat-6',
+    category: DEMO_CATEGORIES[5]
+  },
+];
+
+export const DEMO_FUNDS = [
+  {
+    id: 'fund-1',
+    name: 'مصروف البيت الرئيسي',
+    balance: 2150.00,
+    ownerId: 'demo-user',
+    createdAt: d(30),
+    _count: { transactions: 6, orders: 2 }
+  },
+];
+
+export const DEMO_ORDERS = [
+  {
+    id: 'ord-1', title: 'شراء مستلزمات المطبخ', estAmount: 200,
+    status: 'pending_approval', requestedBy: 'demo-partner',
+    fundId: 'fund-1', fund: DEMO_FUNDS[0], createdAt: d(1)
+  },
+  {
+    id: 'ord-2', title: 'حليب أطفال - علبتان', estAmount: 120,
+    status: 'approved', requestedBy: 'demo-partner',
+    fundId: 'fund-1', fund: DEMO_FUNDS[0], createdAt: d(3)
+  },
+];

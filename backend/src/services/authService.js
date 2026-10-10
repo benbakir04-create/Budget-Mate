@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const prisma = require('../config/database');
+const { DEFAULT_CATEGORIES } = require('../constants/defaultCategories');
 const {
   generateAccessToken,
   generateRefreshToken,
@@ -8,7 +9,7 @@ const {
 
 const SALT_ROUNDS = 10;
 
-async function register({ name, email, password }) {
+async function register({ name, email, password, role = 'owner', parentId = null }) {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     const err = new Error('User already exists');
@@ -19,11 +20,23 @@ async function register({ name, email, password }) {
 
   const hashed = await bcrypt.hash(password, SALT_ROUNDS);
   const user = await prisma.user.create({
-    data: { name, email, password: hashed }
+    data: {
+      name,
+      email,
+      password: hashed,
+      role,
+      parentId,
+      // Partners use their owner's categories, so only owners get the defaults.
+      ...(role === 'owner' && { categories: { create: DEFAULT_CATEGORIES } })
+    }
   });
 
   const tokens = buildTokens(user);
   return { user: sanitizeUser(user), ...tokens };
+}
+
+async function registerPartner({ name, email, password, parentId }) {
+  return register({ name, email, password, role: 'partner', parentId });
 }
 
 async function login({ email, password }) {
@@ -80,6 +93,6 @@ function sanitizeUser(user) {
   return rest;
 }
 
-module.exports = { register, login, refresh, sanitizeUser };
+module.exports = { register, registerPartner, login, refresh, sanitizeUser };
 
 

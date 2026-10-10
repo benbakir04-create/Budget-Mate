@@ -85,7 +85,7 @@ const me = async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
-      select: { id: true, email: true, name: true, currency: true, language: true, createdAt: true }
+      select: { id: true, email: true, name: true, currency: true, language: true, role: true, parentId: true, createdAt: true }
     });
 
     if (!user) {
@@ -110,6 +110,40 @@ const logout = (req, res) => {
   return res.json({ success: true, data: { message: 'Logged out' } });
 };
 
-module.exports = { register, login, refreshToken, me, logout };
+const registerPartner = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() }
+      });
+    }
+
+    if (req.user.role !== 'owner') {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Only owners can register partners' }
+      });
+    }
+
+    const { name, email, password } = req.body;
+    const result = await authService.registerPartner({
+      name,
+      email,
+      password,
+      parentId: req.user.id
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: { partner: result.user }
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+module.exports = { register, registerPartner, login, refreshToken, me, logout };
 
 

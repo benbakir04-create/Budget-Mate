@@ -11,6 +11,17 @@ export const useAuth = () => {
   return context;
 };
 
+// Demo mode - للنسخة التجريبية
+// Demo mode معطل افتراضياً، يمكن تفعيله عبر VITE_DEMO_MODE=true في .env
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
+const DEMO_USER = {
+  id: 'demo-user',
+  name: 'مستخدم تجريبي',
+  email: 'demo@budgetmate.com',
+  currency: 'SAR',
+  language: 'ar'
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -18,19 +29,33 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const initAuth = async () => {
-      const token = authService.getToken();
-      const storedUser = authService.getUser();
-      
-      if (token && storedUser) {
-        try {
-          const currentUser = await authService.getCurrentUser();
-          setUser(currentUser);
-          setIsAuthenticated(true);
-        } catch (error) {
-          authService.logout();
-        }
+      // إذا كان Demo mode مفعّل، استخدم المستخدم التجريبي مباشرة
+      if (DEMO_MODE) {
+        setUser(DEMO_USER);
+        setIsAuthenticated(true);
+        setIsLoading(false);
+        return;
       }
-      setIsLoading(false);
+
+      // الوضع العادي - التحقق من تسجيل الدخول
+      try {
+        const token = authService.getToken();
+        const storedUser = authService.getUser();
+        
+        if (token && storedUser) {
+          try {
+            const currentUser = await authService.getCurrentUser();
+            setUser(currentUser);
+            setIsAuthenticated(true);
+          } catch (error) {
+            authService.logout();
+          }
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     initAuth();
@@ -51,15 +76,22 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    authService.logout();
-    setUser(null);
-    setIsAuthenticated(false);
+    if (DEMO_MODE) {
+      // في وضع Demo، لا نحتاج للخروج من السيرفر
+      setUser(null);
+      setIsAuthenticated(false);
+    } else {
+      authService.logout();
+      setUser(null);
+      setIsAuthenticated(false);
+    }
   };
 
   const value = {
     user,
     isAuthenticated,
     isLoading,
+    isDemoMode: DEMO_MODE,
     login,
     register,
     logout
