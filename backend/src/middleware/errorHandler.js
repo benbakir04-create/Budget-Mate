@@ -10,10 +10,8 @@ function errorHandler(err, req, res, next) {
     success: false,
     error: isServerError
       ? { code: 'SERVER_ERROR', message: 'Internal server error' }
-      : { code: err.code || 'ERROR', message: err.message, details: err.details || undefined }
+      : { code: err.code || 'ERROR', message: err.message, details: err.details || undefined },
   });
 }
 
 module.exports = errorHandler;
-
-

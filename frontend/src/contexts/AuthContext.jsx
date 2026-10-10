@@ -19,7 +19,7 @@ const DEMO_USER = {
   name: 'مستخدم تجريبي',
   email: 'demo@budgetmate.com',
   currency: 'SAR',
-  language: 'ar'
+  language: 'ar',
 };
 
 export const AuthProvider = ({ children }) => {
@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const token = authService.getToken();
         const storedUser = authService.getUser();
-        
+
         if (token && storedUser) {
           try {
             const currentUser = await authService.getCurrentUser();
@@ -94,9 +94,8 @@ export const AuthProvider = ({ children }) => {
     isDemoMode: DEMO_MODE,
     login,
     register,
-    logout
+    logout,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-

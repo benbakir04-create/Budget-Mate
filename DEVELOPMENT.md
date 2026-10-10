@@ -3,12 +3,14 @@
 ## 📋 متطلبات التطوير
 
 ### البرمجيات الأساسية
+
 - **Node.js 18+** - محرك JavaScript
 - **PostgreSQL 15+** - قاعدة البيانات (اختياري للوضع التجريبي)
 - **Git** - نظام التحكم في الإصدارات
 - **Docker** (اختياري) - للإعداد السريع
 
 ### أدوات التطوير الموصى بها
+
 - **VS Code** - محرر الكود
 - **Postman/Thunder Client** - اختبار APIs
 - **pgAdmin** - إدارة قاعدة البيانات
@@ -17,12 +19,14 @@
 ## 🚀 إعداد بيئة التطوير
 
 ### 1. استنساخ المشروع
+
 ```bash
 git clone <repository-url>
 cd budget-mate
 ```
 
 ### 2. الإعداد التلقائي
+
 ```bash
 # على Windows
 setup.bat
@@ -34,12 +38,14 @@ chmod +x setup.sh && ./setup.sh
 ### 3. اختيار وضع التطوير
 
 #### وضع Demo (موصى به للمبتدئين)
+
 ```bash
 run-demo.bat    # Windows
 ./run-demo.sh   # Linux/Mac
 ```
 
 #### وضع التطوير الكامل
+
 ```bash
 # إعداد قاعدة البيانات
 # ... ثم
@@ -48,6 +54,7 @@ run-backend.bat && run.bat    # Windows
 ```
 
 #### وضع Docker
+
 ```bash
 docker-compose up --build
 ```
@@ -81,6 +88,7 @@ budget-mate/
 ## 🔧 أوامر التطوير الشائعة
 
 ### الباك إند
+
 ```bash
 cd backend
 
@@ -101,6 +109,7 @@ npm run prisma:studio     # واجهة إدارة البيانات
 ```
 
 ### الفرونت إند
+
 ```bash
 cd frontend
 
@@ -120,6 +129,7 @@ npm run preview
 ## 🧪 الاختبار والتصحيح
 
 ### اختبار APIs
+
 ```bash
 # استخدم Postman أو Thunder Client
 # أو استخدم السكريبت المدمج
@@ -127,6 +137,7 @@ cd backend && npm run test:api
 ```
 
 ### فحص قاعدة البيانات
+
 ```bash
 cd backend
 npm run prisma:studio
@@ -134,6 +145,7 @@ npm run prisma:studio
 ```
 
 ### فحص الأخطاء
+
 - **Frontend**: افتح DevTools (F12) → Console
 - **Backend**: راجع terminal الخادم
 - **Database**: استخدم pgAdmin أو Prisma Studio
@@ -141,12 +153,14 @@ npm run prisma:studio
 ## 📝 إرشادات الكود
 
 ### أسلوب الكتابة
+
 - استخدم **ES6+** features
 - اتبع **camelCase** للمتغيرات والدوال
 - استخدم **PascalCase** للمكونات
 - أضف تعليقات للمنطق المعقد
 
 ### Git Workflow
+
 ```bash
 # إنشاء فرع جديد
 git checkout -b feature/new-feature
@@ -162,6 +176,7 @@ git push origin feature/new-feature
 ```
 
 ### إدارة البيئة
+
 - لا تضع مفاتيح سرية في الكود
 - استخدم متغيرات البيئة (.env)
 - أضف .env إلى .gitignore
@@ -169,6 +184,7 @@ git push origin feature/new-feature
 ## 🚀 النشر
 
 ### البناء للإنتاج
+
 ```bash
 # الباك إند
 cd backend
@@ -180,6 +196,7 @@ npm run build
 ```
 
 ### نشر مع Docker
+
 ```bash
 # بناء الصور
 docker-compose build
@@ -191,11 +208,13 @@ docker-compose up -d
 ## 📞 المساعدة والدعم
 
 ### الملفات المرجعية
+
 - `QUICK_START.md` - البدء السريع
 - `TESTING_GUIDE.md` - دليل الاختبار
 - `TROUBLESHOOTING.md` - حل المشاكل
 
 ### المشاكل الشائعة
+
 - **Port conflicts**: غيّر المنافذ في .env
 - **Database errors**: تأكد من تشغيل PostgreSQL
 - **Build errors**: احذف node_modules وأعد التثبيت

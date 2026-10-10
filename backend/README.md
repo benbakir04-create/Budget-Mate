@@ -21,16 +21,19 @@ Backend API for Budget Mate application built with Node.js, Express, and Postgre
 ### Installation
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Copy environment variables:
+
 ```bash
 cp env.example .env
 ```
 
 3. Update `.env` file with your database credentials and JWT secrets:
+
 ```env
 DATABASE_URL="postgresql://user:password@localhost:5432/budgetmate"
 JWT_SECRET="your-super-secret-jwt-key-change-in-production"
@@ -39,16 +42,19 @@ FRONTEND_URL="http://localhost:3000"
 ```
 
 4. Generate Prisma Client:
+
 ```bash
 npm run prisma:generate
 ```
 
 5. Run database migrations:
+
 ```bash
 npm run prisma:migrate
 ```
 
 6. Seed default categories:
+
 ```bash
 npm run prisma:seed
 ```
@@ -56,11 +62,13 @@ npm run prisma:seed
 ### Running the Server
 
 Development mode (with auto-reload):
+
 ```bash
 npm run dev
 ```
 
 Production mode:
+
 ```bash
 npm start
 ```
@@ -84,6 +92,7 @@ Server will run on `http://localhost:5000`
 ## API Response Format
 
 ### Success Response
+
 ```json
 {
   "success": true,
@@ -94,6 +103,7 @@ Server will run on `http://localhost:5000`
 ```
 
 ### Error Response
+
 ```json
 {
   "success": false,
@@ -131,4 +141,3 @@ backend/
 │   └── server.js          # Entry point
 └── package.json
 ```
-

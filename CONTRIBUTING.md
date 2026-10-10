@@ -5,11 +5,13 @@
 ## 📋 قبل البدء
 
 ### 1. اقرأ الوثائق
+
 - `README.md` - نظرة عامة على المشروع
 - `DEVELOPMENT.md` - إرشادات التطوير
 - `QUICK_START.md` - البدء السريع
 
 ### 2. إعداد البيئة
+
 ```bash
 # استنساخ المشروع
 git clone <repository-url>
@@ -23,6 +25,7 @@ make run-demo
 ```
 
 ### 3. فهم هيكل المشروع
+
 - **Backend**: Node.js + Express + PostgreSQL + Prisma
 - **Frontend**: React + Vite + Tailwind CSS + i18next
 - **Architecture**: RESTful API مع JWT authentication
@@ -30,11 +33,13 @@ make run-demo
 ## 🐛 الإبلاغ عن مشاكل
 
 ### قبل الإبلاغ:
+
 1. تحقق من أن المشكلة غير موجودة مسبقاً
 2. جرب أحدث إصدار من الكود
 3. راجع `TROUBLESHOOTING.md`
 
 ### كيفية الإبلاغ:
+
 1. استخدم قالب Issue المناسب
 2. وصف المشكلة بوضوح مع خطوات التكرار
 3. أضف معلومات النظام وإصدارات البرمجيات
@@ -43,10 +48,12 @@ make run-demo
 ## 💡 اقتراح ميزات جديدة
 
 ### قبل الاقتراح:
+
 1. تحقق من أن الميزة غير موجودة
 2. راجع الخطة المستقبلية في الوثائق
 
 ### كيفية الاقتراح:
+
 1. وصف الميزة والمشكلة التي تحلها
 2. شرح كيفية عملها
 3. مناقشة البدائل المحتملة
@@ -54,6 +61,7 @@ make run-demo
 ## 🛠️ المساهمة في الكود
 
 ### سير العمل:
+
 1. **Fork** المشروع
 2. **Create** فرع جديد: `git checkout -b feature/your-feature`
 3. **Commit** التغييرات: `git commit -m "Add: feature description"`
@@ -61,12 +69,14 @@ make run-demo
 5. **Create** Pull Request
 
 ### معايير الكود:
+
 - اتبع أسلوب الكود الموجود
 - أضف تعليقات للمنطق المعقد
 - اختبر التغييرات محلياً
 - تأكد من عدم كسر الوظائف الموجودة
 
 ### أنواع المساهمات:
+
 - 🐛 **Bug fixes** - إصلاح الأخطاء
 - ✨ **Features** - ميزات جديدة
 - 📚 **Documentation** - تحسين الوثائق
@@ -77,6 +87,7 @@ make run-demo
 ## 📝 إرشادات الكتابة
 
 ### الرسائل الالتزام (Commits):
+
 ```
 type(scope): description
 
@@ -86,6 +97,7 @@ type(scope): description
 ```
 
 **أنواع الالتزام:**
+
 - `feat`: ميزة جديدة
 - `fix`: إصلاح خطأ
 - `docs`: تغييرات في الوثائق
@@ -95,6 +107,7 @@ type(scope): description
 - `chore`: مهام صيانة
 
 **أمثلة:**
+
 ```
 feat(auth): add password reset functionality
 fix(api): resolve user registration validation error
@@ -102,6 +115,7 @@ docs(readme): update installation instructions
 ```
 
 ### رسائل Pull Request:
+
 - **Title**: وصف واضح للتغييرات
 - **Description**: شرح مفصل للمشكلة والحل
 - **Testing**: كيفية اختبار التغييرات
@@ -110,12 +124,14 @@ docs(readme): update installation instructions
 ## 🧪 الاختبار
 
 ### قبل إرسال PR:
+
 1. اختبر التغييرات محلياً
 2. شغّل التطبيق في وضع demo
 3. تأكد من عدم كسر الوظائف الموجودة
 4. راجع `TESTING_GUIDE.md` للاختبار الشامل
 
 ### الاختبار الآلي (مستقبلاً):
+
 ```bash
 # تشغيل جميع الاختبارات
 npm test
@@ -130,12 +146,14 @@ cd frontend && npm test
 ## 🎨 إرشادات التصميم
 
 ### UI/UX:
+
 - اتبع تصميم Material Design
 - استخدم ألوان التطبيق المحددة
 - ضمن الاستجابة على جميع الأجهزة
 - ركز على تجربة المستخدم العربي
 
 ### الألوان:
+
 - Primary: #10B981 (أخضر)
 - Danger: #EF4444 (أحمر)
 - Warning: #F59E0B (برتقالي)
@@ -144,11 +162,13 @@ cd frontend && npm test
 ## 🌍 الترجمة
 
 ### إضافة نصوص جديدة:
+
 1. أضف المفتاح في `frontend/src/i18n/locales/ar.json`
 2. أضف الترجمة الإنجليزية في `en.json`
 3. استخدم `useTranslation` hook في المكونات
 
 ### مثال:
+
 ```json
 {
   "newFeature": {

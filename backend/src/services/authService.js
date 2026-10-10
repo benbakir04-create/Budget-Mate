@@ -1,11 +1,7 @@
 const bcrypt = require('bcryptjs');
 const prisma = require('../config/database');
 const { DEFAULT_CATEGORIES } = require('../constants/defaultCategories');
-const {
-  generateAccessToken,
-  generateRefreshToken,
-  verifyRefreshToken
-} = require('../utils/jwt');
+const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/jwt');
 
 const SALT_ROUNDS = 10;
 
@@ -27,8 +23,8 @@ async function register({ name, email, password, role = 'owner', parentId = null
       role,
       parentId,
       // Partners use their owner's categories, so only owners get the defaults.
-      ...(role === 'owner' && { categories: { create: DEFAULT_CATEGORIES } })
-    }
+      ...(role === 'owner' && { categories: { create: DEFAULT_CATEGORIES } }),
+    },
   });
 
   const tokens = buildTokens(user);
@@ -84,7 +80,7 @@ function buildTokens(user) {
   const payload = { id: user.id, email: user.email, name: user.name };
   return {
     accessToken: generateAccessToken(payload),
-    refreshToken: generateRefreshToken(payload)
+    refreshToken: generateRefreshToken(payload),
   };
 }
 
@@ -94,5 +90,3 @@ function sanitizeUser(user) {
 }
 
 module.exports = { register, registerPartner, login, refresh, sanitizeUser };
-
-

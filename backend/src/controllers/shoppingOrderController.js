@@ -7,7 +7,7 @@ const getShoppingOrders = async (req, res, next) => {
     const { fundId, status } = req.query;
 
     const whereClause = {
-      fund: { ownerId }
+      fund: { ownerId },
     };
 
     if (fundId) whereClause.fundId = fundId;
@@ -22,10 +22,10 @@ const getShoppingOrders = async (req, res, next) => {
       where: whereClause,
       include: {
         fund: {
-          select: { id: true, name: true, balance: true }
-        }
+          select: { id: true, name: true, balance: true },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
 
     return res.json({ success: true, data: { orders } });
@@ -40,7 +40,7 @@ const createShoppingOrder = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() }
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() },
       });
     }
 
@@ -49,13 +49,13 @@ const createShoppingOrder = async (req, res, next) => {
 
     // Verify fund exists and belongs to Owner
     const fund = await prisma.jointFund.findFirst({
-      where: { id: fundId, ownerId }
+      where: { id: fundId, ownerId },
     });
 
     if (!fund) {
       return res.status(400).json({
         success: false,
-        error: { code: 'INVALID_FUND', message: 'Joint fund not found or not accessible' }
+        error: { code: 'INVALID_FUND', message: 'Joint fund not found or not accessible' },
       });
     }
 
@@ -64,8 +64,8 @@ const createShoppingOrder = async (req, res, next) => {
         title,
         estAmount: parseFloat(estAmount),
         fundId,
-        requestedBy: req.user.id
-      }
+        requestedBy: req.user.id,
+      },
     });
 
     return res.status(201).json({ success: true, data: { order } });
@@ -80,7 +80,7 @@ const approveShoppingOrder = async (req, res, next) => {
     if (req.user.role !== 'owner') {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Only accounts with Owner role can approve orders' }
+        error: { code: 'FORBIDDEN', message: 'Only accounts with Owner role can approve orders' },
       });
     }
 
@@ -88,13 +88,13 @@ const approveShoppingOrder = async (req, res, next) => {
 
     const order = await prisma.shoppingOrder.findUnique({
       where: { id },
-      include: { fund: true }
+      include: { fund: true },
     });
 
     if (!order) {
       return res.status(404).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Shopping order not found' }
+        error: { code: 'NOT_FOUND', message: 'Shopping order not found' },
       });
     }
 
@@ -102,13 +102,13 @@ const approveShoppingOrder = async (req, res, next) => {
     if (order.fund.ownerId !== req.user.id) {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Not authorized to approve this order' }
+        error: { code: 'FORBIDDEN', message: 'Not authorized to approve this order' },
       });
     }
 
     const updatedOrder = await prisma.shoppingOrder.update({
       where: { id },
-      data: { status: 'approved' }
+      data: { status: 'approved' },
     });
 
     return res.json({ success: true, data: { order: updatedOrder } });
@@ -123,7 +123,7 @@ const purchaseShoppingOrder = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() }
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() },
       });
     }
 
@@ -134,13 +134,13 @@ const purchaseShoppingOrder = async (req, res, next) => {
     // Fetch order
     const order = await prisma.shoppingOrder.findUnique({
       where: { id },
-      include: { fund: true }
+      include: { fund: true },
     });
 
     if (!order) {
       return res.status(404).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Shopping order not found' }
+        error: { code: 'NOT_FOUND', message: 'Shopping order not found' },
       });
     }
 
@@ -148,7 +148,7 @@ const purchaseShoppingOrder = async (req, res, next) => {
     if (order.fund.ownerId !== ownerId) {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Access denied' }
+        error: { code: 'FORBIDDEN', message: 'Access denied' },
       });
     }
 
@@ -157,7 +157,7 @@ const purchaseShoppingOrder = async (req, res, next) => {
     if (!category || category.userId !== ownerId) {
       return res.status(400).json({
         success: false,
-        error: { code: 'INVALID_CATEGORY', message: 'Category not found or not accessible' }
+        error: { code: 'INVALID_CATEGORY', message: 'Category not found or not accessible' },
       });
     }
 
@@ -165,7 +165,10 @@ const purchaseShoppingOrder = async (req, res, next) => {
     if (req.user.role === 'partner' && category.isPrivate) {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Cannot record transactions under a private category' }
+        error: {
+          code: 'FORBIDDEN',
+          message: 'Cannot record transactions under a private category',
+        },
       });
     }
 
@@ -176,12 +179,12 @@ const purchaseShoppingOrder = async (req, res, next) => {
       // 1. Update order status to purchased
       prisma.shoppingOrder.update({
         where: { id },
-        data: { status: 'purchased' }
+        data: { status: 'purchased' },
       }),
       // 2. Deduct from joint fund
       prisma.jointFund.update({
         where: { id: order.fundId },
-        data: { balance: { decrement: finalAmount } }
+        data: { balance: { decrement: finalAmount } },
       }),
       // 3. Create actual Transaction record
       prisma.transaction.create({
@@ -192,12 +195,12 @@ const purchaseShoppingOrder = async (req, res, next) => {
           userId: req.user.id,
           categoryId,
           fundId: order.fundId,
-          receiptUrl: receiptUrl || null
+          receiptUrl: receiptUrl || null,
         },
         include: {
-          category: { select: { id: true, name: true, nameAr: true, icon: true, color: true } }
-        }
-      })
+          category: { select: { id: true, name: true, nameAr: true, icon: true, color: true } },
+        },
+      }),
     ]);
 
     return res.json({
@@ -205,8 +208,8 @@ const purchaseShoppingOrder = async (req, res, next) => {
       data: {
         order: results[0],
         fund: results[1],
-        transaction: results[2]
-      }
+        transaction: results[2],
+      },
     });
   } catch (err) {
     return next(err);
@@ -220,21 +223,24 @@ const deleteShoppingOrder = async (req, res, next) => {
 
     const order = await prisma.shoppingOrder.findUnique({
       where: { id },
-      include: { fund: true }
+      include: { fund: true },
     });
 
     if (!order) {
       return res.status(404).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Shopping order not found' }
+        error: { code: 'NOT_FOUND', message: 'Shopping order not found' },
       });
     }
 
     // Ownership check: Owners can delete any order. Partners can only delete their own requested orders.
-    if (order.fund.ownerId !== ownerId || (order.requestedBy !== req.user.id && req.user.role !== 'owner')) {
+    if (
+      order.fund.ownerId !== ownerId ||
+      (order.requestedBy !== req.user.id && req.user.role !== 'owner')
+    ) {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Not authorized to delete this order' }
+        error: { code: 'FORBIDDEN', message: 'Not authorized to delete this order' },
       });
     }
 
@@ -251,5 +257,5 @@ module.exports = {
   createShoppingOrder,
   approveShoppingOrder,
   purchaseShoppingOrder,
-  deleteShoppingOrder
+  deleteShoppingOrder,
 };

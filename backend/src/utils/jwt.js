@@ -25,7 +25,5 @@ module.exports = {
   generateAccessToken,
   generateRefreshToken,
   verifyAccessToken,
-  verifyRefreshToken
+  verifyRefreshToken,
 };
-
-

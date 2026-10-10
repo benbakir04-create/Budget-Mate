@@ -5,10 +5,10 @@
 @tailwind utilities;
 
 :root {
-  --primary: #10B981;
-  --danger: #EF4444;
-  --warning: #F59E0B;
-  --info: #3B82F6;
+  --primary: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
 }
 
 @layer base {
@@ -18,7 +18,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  
+
   .dark body {
     @apply bg-[#030712] text-white;
   }
@@ -28,13 +28,13 @@
   .glass-panel {
     @apply bg-white/80 dark:bg-[#0f172a]/70 backdrop-blur-xl border border-white/40 dark:border-white/5;
   }
-  
+
   .premium-card {
     @apply bg-white dark:bg-[#0f172a] rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none dark:border dark:border-white/[0.05];
   }
-  
+
   .luxury-gradient {
-    background: linear-gradient(135deg, #10B981 0%, #047857 100%);
+    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
   }
   .dark .luxury-gradient {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);

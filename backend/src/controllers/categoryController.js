@@ -5,9 +5,9 @@ const getCategories = async (req, res, next) => {
   try {
     // If user is a partner, they fetch categories of their owner where isPrivate is false
     const ownerId = req.user.role === 'partner' ? req.user.parentId : req.user.id;
-    
+
     const whereClause = { userId: ownerId };
-    
+
     // 🔒 Strictly enforce that partners cannot retrieve private categories
     if (req.user.role === 'partner') {
       whereClause.isPrivate = false;
@@ -23,9 +23,9 @@ const getCategories = async (req, res, next) => {
         color: true,
         type: true,
         isPrivate: true,
-        createdAt: true
+        createdAt: true,
       },
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
     });
 
     return res.json({ success: true, data: { categories } });
@@ -40,7 +40,7 @@ const createCategory = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() }
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() },
       });
     }
 
@@ -48,7 +48,10 @@ const createCategory = async (req, res, next) => {
     if (req.user.role !== 'owner') {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Only accounts with Owner role can manage categories' }
+        error: {
+          code: 'FORBIDDEN',
+          message: 'Only accounts with Owner role can manage categories',
+        },
       });
     }
 
@@ -58,14 +61,14 @@ const createCategory = async (req, res, next) => {
     const existing = await prisma.category.findFirst({
       where: {
         userId: req.user.id,
-        name: { equals: name, mode: 'insensitive' }
-      }
+        name: { equals: name, mode: 'insensitive' },
+      },
     });
 
     if (existing) {
       return res.status(409).json({
         success: false,
-        error: { code: 'CATEGORY_EXISTS', message: 'Category name already exists' }
+        error: { code: 'CATEGORY_EXISTS', message: 'Category name already exists' },
       });
     }
 
@@ -77,8 +80,8 @@ const createCategory = async (req, res, next) => {
         color: color || '#1D9E75',
         type,
         isPrivate: isPrivate || false,
-        userId: req.user.id
-      }
+        userId: req.user.id,
+      },
     });
 
     return res.status(201).json({ success: true, data: { category } });
@@ -93,7 +96,7 @@ const updateCategory = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() }
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() },
       });
     }
 
@@ -101,7 +104,10 @@ const updateCategory = async (req, res, next) => {
     if (req.user.role !== 'owner') {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Only accounts with Owner role can manage categories' }
+        error: {
+          code: 'FORBIDDEN',
+          message: 'Only accounts with Owner role can manage categories',
+        },
       });
     }
 
@@ -112,7 +118,7 @@ const updateCategory = async (req, res, next) => {
     if (!existing) {
       return res.status(404).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Category not found' }
+        error: { code: 'NOT_FOUND', message: 'Category not found' },
       });
     }
 
@@ -120,7 +126,7 @@ const updateCategory = async (req, res, next) => {
     if (existing.userId !== req.user.id) {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Not authorized to modify this category' }
+        error: { code: 'FORBIDDEN', message: 'Not authorized to modify this category' },
       });
     }
 
@@ -134,7 +140,7 @@ const updateCategory = async (req, res, next) => {
 
     const category = await prisma.category.update({
       where: { id },
-      data: updateData
+      data: updateData,
     });
 
     return res.json({ success: true, data: { category } });
@@ -149,7 +155,10 @@ const deleteCategory = async (req, res, next) => {
     if (req.user.role !== 'owner') {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Only accounts with Owner role can manage categories' }
+        error: {
+          code: 'FORBIDDEN',
+          message: 'Only accounts with Owner role can manage categories',
+        },
       });
     }
 
@@ -159,7 +168,7 @@ const deleteCategory = async (req, res, next) => {
     if (!existing) {
       return res.status(404).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Category not found' }
+        error: { code: 'NOT_FOUND', message: 'Category not found' },
       });
     }
 
@@ -167,7 +176,7 @@ const deleteCategory = async (req, res, next) => {
     if (existing.userId !== req.user.id) {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Not authorized to delete this category' }
+        error: { code: 'FORBIDDEN', message: 'Not authorized to delete this category' },
       });
     }
 
@@ -183,5 +192,5 @@ module.exports = {
   getCategories,
   createCategory,
   updateCategory,
-  deleteCategory
+  deleteCategory,
 };

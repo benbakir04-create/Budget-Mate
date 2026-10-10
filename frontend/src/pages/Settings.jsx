@@ -7,13 +7,15 @@ import { categoryService } from '../services/categoryService';
 const Settings = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  
+
   // App settings state
-  const [appName, setAppName] = useState(localStorage.getItem('appName') || import.meta.env.VITE_APP_NAME || 'وازن');
+  const [appName, setAppName] = useState(
+    localStorage.getItem('appName') || import.meta.env.VITE_APP_NAME || 'وازن'
+  );
   const [currency, setCurrency] = useState(user?.currency || 'SAR');
   const [lang] = useState('ar');
   const [successMsg, setSuccessMsg] = useState('');
-  
+
   // Categories state
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -23,9 +25,9 @@ const Settings = () => {
     name: '',
     type: 'expense',
     color: '#10B981',
-    icon: 'folder'
+    icon: 'folder',
   });
-  
+
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -51,10 +53,10 @@ const Settings = () => {
     }
   };
 
-  const handleSaveGeneralSettings = (e) => {
+  const handleSaveGeneralSettings = e => {
     e.preventDefault();
     localStorage.setItem('appName', appName);
-    
+
     // Update currency in current user session
     if (user) {
       const updatedUser = { ...user, currency };
@@ -70,13 +72,13 @@ const Settings = () => {
     }
   };
 
-  const handleAddCategory = async (e) => {
+  const handleAddCategory = async e => {
     e.preventDefault();
     if (!newCategoryData.nameAr) return;
     try {
       const data = {
         ...newCategoryData,
-        name: newCategoryData.name || newCategoryData.nameAr // Fallback for English name
+        name: newCategoryData.name || newCategoryData.nameAr, // Fallback for English name
       };
       const created = await categoryService.createCategory(data);
       setShowAddCategory(false);
@@ -85,7 +87,7 @@ const Settings = () => {
         name: '',
         type: 'expense',
         color: '#10B981',
-        icon: 'folder'
+        icon: 'folder',
       });
       await loadCategories();
       setSelectedCategory(created);
@@ -96,8 +98,12 @@ const Settings = () => {
     }
   };
 
-  const handleDeleteCategory = async (id) => {
-    if (window.confirm('هل أنت متأكد من رغبتك في حذف هذا القسم؟ سيتم حذف جميع الفئات الفرعية التابعة له.')) {
+  const handleDeleteCategory = async id => {
+    if (
+      window.confirm(
+        'هل أنت متأكد من رغبتك في حذف هذا القسم؟ سيتم حذف جميع الفئات الفرعية التابعة له.'
+      )
+    ) {
       try {
         await categoryService.deleteCategory(id);
         if (selectedCategory?.id === id) {
@@ -112,18 +118,20 @@ const Settings = () => {
     }
   };
 
-  const handleAddSubcategory = async (e) => {
+  const handleAddSubcategory = async e => {
     e.preventDefault();
     if (!newSubcategoryName || !selectedCategory) return;
-    
+
     try {
-      const subcategories = selectedCategory.subcategories ? [...selectedCategory.subcategories] : [];
+      const subcategories = selectedCategory.subcategories
+        ? [...selectedCategory.subcategories]
+        : [];
       const newSub = {
         id: 'sub-' + Date.now(),
-        nameAr: newSubcategoryName
+        nameAr: newSubcategoryName,
       };
       subcategories.push(newSub);
-      
+
       await categoryService.updateCategory(selectedCategory.id, { subcategories });
       setNewSubcategoryName('');
       await loadCategories();
@@ -134,7 +142,7 @@ const Settings = () => {
     }
   };
 
-  const handleDeleteSubcategory = async (subId) => {
+  const handleDeleteSubcategory = async subId => {
     if (!selectedCategory) return;
     if (window.confirm('هل أنت متأكد من رغبتك في حذف هذا الصنف الفرعي؟')) {
       try {
@@ -150,14 +158,22 @@ const Settings = () => {
   };
 
   const colors = [
-    '#10B981', '#1D9E75', '#3B82F6', '#F59E0B', '#EF4444', 
-    '#8B5CF6', '#EC4899', '#06B6D4', '#6B7280', '#111827'
+    '#10B981',
+    '#1D9E75',
+    '#3B82F6',
+    '#F59E0B',
+    '#EF4444',
+    '#8B5CF6',
+    '#EC4899',
+    '#06B6D4',
+    '#6B7280',
+    '#111827',
   ];
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
-      
+
       <div className="flex-1 max-w-7xl mx-auto p-4 md:mr-64">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900">إعدادات التطبيق</h1>
@@ -174,32 +190,54 @@ const Settings = () => {
           <div className="space-y-6 lg:col-span-1">
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
               <h2 className="text-xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 ml-2 text-primary"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
                 </svg>
                 الضبط العام للتطبيق
               </h2>
 
               <form onSubmit={handleSaveGeneralSettings} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">اسم التطبيق التجريبي</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    اسم التطبيق التجريبي
+                  </label>
                   <input
                     type="text"
                     value={appName}
-                    onChange={(e) => setAppName(e.target.value)}
+                    onChange={e => setAppName(e.target.value)}
                     required
                     placeholder="أدخل اسم التطبيق"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-primary focus:border-primary text-sm"
                   />
-                  <p className="text-xs text-gray-500 mt-1">يتغير فوراً في أعلى القائمة الجانبية عند الحفظ.</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    يتغير فوراً في أعلى القائمة الجانبية عند الحفظ.
+                  </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">العملة الافتراضية</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    العملة الافتراضية
+                  </label>
                   <select
                     value={currency}
-                    onChange={(e) => setCurrency(e.target.value)}
+                    onChange={e => setCurrency(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-primary focus:border-primary text-sm bg-white"
                   >
                     <option value="SAR">ريال سعودي (SAR)</option>
@@ -213,7 +251,9 @@ const Settings = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">لغة التطبيق</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    لغة التطبيق
+                  </label>
                   <div className="relative">
                     <select
                       value={lang}
@@ -226,7 +266,9 @@ const Settings = () => {
                       اللغة الحالية الوحيدة
                     </span>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">تنسيق اتجاه الصفحات معتمد بشكل كامل من اليمين إلى اليسار.</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    تنسيق اتجاه الصفحات معتمد بشكل كامل من اليمين إلى اليسار.
+                  </p>
                 </div>
 
                 <button
@@ -245,8 +287,19 @@ const Settings = () => {
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                 <h2 className="text-xl font-bold text-gray-900 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 ml-2 text-primary"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                    />
                   </svg>
                   إدارة الأقسام والأصناف الفرعية
                 </h2>
@@ -265,21 +318,29 @@ const Settings = () => {
                     <h3 className="text-sm font-bold text-green-800">إضافة قسم رئيسي جديد</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">اسم القسم (بالعربية)</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          اسم القسم (بالعربية)
+                        </label>
                         <input
                           type="text"
                           required
                           value={newCategoryData.nameAr}
-                          onChange={(e) => setNewCategoryData({ ...newCategoryData, nameAr: e.target.value })}
+                          onChange={e =>
+                            setNewCategoryData({ ...newCategoryData, nameAr: e.target.value })
+                          }
                           placeholder="مثال: اشتراكات، إيجار..."
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-primary focus:border-primary bg-white"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">النوع</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          النوع
+                        </label>
                         <select
                           value={newCategoryData.type}
-                          onChange={(e) => setNewCategoryData({ ...newCategoryData, type: e.target.value })}
+                          onChange={e =>
+                            setNewCategoryData({ ...newCategoryData, type: e.target.value })
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-primary focus:border-primary bg-white"
                         >
                           <option value="expense">مصروف (Expense)</option>
@@ -287,7 +348,9 @@ const Settings = () => {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">اللون المميز</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          اللون المميز
+                        </label>
                         <div className="flex space-x-1 space-x-reverse items-center h-8">
                           {colors.map(color => (
                             <button
@@ -344,7 +407,9 @@ const Settings = () => {
                               style={{ backgroundColor: category.color }}
                             />
                             <div>
-                              <span className="text-sm font-semibold text-gray-900">{category.nameAr}</span>
+                              <span className="text-sm font-semibold text-gray-900">
+                                {category.nameAr}
+                              </span>
                               <span className="text-[10px] text-gray-400 block">
                                 {category.type === 'income' ? 'قسم دخل' : 'قسم مصروف'}
                               </span>
@@ -355,14 +420,25 @@ const Settings = () => {
                               {(category.subcategories || []).length} أصناف
                             </span>
                             <button
-                              onClick={(e) => {
+                              onClick={e => {
                                 e.stopPropagation();
                                 handleDeleteCategory(category.id);
                               }}
                               className="text-red-500 hover:text-red-700 p-1 hover:bg-white rounded-md transition-colors"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
                               </svg>
                             </button>
                           </div>
@@ -378,19 +454,25 @@ const Settings = () => {
                         <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-100">
                           <div>
                             <h3 className="text-sm font-bold text-gray-800">
-                              الأصناف الفرعية لقسم <span className="text-primary">{selectedCategory.nameAr}</span>
+                              الأصناف الفرعية لقسم{' '}
+                              <span className="text-primary">{selectedCategory.nameAr}</span>
                             </h3>
-                            <p className="text-[11px] text-gray-500">قم بإضافة أصناف مخصصة دقيقة لمراقبة تفاصيل الصرف.</p>
+                            <p className="text-[11px] text-gray-500">
+                              قم بإضافة أصناف مخصصة دقيقة لمراقبة تفاصيل الصرف.
+                            </p>
                           </div>
                         </div>
 
                         {/* Add Subcategory Form */}
-                        <form onSubmit={handleAddSubcategory} className="flex space-x-2 space-x-reverse mb-4">
+                        <form
+                          onSubmit={handleAddSubcategory}
+                          className="flex space-x-2 space-x-reverse mb-4"
+                        >
                           <input
                             type="text"
                             required
                             value={newSubcategoryName}
-                            onChange={(e) => setNewSubcategoryName(e.target.value)}
+                            onChange={e => setNewSubcategoryName(e.target.value)}
                             placeholder="صنف فرعي جديد (مثال: صيانة سيارة، مطاعم فطور...)"
                             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-primary focus:border-primary bg-white shadow-sm"
                           />
@@ -398,8 +480,19 @@ const Settings = () => {
                             type="submit"
                             className="bg-primary hover:bg-green-600 text-white px-3 py-2 rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8l-8 8-8-8" />
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4 ml-1"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 4v16m8-8l-8 8-8-8"
+                              />
                             </svg>
                             إضافة
                           </button>
@@ -413,14 +506,27 @@ const Settings = () => {
                                 key={sub.id}
                                 className="flex justify-between items-center bg-white border border-gray-150 p-2.5 rounded-lg shadow-sm hover:shadow transition-shadow"
                               >
-                                <span className="text-xs font-medium text-gray-800">{sub.nameAr}</span>
+                                <span className="text-xs font-medium text-gray-800">
+                                  {sub.nameAr}
+                                </span>
                                 <button
                                   type="button"
                                   onClick={() => handleDeleteSubcategory(sub.id)}
                                   className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded-md transition-colors"
                                 >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
                                   </svg>
                                 </button>
                               </div>
@@ -434,10 +540,23 @@ const Settings = () => {
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center h-full text-center p-6 text-gray-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-10 w-10 mb-2 text-gray-300"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                          />
                         </svg>
-                        <span className="text-xs font-semibold">الرجاء تحديد قسم رئيسي من القائمة على اليمين للتحكم في فئاته الفرعية.</span>
+                        <span className="text-xs font-semibold">
+                          الرجاء تحديد قسم رئيسي من القائمة على اليمين للتحكم في فئاته الفرعية.
+                        </span>
                       </div>
                     )}
                   </div>

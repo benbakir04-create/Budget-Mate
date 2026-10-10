@@ -91,58 +91,61 @@ const shadows = [
 ];
 
 // إنشاء الثيم
-const theme = createTheme({
-  direction: 'rtl',
-  palette,
-  typography,
-  spacing,
-  shadows,
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          textTransform: 'none',
-          fontWeight: 500,
+const theme = createTheme(
+  {
+    direction: 'rtl',
+    palette,
+    typography,
+    spacing,
+    shadows,
+    components: {
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: 8,
+            textTransform: 'none',
+            fontWeight: 500,
+          },
         },
       },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            borderRadius: 12,
+            boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+          },
         },
       },
-    },
-    MuiListItemButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          transition: 'all 0.2s ease-in-out',
-          '&:hover': {
-            transform: 'translateX(-4px)',
+      MuiListItemButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: 8,
+            transition: 'all 0.2s ease-in-out',
+            '&:hover': {
+              transform: 'translateX(-4px)',
+            },
+          },
+        },
+      },
+      MuiDrawer: {
+        styleOverrides: {
+          paper: {
+            borderLeft: '1px solid rgba(0, 0, 0, 0.12)',
+          },
+        },
+      },
+      MuiAppBar: {
+        styleOverrides: {
+          root: {
+            backgroundColor: '#ffffff',
+            color: '#212121',
+            boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
           },
         },
       },
     },
-    MuiDrawer: {
-      styleOverrides: {
-        paper: {
-          borderLeft: '1px solid rgba(0, 0, 0, 0.12)',
-        },
-      },
-    },
-    MuiAppBar: {
-      styleOverrides: {
-        root: {
-          backgroundColor: '#ffffff',
-          color: '#212121',
-          boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
-        },
-      },
-    },
   },
-}, arSA);
+  arSA
+);
 
 export { theme, cacheRtl };

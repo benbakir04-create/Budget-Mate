@@ -22,21 +22,23 @@ export const jointFundService = {
       const funds = await this.getJointFunds();
       const fund = funds.find(f => f.id === id);
       if (!fund) return null;
-      
+
       // Simulate transactions and orders for this fund
       const storedTransactions = localStorage.getItem('demo_transactions');
       const transactions = storedTransactions ? JSON.parse(storedTransactions) : [];
       // Normalize fund reference check
-      const fundTransactions = transactions.filter(t => t.fund && (t.fund.id === id || t.fundId === id));
-      
+      const fundTransactions = transactions.filter(
+        t => t.fund && (t.fund.id === id || t.fundId === id)
+      );
+
       const storedOrders = localStorage.getItem('demo_orders');
       const orders = storedOrders ? JSON.parse(storedOrders) : [];
       const fundOrders = orders.filter(o => o.fundId === id && o.status === 'pending_approval');
-      
+
       return {
         ...fund,
         transactions: fundTransactions.slice(0, 10),
-        orders: fundOrders
+        orders: fundOrders,
       };
     }
     const response = await api.get(`/funds/${id}`);
@@ -52,11 +54,11 @@ export const jointFundService = {
         balance: parseFloat(data.initialBalance || 0),
         ownerId: 'demo-user',
         createdAt: new Date().toISOString(),
-        _count: { transactions: 0, orders: 0 }
+        _count: { transactions: 0, orders: 0 },
       };
       funds.push(newFund);
       localStorage.setItem('demo_funds', JSON.stringify(funds));
-      
+
       // If initial balance is greater than 0, simulate category and transaction
       if (newFund.balance > 0) {
         const storedTx = localStorage.getItem('demo_transactions');
@@ -69,14 +71,20 @@ export const jointFundService = {
           date: new Date().toISOString(),
           userId: 'demo-user',
           categoryId: 'cat-7', // Funding
-          category: { id: 'cat-7', name: 'Funding', nameAr: 'تمويل العهدة', icon: 'account-balance-wallet', color: '#1D9E75' },
+          category: {
+            id: 'cat-7',
+            name: 'Funding',
+            nameAr: 'تمويل العهدة',
+            icon: 'account-balance-wallet',
+            color: '#1D9E75',
+          },
           user: { id: 'demo-user', name: 'المالك الرئيسي', role: 'owner' },
-          fund: { id: newFund.id, name: newFund.name }
+          fund: { id: newFund.id, name: newFund.name },
         };
         transactions.unshift(fundingTx);
         localStorage.setItem('demo_transactions', JSON.stringify(transactions));
       }
-      
+
       return newFund;
     }
     const response = await api.post('/funds', data);
@@ -115,7 +123,7 @@ export const jointFundService = {
       if (index !== -1) {
         funds[index].balance += parseFloat(data.amount);
         localStorage.setItem('demo_funds', JSON.stringify(funds));
-        
+
         // Save transaction record
         const storedTx = localStorage.getItem('demo_transactions');
         const transactions = storedTx ? JSON.parse(storedTx) : [];
@@ -127,18 +135,24 @@ export const jointFundService = {
           date: new Date().toISOString(),
           userId: 'demo-user',
           categoryId: 'cat-7',
-          category: { id: 'cat-7', name: 'Funding', nameAr: 'تمويل العهدة', icon: 'account-balance-wallet', color: '#1D9E75' },
+          category: {
+            id: 'cat-7',
+            name: 'Funding',
+            nameAr: 'تمويل العهدة',
+            icon: 'account-balance-wallet',
+            color: '#1D9E75',
+          },
           user: { id: 'demo-user', name: 'المالك الرئيسي', role: 'owner' },
-          fund: { id: funds[index].id, name: funds[index].name }
+          fund: { id: funds[index].id, name: funds[index].name },
         };
         transactions.unshift(fundingTx);
         localStorage.setItem('demo_transactions', JSON.stringify(transactions));
-        
+
         return { fund: funds[index], transaction: fundingTx };
       }
       throw new Error('Fund not found');
     }
     const response = await api.post(`/funds/${id}/deposit`, data);
     return response.data.data;
-  }
+  },
 };

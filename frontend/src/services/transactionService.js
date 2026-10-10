@@ -14,7 +14,7 @@ export const transactionService = {
       const paginated = data.slice((page - 1) * limit, page * limit);
       return {
         transactions: paginated,
-        pagination: { page, limit, total: data.length, pages: Math.ceil(data.length / limit) }
+        pagination: { page, limit, total: data.length, pages: Math.ceil(data.length / limit) },
       };
     }
 
@@ -58,5 +58,5 @@ export const transactionService = {
   async deleteTransaction(id) {
     if (DEMO_MODE) return;
     await api.delete(`/transactions/${id}`);
-  }
+  },
 };

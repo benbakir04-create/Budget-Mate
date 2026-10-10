@@ -15,6 +15,7 @@ scripts/    setup.js لتهيئة المشروع
 يوجد `package.json` في الجذر يجمع أوامر الجزأين (concurrently) وأدوات الجودة (ESLint, Prettier, husky, lint-staged).
 
 ### الخادم (`backend/`)
+
 - نقطة الدخول: `src/server.js` (helmet, cors, rate-limit, morgan, cookie-parser).
 - الطبقات: `routes/` ← `controllers/` ← `services/`، والتحقق في `middleware/validators/` (express-validator).
 - الموارد: auth, budgets, categories, transactions, joint funds, shopping orders.
@@ -24,6 +25,7 @@ scripts/    setup.js لتهيئة المشروع
 - الأخطاء تُعاد بشكل `{ success: false, ... }` عبر `middleware/errorHandler.js`.
 
 ### الواجهة (`frontend/`)
+
 - `src/pages/` الصفحات، `src/services/` استدعاءات API عبر axios، `src/contexts/AuthContext.jsx` المصادقة.
 - الترجمة في `src/i18n/locales/{ar,en}.json`، ودعم RTL عبر `stylis-plugin-rtl`.
 - وضع تجريبي بلا خادم: `src/services/demoData.js` ويُفعَّل بـ `VITE_DEMO_MODE=true`.
@@ -59,7 +61,7 @@ npm run test:api             # سكربت يدوي يضرب API قيد التش�
 - أي تعديل على `schema.prisma` يمر عبر migration (`npx prisma migrate dev --name <وصف>`) مع ذكر أثره على البيانات في وصف الـ PR. لا تعدّل migration سبق دمجه.
 - العمليات المالية (رصيد، صرف، عهدة) تتحقق من الصلاحيات في الخادم وتُسجَّل في سجل تدقيق.
 - أضف اختبارات للمنطق المالي الحرج قبل الدمج.
-- لا تعدّل ولا تعتمد على: `everything-claude-code-main/` (مكتبة أدوات خارجية لا تخص التطبيق)، `frontend/dist/`، `logs/`، `node_modules/`، ولا ملفات "تحليل ai *.txt" و`.docx` (مواد مرجعية فقط).
+- لا تعدّل ولا تعتمد على: `everything-claude-code-main/` (مكتبة أدوات خارجية لا تخص التطبيق)، `frontend/dist/`، `logs/`، `node_modules/`، ولا ملفات "تحليل ai \*.txt" و`.docx` (مواد مرجعية فقط).
 - عند الشك في قرار معماري كبير، اسأل قبل التنفيذ.
 
 ## أسئلة مفتوحة

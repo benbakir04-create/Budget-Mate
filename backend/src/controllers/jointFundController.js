@@ -9,10 +9,10 @@ const getJointFunds = async (req, res, next) => {
       where: { ownerId },
       include: {
         _count: {
-          select: { transactions: true, orders: true }
-        }
+          select: { transactions: true, orders: true },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
 
     return res.json({ success: true, data: { funds } });
@@ -34,20 +34,20 @@ const getJointFund = async (req, res, next) => {
           orderBy: { date: 'desc' },
           include: {
             category: { select: { id: true, name: true, nameAr: true, icon: true, color: true } },
-            user: { select: { id: true, name: true } }
-          }
+            user: { select: { id: true, name: true } },
+          },
         },
         orders: {
           where: { status: 'pending_approval' },
-          orderBy: { createdAt: 'desc' }
-        }
-      }
+          orderBy: { createdAt: 'desc' },
+        },
+      },
     });
 
     if (!fund) {
       return res.status(404).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Joint fund not found' }
+        error: { code: 'NOT_FOUND', message: 'Joint fund not found' },
       });
     }
 
@@ -63,7 +63,7 @@ const createJointFund = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() }
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() },
       });
     }
 
@@ -71,28 +71,31 @@ const createJointFund = async (req, res, next) => {
     if (req.user.role !== 'owner') {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Only accounts with Owner role can create joint funds' }
+        error: {
+          code: 'FORBIDDEN',
+          message: 'Only accounts with Owner role can create joint funds',
+        },
       });
     }
 
     const { name, initialBalance } = req.body;
-    const balance = initialBalance ? parseFloat(initialBalance) : 0.00;
+    const balance = initialBalance ? parseFloat(initialBalance) : 0.0;
 
     const fund = await prisma.jointFund.create({
       data: {
         name,
         balance,
-        ownerId: req.user.id
-      }
+        ownerId: req.user.id,
+      },
     });
 
     // If initial balance is greater than 0, record an income transaction for funding auditing!
     if (balance > 0) {
       // Find or create a default "Funding" category for the owner
       let category = await prisma.category.findFirst({
-        where: { userId: req.user.id, name: 'Funding' }
+        where: { userId: req.user.id, name: 'Funding' },
       });
-      
+
       if (!category) {
         category = await prisma.category.create({
           data: {
@@ -101,8 +104,8 @@ const createJointFund = async (req, res, next) => {
             icon: 'account-balance-wallet',
             color: '#1D9E75',
             type: 'income',
-            userId: req.user.id
-          }
+            userId: req.user.id,
+          },
         });
       }
 
@@ -113,8 +116,8 @@ const createJointFund = async (req, res, next) => {
           description: `التمويل الأولي لصندوق: ${name}`,
           userId: req.user.id,
           categoryId: category.id,
-          fundId: fund.id
-        }
+          fundId: fund.id,
+        },
       });
     }
 
@@ -130,7 +133,7 @@ const updateJointFund = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() }
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() },
       });
     }
 
@@ -138,7 +141,10 @@ const updateJointFund = async (req, res, next) => {
     if (req.user.role !== 'owner') {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Only accounts with Owner role can manage joint funds' }
+        error: {
+          code: 'FORBIDDEN',
+          message: 'Only accounts with Owner role can manage joint funds',
+        },
       });
     }
 
@@ -149,7 +155,7 @@ const updateJointFund = async (req, res, next) => {
     if (!existing) {
       return res.status(404).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Joint fund not found' }
+        error: { code: 'NOT_FOUND', message: 'Joint fund not found' },
       });
     }
 
@@ -157,13 +163,13 @@ const updateJointFund = async (req, res, next) => {
     if (existing.ownerId !== req.user.id) {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Not authorized to modify this joint fund' }
+        error: { code: 'FORBIDDEN', message: 'Not authorized to modify this joint fund' },
       });
     }
 
     const fund = await prisma.jointFund.update({
       where: { id },
-      data: { name }
+      data: { name },
     });
 
     return res.json({ success: true, data: { fund } });
@@ -178,7 +184,10 @@ const deleteJointFund = async (req, res, next) => {
     if (req.user.role !== 'owner') {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Only accounts with Owner role can manage joint funds' }
+        error: {
+          code: 'FORBIDDEN',
+          message: 'Only accounts with Owner role can manage joint funds',
+        },
       });
     }
 
@@ -188,7 +197,7 @@ const deleteJointFund = async (req, res, next) => {
     if (!existing) {
       return res.status(404).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Joint fund not found' }
+        error: { code: 'NOT_FOUND', message: 'Joint fund not found' },
       });
     }
 
@@ -196,7 +205,7 @@ const deleteJointFund = async (req, res, next) => {
     if (existing.ownerId !== req.user.id) {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Not authorized to delete this joint fund' }
+        error: { code: 'FORBIDDEN', message: 'Not authorized to delete this joint fund' },
       });
     }
 
@@ -214,7 +223,7 @@ const addMoneyToFund = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() }
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() },
       });
     }
 
@@ -222,7 +231,7 @@ const addMoneyToFund = async (req, res, next) => {
     if (req.user.role !== 'owner') {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Only accounts with Owner role can fund accounts' }
+        error: { code: 'FORBIDDEN', message: 'Only accounts with Owner role can fund accounts' },
       });
     }
 
@@ -233,22 +242,22 @@ const addMoneyToFund = async (req, res, next) => {
     if (!fund) {
       return res.status(404).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Joint fund not found' }
+        error: { code: 'NOT_FOUND', message: 'Joint fund not found' },
       });
     }
 
     if (fund.ownerId !== req.user.id) {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Not authorized to fund this account' }
+        error: { code: 'FORBIDDEN', message: 'Not authorized to fund this account' },
       });
     }
 
     // Find or create default "Funding" category
     let category = await prisma.category.findFirst({
-      where: { userId: req.user.id, name: 'Funding' }
+      where: { userId: req.user.id, name: 'Funding' },
     });
-    
+
     if (!category) {
       category = await prisma.category.create({
         data: {
@@ -257,8 +266,8 @@ const addMoneyToFund = async (req, res, next) => {
           icon: 'account-balance-wallet',
           color: '#1D9E75',
           type: 'income',
-          userId: req.user.id
-        }
+          userId: req.user.id,
+        },
       });
     }
 
@@ -266,7 +275,7 @@ const addMoneyToFund = async (req, res, next) => {
     const results = await prisma.$transaction([
       prisma.jointFund.update({
         where: { id },
-        data: { balance: { increment: parseFloat(amount) } }
+        data: { balance: { increment: parseFloat(amount) } },
       }),
       prisma.transaction.create({
         data: {
@@ -275,17 +284,17 @@ const addMoneyToFund = async (req, res, next) => {
           description: description || 'ضخ تمويل إضافي للصندوق المشترك',
           userId: req.user.id,
           categoryId: category.id,
-          fundId: id
-        }
-      })
+          fundId: id,
+        },
+      }),
     ]);
 
     return res.json({
       success: true,
       data: {
         fund: results[0],
-        transaction: results[1]
-      }
+        transaction: results[1],
+      },
     });
   } catch (err) {
     return next(err);
@@ -298,5 +307,5 @@ module.exports = {
   createJointFund,
   updateJointFund,
   deleteJointFund,
-  addMoneyToFund
+  addMoneyToFund,
 };

@@ -31,5 +31,5 @@ export const budgetService = {
   async deleteBudget(id) {
     if (DEMO_MODE) return;
     await api.delete(`/budgets/${id}`);
-  }
+  },
 };

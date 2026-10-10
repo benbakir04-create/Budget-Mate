@@ -22,15 +22,15 @@ async function main() {
       password: hashed,
       name: 'Seed User',
       currency: 'SAR',
-      language: 'ar'
-    }
+      language: 'ar',
+    },
   });
 
   for (const category of categories) {
     await prisma.category.upsert({
       where: { userId_name: { userId: systemUserId, name: category.name } },
       update: {},
-      create: { ...category, userId: systemUserId }
+      create: { ...category, userId: systemUserId },
     });
   }
 
@@ -38,11 +38,10 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error(e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
   });
-

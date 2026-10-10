@@ -7,7 +7,7 @@ const getTransactions = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() }
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() },
       });
     }
 
@@ -19,7 +19,7 @@ const getTransactions = async (req, res, next) => {
       startDate,
       endDate,
       scope, // 'personal', 'shared'
-      fundId
+      fundId,
     } = req.query;
 
     const pageNum = Math.max(parseInt(page, 10) || 1, 1);
@@ -27,11 +27,11 @@ const getTransactions = async (req, res, next) => {
     const skip = (pageNum - 1) * take;
 
     const ownerId = req.user.role === 'partner' ? req.user.parentId : req.user.id;
-    
+
     // Fetch all related user IDs (Owner + all of their partners)
     const partners = await prisma.user.findMany({
       where: { parentId: ownerId },
-      select: { id: true }
+      select: { id: true },
     });
     const partnerIds = partners.map(p => p.id);
     const allUserIds = [ownerId, ...partnerIds];
@@ -41,7 +41,7 @@ const getTransactions = async (req, res, next) => {
     if (req.user.role === 'owner') {
       // Owner can see everything within their network
       where.userId = { in: allUserIds };
-      
+
       // Filter by scope
       if (scope === 'personal') {
         where.fundId = null;
@@ -56,12 +56,9 @@ const getTransactions = async (req, res, next) => {
       where = {
         userId: { in: allUserIds },
         category: { isPrivate: false },
-        OR: [
-          { userId: req.user.id },
-          { fundId: { not: null } }
-        ]
+        OR: [{ userId: req.user.id }, { fundId: { not: null } }],
       };
-      
+
       if (scope === 'shared') {
         where.fundId = { not: null };
       }
@@ -80,7 +77,7 @@ const getTransactions = async (req, res, next) => {
         if (!cat || cat.isPrivate || cat.userId !== ownerId) {
           return res.status(403).json({
             success: false,
-            error: { code: 'FORBIDDEN', message: 'Category not accessible' }
+            error: { code: 'FORBIDDEN', message: 'Category not accessible' },
           });
         }
       }
@@ -98,20 +95,28 @@ const getTransactions = async (req, res, next) => {
         where,
         include: {
           category: {
-            select: { id: true, name: true, nameAr: true, icon: true, color: true, type: true, isPrivate: true }
+            select: {
+              id: true,
+              name: true,
+              nameAr: true,
+              icon: true,
+              color: true,
+              type: true,
+              isPrivate: true,
+            },
           },
           user: {
-            select: { id: true, name: true, role: true }
+            select: { id: true, name: true, role: true },
           },
           fund: {
-            select: { id: true, name: true }
-          }
+            select: { id: true, name: true },
+          },
         },
         orderBy: { date: 'desc' },
         skip,
-        take
+        take,
       }),
-      prisma.transaction.count({ where })
+      prisma.transaction.count({ where }),
     ]);
 
     return res.json({
@@ -122,9 +127,9 @@ const getTransactions = async (req, res, next) => {
           page: pageNum,
           limit: take,
           total,
-          pages: Math.ceil(total / take)
-        }
-      }
+          pages: Math.ceil(total / take),
+        },
+      },
     });
   } catch (err) {
     return next(err);
@@ -135,11 +140,11 @@ const getTransaction = async (req, res, next) => {
   try {
     const { id } = req.params;
     const ownerId = req.user.role === 'partner' ? req.user.parentId : req.user.id;
-    
+
     // Find within the owner's network
     const partners = await prisma.user.findMany({
       where: { parentId: ownerId },
-      select: { id: true }
+      select: { id: true },
     });
     const partnerIds = partners.map(p => p.id);
     const allUserIds = [ownerId, ...partnerIds];
@@ -148,21 +153,29 @@ const getTransaction = async (req, res, next) => {
       where: { id, userId: { in: allUserIds } },
       include: {
         category: {
-          select: { id: true, name: true, nameAr: true, icon: true, color: true, type: true, isPrivate: true }
+          select: {
+            id: true,
+            name: true,
+            nameAr: true,
+            icon: true,
+            color: true,
+            type: true,
+            isPrivate: true,
+          },
         },
         user: {
-          select: { id: true, name: true, role: true }
+          select: { id: true, name: true, role: true },
         },
         fund: {
-          select: { id: true, name: true }
-        }
-      }
+          select: { id: true, name: true },
+        },
+      },
     });
 
     if (!transaction) {
       return res.status(404).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Transaction not found' }
+        error: { code: 'NOT_FOUND', message: 'Transaction not found' },
       });
     }
 
@@ -170,7 +183,7 @@ const getTransaction = async (req, res, next) => {
     if (req.user.role === 'partner' && transaction.category.isPrivate) {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Access denied to this transaction' }
+        error: { code: 'FORBIDDEN', message: 'Access denied to this transaction' },
       });
     }
 
@@ -186,7 +199,7 @@ const createTransaction = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() }
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() },
       });
     }
 
@@ -198,7 +211,7 @@ const createTransaction = async (req, res, next) => {
     if (!category || category.userId !== ownerId) {
       return res.status(400).json({
         success: false,
-        error: { code: 'INVALID_CATEGORY', message: 'Category not found or not accessible' }
+        error: { code: 'INVALID_CATEGORY', message: 'Category not found or not accessible' },
       });
     }
 
@@ -206,32 +219,35 @@ const createTransaction = async (req, res, next) => {
     if (req.user.role === 'partner' && category.isPrivate) {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Cannot record transactions under a private category' }
+        error: {
+          code: 'FORBIDDEN',
+          message: 'Cannot record transactions under a private category',
+        },
       });
     }
 
     // 2. Prepaid Joint Fund Flow implementation
     let actions = [];
-    
+
     if (fundId) {
       // Verify fund exists and belongs to Owner
       const fund = await prisma.jointFund.findFirst({
-        where: { id: fundId, ownerId }
+        where: { id: fundId, ownerId },
       });
       if (!fund) {
         return res.status(400).json({
           success: false,
-          error: { code: 'INVALID_FUND', message: 'Joint fund not found or not accessible' }
+          error: { code: 'INVALID_FUND', message: 'Joint fund not found or not accessible' },
         });
       }
 
       // If it's an expense, decrement the fund balance. If it's income (deposit), increment it!
       const balanceAdjustment = type === 'expense' ? -parseFloat(amount) : parseFloat(amount);
-      
+
       actions.push(
         prisma.jointFund.update({
           where: { id: fundId },
-          data: { balance: { increment: balanceAdjustment } }
+          data: { balance: { increment: balanceAdjustment } },
         })
       );
     }
@@ -247,22 +263,22 @@ const createTransaction = async (req, res, next) => {
           userId: req.user.id,
           categoryId,
           fundId: fundId || null,
-          receiptUrl: receiptUrl || null
+          receiptUrl: receiptUrl || null,
         },
         include: {
           category: {
-            select: { id: true, name: true, nameAr: true, icon: true, color: true, type: true }
+            select: { id: true, name: true, nameAr: true, icon: true, color: true, type: true },
           },
           fund: {
-            select: { id: true, name: true }
-          }
-        }
+            select: { id: true, name: true },
+          },
+        },
       })
     );
 
     // Execute in Prisma Transaction
     const results = await prisma.$transaction(actions);
-    
+
     // The created transaction is the last element in the transaction array
     const transaction = results[results.length - 1];
 
@@ -278,7 +294,7 @@ const updateTransaction = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() }
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() },
       });
     }
 
@@ -289,13 +305,13 @@ const updateTransaction = async (req, res, next) => {
     // Fetch the existing transaction
     const oldTx = await prisma.transaction.findUnique({
       where: { id },
-      include: { category: true }
+      include: { category: true },
     });
 
     if (!oldTx) {
       return res.status(404).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Transaction not found' }
+        error: { code: 'NOT_FOUND', message: 'Transaction not found' },
       });
     }
 
@@ -304,7 +320,7 @@ const updateTransaction = async (req, res, next) => {
     if (oldTx.userId !== req.user.id && req.user.role !== 'owner') {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Not authorized to modify this transaction' }
+        error: { code: 'FORBIDDEN', message: 'Not authorized to modify this transaction' },
       });
     }
 
@@ -314,13 +330,16 @@ const updateTransaction = async (req, res, next) => {
       if (!category || category.userId !== ownerId) {
         return res.status(400).json({
           success: false,
-          error: { code: 'INVALID_CATEGORY', message: 'Category not found or not accessible' }
+          error: { code: 'INVALID_CATEGORY', message: 'Category not found or not accessible' },
         });
       }
       if (req.user.role === 'partner' && category.isPrivate) {
         return res.status(403).json({
           success: false,
-          error: { code: 'FORBIDDEN', message: 'Cannot record transactions under a private category' }
+          error: {
+            code: 'FORBIDDEN',
+            message: 'Cannot record transactions under a private category',
+          },
         });
       }
     }
@@ -331,7 +350,7 @@ const updateTransaction = async (req, res, next) => {
       if (!fund) {
         return res.status(400).json({
           success: false,
-          error: { code: 'INVALID_FUND', message: 'Joint fund not found or not accessible' }
+          error: { code: 'INVALID_FUND', message: 'Joint fund not found or not accessible' },
         });
       }
     }
@@ -348,18 +367,19 @@ const updateTransaction = async (req, res, next) => {
 
     const targetAmount = amount !== undefined ? parseFloat(amount) : parseFloat(oldTx.amount);
     const targetType = type !== undefined ? type : oldTx.type;
-    const targetFundId = fundId !== undefined ? (fundId || null) : oldTx.fundId;
+    const targetFundId = fundId !== undefined ? fundId || null : oldTx.fundId;
 
     const actions = [];
 
     // Financial Audit Math: Revert old impact on the old fund, and apply new impact on the new fund
     if (oldTx.fundId) {
       // Revert old impact (e.g. if we spent 100, we add it back. If we received 100, we subtract it)
-      const oldReversion = oldTx.type === 'expense' ? parseFloat(oldTx.amount) : -parseFloat(oldTx.amount);
+      const oldReversion =
+        oldTx.type === 'expense' ? parseFloat(oldTx.amount) : -parseFloat(oldTx.amount);
       actions.push(
         prisma.jointFund.update({
           where: { id: oldTx.fundId },
-          data: { balance: { increment: oldReversion } }
+          data: { balance: { increment: oldReversion } },
         })
       );
     }
@@ -370,7 +390,7 @@ const updateTransaction = async (req, res, next) => {
       actions.push(
         prisma.jointFund.update({
           where: { id: targetFundId },
-          data: { balance: { increment: newAdjustment } }
+          data: { balance: { increment: newAdjustment } },
         })
       );
     }
@@ -382,12 +402,12 @@ const updateTransaction = async (req, res, next) => {
         data: updateData,
         include: {
           category: {
-            select: { id: true, name: true, nameAr: true, icon: true, color: true, type: true }
+            select: { id: true, name: true, nameAr: true, icon: true, color: true, type: true },
           },
           fund: {
-            select: { id: true, name: true }
-          }
-        }
+            select: { id: true, name: true },
+          },
+        },
       })
     );
 
@@ -406,13 +426,13 @@ const deleteTransaction = async (req, res, next) => {
     const { id } = req.params;
 
     const transaction = await prisma.transaction.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!transaction) {
       return res.status(404).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Transaction not found' }
+        error: { code: 'NOT_FOUND', message: 'Transaction not found' },
       });
     }
 
@@ -420,7 +440,7 @@ const deleteTransaction = async (req, res, next) => {
     if (transaction.userId !== req.user.id && req.user.role !== 'owner') {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Not authorized to delete this transaction' }
+        error: { code: 'FORBIDDEN', message: 'Not authorized to delete this transaction' },
       });
     }
 
@@ -428,11 +448,14 @@ const deleteTransaction = async (req, res, next) => {
 
     // Revert fund balance before deleting transaction record
     if (transaction.fundId) {
-      const reversion = transaction.type === 'expense' ? parseFloat(transaction.amount) : -parseFloat(transaction.amount);
+      const reversion =
+        transaction.type === 'expense'
+          ? parseFloat(transaction.amount)
+          : -parseFloat(transaction.amount);
       actions.push(
         prisma.jointFund.update({
           where: { id: transaction.fundId },
-          data: { balance: { increment: reversion } }
+          data: { balance: { increment: reversion } },
         })
       );
     }
@@ -440,7 +463,7 @@ const deleteTransaction = async (req, res, next) => {
     // Delete transaction
     actions.push(
       prisma.transaction.delete({
-        where: { id }
+        where: { id },
       })
     );
 
@@ -457,5 +480,5 @@ module.exports = {
   getTransaction,
   createTransaction,
   updateTransaction,
-  deleteTransaction
+  deleteTransaction,
 };

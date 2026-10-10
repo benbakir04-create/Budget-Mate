@@ -21,16 +21,19 @@ Frontend application for Budget Mate built with React, Vite, and Tailwind CSS.
 ### Installation
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Copy environment variables:
+
 ```bash
 cp .env.example .env
 ```
 
 3. Update `.env` file if needed:
+
 ```env
 VITE_API_URL=http://localhost:5000/api
 VITE_APP_NAME=Budget Mate
@@ -39,16 +42,19 @@ VITE_APP_NAME=Budget Mate
 ### Running the Application
 
 Development mode:
+
 ```bash
 npm run dev
 ```
 
 Build for production:
+
 ```bash
 npm run build
 ```
 
 Preview production build:
+
 ```bash
 npm run preview
 ```
@@ -91,6 +97,6 @@ frontend/
 The app supports Arabic and English. Language preference is stored in localStorage and persists across sessions.
 
 To add new translations, edit:
+
 - `src/i18n/locales/ar.json` for Arabic
 - `src/i18n/locales/en.json` for English
-

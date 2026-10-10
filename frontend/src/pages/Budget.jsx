@@ -18,7 +18,9 @@ const Budget = () => {
     amount: '',
     period: 'monthly',
     startDate: new Date().toISOString().split('T')[0],
-    endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0] // End of current month
+    endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+      .toISOString()
+      .split('T')[0], // End of current month
   });
 
   useEffect(() => {
@@ -30,7 +32,7 @@ const Budget = () => {
       setLoading(true);
       const [budgetsData, categoriesData] = await Promise.all([
         budgetService.getBudgets(),
-        categoryService.getCategories()
+        categoryService.getCategories(),
       ]);
 
       setBudgets(budgetsData);
@@ -43,15 +45,15 @@ const Budget = () => {
     }
   };
 
-  const handleFormChange = (e) => {
+  const handleFormChange = e => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  const handlePeriodChange = (period) => {
+  const handlePeriodChange = period => {
     const now = new Date();
     let startDate, endDate;
 
@@ -78,16 +80,16 @@ const Budget = () => {
       ...prev,
       period,
       startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0]
+      endDate: endDate.toISOString().split('T')[0],
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     try {
       const budgetData = {
         ...formData,
-        amount: parseFloat(formData.amount)
+        amount: parseFloat(formData.amount),
       };
 
       await budgetService.createBudget(budgetData);
@@ -96,7 +98,9 @@ const Budget = () => {
         amount: '',
         period: 'monthly',
         startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0]
+        endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+          .toISOString()
+          .split('T')[0],
       });
       setShowAddForm(false);
       loadData(); // Reload data
@@ -106,7 +110,7 @@ const Budget = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async id => {
     if (window.confirm(t('budget.confirmDelete', 'Are you sure you want to delete this budget?'))) {
       try {
         await budgetService.deleteBudget(id);
@@ -118,7 +122,7 @@ const Budget = () => {
     }
   };
 
-  const calculateSpent = (budget) => {
+  const calculateSpent = budget => {
     return parseFloat(budget.spent || 0);
   };
 
@@ -144,7 +148,9 @@ const Budget = () => {
       <Sidebar />
       <div className="flex-1 max-w-7xl mx-auto p-4 md:mr-64">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">{t('budget.title', 'Budget Management')}</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {t('budget.title', 'Budget Management')}
+          </h1>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
             className="bg-primary hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium"
@@ -159,11 +165,24 @@ const Budget = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">{t('budget.totalBudget', 'Total Budget')}</p>
-                <p className="text-2xl font-bold text-gray-900">{totalBudget.toLocaleString()} {user?.currency || 'SAR'}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {totalBudget.toLocaleString()} {user?.currency || 'SAR'}
+                </p>
               </div>
               <div className="bg-blue-100 rounded-full p-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-blue-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                  />
                 </svg>
               </div>
             </div>
@@ -173,11 +192,24 @@ const Budget = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">{t('budget.totalSpent', 'Total Spent')}</p>
-                <p className="text-2xl font-bold text-gray-900">{totalSpent.toLocaleString()} {user?.currency || 'SAR'}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {totalSpent.toLocaleString()} {user?.currency || 'SAR'}
+                </p>
               </div>
               <div className="bg-red-100 rounded-full p-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 20V4m8 8l-8-8-8 8" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-red-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 20V4m8 8l-8-8-8 8"
+                  />
                 </svg>
               </div>
             </div>
@@ -187,13 +219,26 @@ const Budget = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">{t('budget.remaining', 'Remaining')}</p>
-                <p className={`text-2xl font-bold ${totalBudget - totalSpent >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
+                <p
+                  className={`text-2xl font-bold ${totalBudget - totalSpent >= 0 ? 'text-gray-900' : 'text-red-600'}`}
+                >
                   {(totalBudget - totalSpent).toLocaleString()} {user?.currency || 'SAR'}
                 </p>
               </div>
               <div className="bg-green-100 rounded-full p-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-green-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
             </div>
@@ -203,12 +248,16 @@ const Budget = () => {
         {/* Add Budget Form */}
         {showAddForm && (
           <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('budget.addNew', 'Add New Budget')}</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              {t('budget.addNew', 'Add New Budget')}
+            </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('transactions.category', 'Category')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('transactions.category', 'Category')}
+                  </label>
                   <select
                     name="categoryId"
                     value={formData.categoryId}
@@ -226,7 +275,9 @@ const Budget = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('transactions.amount', 'Amount')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('transactions.amount', 'Amount')}
+                  </label>
                   <input
                     type="number"
                     name="amount"
@@ -241,11 +292,13 @@ const Budget = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('budget.period', 'Period')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('budget.period', 'Period')}
+                  </label>
                   <select
                     name="period"
                     value={formData.period}
-                    onChange={(e) => handlePeriodChange(e.target.value)}
+                    onChange={e => handlePeriodChange(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
                   >
                     <option value="weekly">{t('budget.weekly', 'Weekly')}</option>
@@ -255,7 +308,9 @@ const Budget = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('budget.startDate', 'Start Date')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('budget.startDate', 'Start Date')}
+                  </label>
                   <input
                     type="date"
                     name="startDate"
@@ -267,7 +322,9 @@ const Budget = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('budget.endDate', 'End Date')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('budget.endDate', 'End Date')}
+                  </label>
                   <input
                     type="date"
                     name="endDate"
@@ -301,7 +358,9 @@ const Budget = () => {
         {/* Budgets List */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">{t('budget.currentBudgets', 'Current Budgets')} ({budgets.length})</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              {t('budget.currentBudgets', 'Current Budgets')} ({budgets.length})
+            </h2>
           </div>
 
           <div className="divide-y divide-gray-200">
@@ -321,7 +380,11 @@ const Budget = () => {
                           {user?.language === 'ar' ? budget.category.nameAr : budget.category.name}
                         </h3>
                         <p className="text-sm text-gray-500">
-                          {t('budget.periodLabel', 'Period: {{period}}', { period: t(`budget.${budget.period}`, budget.period) })} • {new Date(budget.startDate).toLocaleDateString()} - {new Date(budget.endDate).toLocaleDateString()}
+                          {t('budget.periodLabel', 'Period: {{period}}', {
+                            period: t(`budget.${budget.period}`, budget.period),
+                          })}{' '}
+                          • {new Date(budget.startDate).toLocaleDateString()} -{' '}
+                          {new Date(budget.endDate).toLocaleDateString()}
                         </p>
                       </div>
 
@@ -330,8 +393,19 @@ const Budget = () => {
                           onClick={() => handleDelete(budget.id)}
                           className="text-red-600 hover:text-red-800"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
                           </svg>
                         </button>
                       </div>
@@ -340,17 +414,23 @@ const Budget = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-600">{t('budget.label', 'Budget')}</span>
-                        <span className="text-gray-900 font-medium">{parseFloat(budget.amount).toLocaleString()} {user?.currency || 'SAR'}</span>
+                        <span className="text-gray-900 font-medium">
+                          {parseFloat(budget.amount).toLocaleString()} {user?.currency || 'SAR'}
+                        </span>
                       </div>
 
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-600">{t('budget.spent', 'Spent')}</span>
-                        <span className="text-gray-900 font-medium">{spent.toLocaleString()} {user?.currency || 'SAR'}</span>
+                        <span className="text-gray-900 font-medium">
+                          {spent.toLocaleString()} {user?.currency || 'SAR'}
+                        </span>
                       </div>
 
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-600">{t('budget.remaining', 'Remaining')}</span>
-                        <span className={`${remaining >= 0 ? 'text-gray-900' : 'text-red-600'} font-medium`}>
+                        <span
+                          className={`${remaining >= 0 ? 'text-gray-900' : 'text-red-600'} font-medium`}
+                        >
                           {remaining.toLocaleString()} {user?.currency || 'SAR'}
                         </span>
                       </div>
@@ -363,12 +443,20 @@ const Budget = () => {
                       </div>
 
                       <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
-                        <span>{t('budget.usedPercentage', 'Used {{percentage}}% of budget', { percentage: Math.round(percentage) })}</span>
+                        <span>
+                          {t('budget.usedPercentage', 'Used {{percentage}}% of budget', {
+                            percentage: Math.round(percentage),
+                          })}
+                        </span>
                         {isOverBudget && (
-                          <span className="text-red-600 font-medium">{t('budget.overBudget', 'Over budget!')}</span>
+                          <span className="text-red-600 font-medium">
+                            {t('budget.overBudget', 'Over budget!')}
+                          </span>
                         )}
                         {isNearLimit && (
-                          <span className="text-yellow-600 font-medium">{t('budget.nearLimit', 'Near limit')}</span>
+                          <span className="text-yellow-600 font-medium">
+                            {t('budget.nearLimit', 'Near limit')}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -377,7 +465,10 @@ const Budget = () => {
               })
             ) : (
               <div className="p-6 text-center text-gray-500">
-                {t('budget.noBudgets', 'No budgets found. Create your first budget to get started.')}
+                {t(
+                  'budget.noBudgets',
+                  'No budgets found. Create your first budget to get started.'
+                )}
               </div>
             )}
           </div>

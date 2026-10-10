@@ -2,7 +2,7 @@ const express = require('express');
 const {
   createBudgetValidator,
   updateBudgetValidator,
-  budgetIdValidator
+  budgetIdValidator,
 } = require('../middleware/validators/budgetValidators');
 const authMiddleware = require('../middleware/auth');
 const budgetController = require('../controllers/budgetController');

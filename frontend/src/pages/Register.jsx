@@ -11,17 +11,17 @@ const Register = () => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setError('');
 
@@ -135,10 +135,7 @@ const Register = () => {
           </div>
 
           <div className="text-center">
-            <Link
-              to="/login"
-              className="font-medium text-primary hover:text-green-600"
-            >
+            <Link to="/login" className="font-medium text-primary hover:text-green-600">
               {t('auth.alreadyHaveAccount')}
             </Link>
           </div>
@@ -149,4 +146,3 @@ const Register = () => {
 };
 
 export default Register;
-

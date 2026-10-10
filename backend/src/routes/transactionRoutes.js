@@ -3,7 +3,7 @@ const {
   createTransactionValidator,
   updateTransactionValidator,
   getTransactionsValidator,
-  transactionIdValidator
+  transactionIdValidator,
 } = require('../middleware/validators/transactionValidators');
 const authMiddleware = require('../middleware/auth');
 const transactionController = require('../controllers/transactionController');

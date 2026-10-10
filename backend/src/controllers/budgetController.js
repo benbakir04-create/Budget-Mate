@@ -5,7 +5,7 @@ const getBudgets = async (req, res, next) => {
   try {
     const ownerId = req.user.role === 'partner' ? req.user.parentId : req.user.id;
     const whereClause = { userId: ownerId };
-    
+
     if (req.user.role === 'partner') {
       whereClause.category = { isPrivate: false };
     }
@@ -14,42 +14,52 @@ const getBudgets = async (req, res, next) => {
       where: whereClause,
       include: {
         category: {
-          select: { id: true, name: true, nameAr: true, icon: true, color: true, type: true, isPrivate: true }
-        }
+          select: {
+            id: true,
+            name: true,
+            nameAr: true,
+            icon: true,
+            color: true,
+            type: true,
+            isPrivate: true,
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
 
     // Get all userIds in the network to calculate total spent (Owner + partners)
     const partners = await prisma.user.findMany({
       where: { parentId: ownerId },
-      select: { id: true }
+      select: { id: true },
     });
     const partnerIds = partners.map(p => p.id);
     const allUserIds = [ownerId, ...partnerIds];
 
     // Fetch spent amount for each budget dynamically
-    const budgetsWithSpent = await Promise.all(budgets.map(async (budget) => {
-      const aggregate = await prisma.transaction.aggregate({
-        where: {
-          userId: { in: allUserIds },
-          categoryId: budget.categoryId,
-          type: 'expense',
-          date: {
-            gte: budget.startDate,
-            lte: budget.endDate
-          }
-        },
-        _sum: {
-          amount: true
-        }
-      });
+    const budgetsWithSpent = await Promise.all(
+      budgets.map(async budget => {
+        const aggregate = await prisma.transaction.aggregate({
+          where: {
+            userId: { in: allUserIds },
+            categoryId: budget.categoryId,
+            type: 'expense',
+            date: {
+              gte: budget.startDate,
+              lte: budget.endDate,
+            },
+          },
+          _sum: {
+            amount: true,
+          },
+        });
 
-      return {
-        ...budget,
-        spent: parseFloat(aggregate._sum.amount || 0)
-      };
-    }));
+        return {
+          ...budget,
+          spent: parseFloat(aggregate._sum.amount || 0),
+        };
+      })
+    );
 
     return res.json({ success: true, data: { budgets: budgetsWithSpent } });
   } catch (err) {
@@ -66,15 +76,23 @@ const getBudget = async (req, res, next) => {
       where: { id, userId: ownerId },
       include: {
         category: {
-          select: { id: true, name: true, nameAr: true, icon: true, color: true, type: true, isPrivate: true }
-        }
-      }
+          select: {
+            id: true,
+            name: true,
+            nameAr: true,
+            icon: true,
+            color: true,
+            type: true,
+            isPrivate: true,
+          },
+        },
+      },
     });
 
     if (!budget) {
       return res.status(404).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Budget not found' }
+        error: { code: 'NOT_FOUND', message: 'Budget not found' },
       });
     }
 
@@ -82,14 +100,14 @@ const getBudget = async (req, res, next) => {
     if (req.user.role === 'partner' && budget.category.isPrivate) {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Access denied to this budget' }
+        error: { code: 'FORBIDDEN', message: 'Access denied to this budget' },
       });
     }
 
     // Get all userIds in the network
     const partners = await prisma.user.findMany({
       where: { parentId: ownerId },
-      select: { id: true }
+      select: { id: true },
     });
     const partnerIds = partners.map(p => p.id);
     const allUserIds = [ownerId, ...partnerIds];
@@ -101,17 +119,17 @@ const getBudget = async (req, res, next) => {
         type: 'expense',
         date: {
           gte: budget.startDate,
-          lte: budget.endDate
-        }
+          lte: budget.endDate,
+        },
       },
       _sum: {
-        amount: true
-      }
+        amount: true,
+      },
     });
 
     const budgetWithSpent = {
       ...budget,
-      spent: parseFloat(aggregate._sum.amount || 0)
+      spent: parseFloat(aggregate._sum.amount || 0),
     };
 
     return res.json({ success: true, data: { budget: budgetWithSpent } });
@@ -126,7 +144,7 @@ const createBudget = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() }
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() },
       });
     }
 
@@ -134,7 +152,7 @@ const createBudget = async (req, res, next) => {
     if (req.user.role !== 'owner') {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Only accounts with Owner role can manage budgets' }
+        error: { code: 'FORBIDDEN', message: 'Only accounts with Owner role can manage budgets' },
       });
     }
 
@@ -145,7 +163,7 @@ const createBudget = async (req, res, next) => {
     if (!category || category.userId !== req.user.id) {
       return res.status(400).json({
         success: false,
-        error: { code: 'INVALID_CATEGORY', message: 'Category not found or not owned by you' }
+        error: { code: 'INVALID_CATEGORY', message: 'Category not found or not owned by you' },
       });
     }
 
@@ -155,14 +173,17 @@ const createBudget = async (req, res, next) => {
         userId: req.user.id,
         categoryId,
         startDate: new Date(startDate),
-        endDate: new Date(endDate)
-      }
+        endDate: new Date(endDate),
+      },
     });
 
     if (existingBudget) {
       return res.status(409).json({
         success: false,
-        error: { code: 'BUDGET_EXISTS', message: 'Budget already exists for this category and period' }
+        error: {
+          code: 'BUDGET_EXISTS',
+          message: 'Budget already exists for this category and period',
+        },
       });
     }
 
@@ -173,13 +194,13 @@ const createBudget = async (req, res, next) => {
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         userId: req.user.id,
-        categoryId
+        categoryId,
       },
       include: {
         category: {
-          select: { id: true, name: true, nameAr: true, icon: true, color: true, type: true }
-        }
-      }
+          select: { id: true, name: true, nameAr: true, icon: true, color: true, type: true },
+        },
+      },
     });
 
     return res.status(201).json({ success: true, data: { budget } });
@@ -194,7 +215,7 @@ const updateBudget = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() }
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() },
       });
     }
 
@@ -202,7 +223,7 @@ const updateBudget = async (req, res, next) => {
     if (req.user.role !== 'owner') {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Only accounts with Owner role can manage budgets' }
+        error: { code: 'FORBIDDEN', message: 'Only accounts with Owner role can manage budgets' },
       });
     }
 
@@ -213,7 +234,7 @@ const updateBudget = async (req, res, next) => {
     if (!existing) {
       return res.status(404).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Budget not found' }
+        error: { code: 'NOT_FOUND', message: 'Budget not found' },
       });
     }
 
@@ -221,7 +242,7 @@ const updateBudget = async (req, res, next) => {
     if (existing.userId !== req.user.id) {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Not authorized to modify this budget' }
+        error: { code: 'FORBIDDEN', message: 'Not authorized to modify this budget' },
       });
     }
 
@@ -230,14 +251,14 @@ const updateBudget = async (req, res, next) => {
     if (period !== undefined) updateData.period = period;
     if (startDate !== undefined) updateData.startDate = new Date(startDate);
     if (endDate !== undefined) updateData.endDate = new Date(endDate);
-    
+
     if (categoryId !== undefined) {
       // Verify category belongs to owner
       const category = await prisma.category.findUnique({ where: { id: categoryId } });
       if (!category || category.userId !== req.user.id) {
         return res.status(400).json({
           success: false,
-          error: { code: 'INVALID_CATEGORY', message: 'Category not found or not owned by you' }
+          error: { code: 'INVALID_CATEGORY', message: 'Category not found or not owned by you' },
         });
       }
       updateData.categoryId = categoryId;
@@ -248,9 +269,9 @@ const updateBudget = async (req, res, next) => {
       data: updateData,
       include: {
         category: {
-          select: { id: true, name: true, nameAr: true, icon: true, color: true, type: true }
-        }
-      }
+          select: { id: true, name: true, nameAr: true, icon: true, color: true, type: true },
+        },
+      },
     });
 
     return res.json({ success: true, data: { budget } });
@@ -265,7 +286,7 @@ const deleteBudget = async (req, res, next) => {
     if (req.user.role !== 'owner') {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Only accounts with Owner role can manage budgets' }
+        error: { code: 'FORBIDDEN', message: 'Only accounts with Owner role can manage budgets' },
       });
     }
 
@@ -275,7 +296,7 @@ const deleteBudget = async (req, res, next) => {
     if (!existing) {
       return res.status(404).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Budget not found' }
+        error: { code: 'NOT_FOUND', message: 'Budget not found' },
       });
     }
 
@@ -283,12 +304,12 @@ const deleteBudget = async (req, res, next) => {
     if (existing.userId !== req.user.id) {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Not authorized to delete this budget' }
+        error: { code: 'FORBIDDEN', message: 'Not authorized to delete this budget' },
       });
     }
 
     await prisma.budget.delete({
-      where: { id }
+      where: { id },
     });
 
     return res.json({ success: true, data: { message: 'Budget deleted' } });
@@ -302,5 +323,5 @@ module.exports = {
   getBudget,
   createBudget,
   updateBudget,
-  deleteBudget
+  deleteBudget,
 };

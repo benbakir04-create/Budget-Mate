@@ -1,6 +1,7 @@
 # حل مشكلة الواجهة الأمامية
 
 ## 🔍 المشكلة
+
 الصفحة `http://localhost:5173/register` لا تعمل
 
 ## ✅ الحل خطوة بخطوة
@@ -27,6 +28,7 @@ npm run dev
 ```
 
 **✅ يجب أن ترى:**
+
 ```
   VITE v4.x.x  ready in xxx ms
 
@@ -39,6 +41,7 @@ npm run dev
 ### الخطوة 3: افتح المتصفح
 
 اذهب إلى:
+
 ```
 http://localhost:5173/register
 ```
@@ -100,6 +103,7 @@ npm run dev
 ```
 
 يجب أن ترى:
+
 ```
 Server running on port 5000
 ```
@@ -143,6 +147,7 @@ npm run dev
 ## ✅ النتيجة المتوقعة
 
 بعد تشغيل `npm run dev`، يجب أن:
+
 1. ترى رسالة "ready" في Terminal
 2. تفتح المتصفح على `http://localhost:5173/register`
 3. ترى صفحة التسجيل مع النموذج
@@ -150,4 +155,3 @@ npm run dev
 ---
 
 **💡 نصيحة:** اترك Terminal مفتوحاً أثناء استخدام الواجهة!
-

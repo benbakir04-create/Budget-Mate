@@ -5,6 +5,7 @@
 ### الخطوة 1: تشغيل السكريبت التلقائي
 
 **على Windows:**
+
 ```cmd
 setup.bat
 REM أو استخدم الأوامر البسيطة:
@@ -12,6 +13,7 @@ make setup
 ```
 
 **على Linux/Mac:**
+
 ```bash
 chmod +x setup.sh
 ./setup.sh
@@ -20,6 +22,7 @@ make setup
 ```
 
 **استخدام Docker (الأسهل):**
+
 ```bash
 docker-compose up --build
 ```
@@ -27,6 +30,7 @@ docker-compose up --build
 ### الخطوة 2: اختيار وضع التشغيل
 
 #### 🎯 للتجربة السريعة (Demo Mode):
+
 ```bash
 # في مجلد frontend، أنشئ ملف .env
 echo "VITE_DEMO_MODE=true" > .env
@@ -44,6 +48,7 @@ run.bat    # على Windows
    - Mac: `brew install postgresql`
 
 2. **إنشاء قاعدة البيانات:**
+
    ```sql
    CREATE DATABASE budgetmate;
    ```
@@ -53,6 +58,7 @@ run.bat    # على Windows
    - غيّر `DATABASE_URL` ببياناتك
 
 4. **تشغيل قاعدة البيانات:**
+
    ```bash
    cd backend
    npm run prisma:migrate
@@ -60,6 +66,7 @@ run.bat    # على Windows
    ```
 
 5. **تشغيل التطبيق:**
+
    ```bash
    run-backend.bat  # على Windows
    ./run-backend.sh # على Linux/Mac
@@ -69,6 +76,7 @@ run.bat    # على Windows
    ```
 
 #### 🐳 للإعداد المتقدم (Docker):
+
 ```bash
 # تأكد من تثبيت Docker و Docker Compose
 docker --version
@@ -81,15 +89,18 @@ docker-compose up --build
 ## 🌐 فتح التطبيق
 
 بعد التشغيل، افتح المتصفح واذهب إلى:
+
 - **http://localhost:5173** - الواجهة الأمامية
 
 ## 📝 أول استخدام
 
 ### في وضع Demo:
+
 - ستجد حساباً تجريبياً جاهزاً
 - يمكنك تصفح الميزات دون تسجيل
 
 ### في الوضع الكامل:
+
 1. اضغط "إنشاء حساب"
 2. املأ البيانات:
    - الاسم: أحمد محمد
@@ -100,6 +111,7 @@ docker-compose up --build
 ## 🔧 استكشاف الأخطاء
 
 ### خطأ "Port already in use":
+
 ```bash
 # على Windows
 netstat -ano | findstr :5173
@@ -110,12 +122,14 @@ lsof -ti:5173 | xargs kill -9
 ```
 
 ### خطأ في قاعدة البيانات:
+
 ```bash
 cd backend
 npm run prisma:studio  # لمراجعة البيانات
 ```
 
 ### خطأ في التثبيت:
+
 ```bash
 # حذف node_modules وإعادة التثبيت
 rm -rf node_modules package-lock.json

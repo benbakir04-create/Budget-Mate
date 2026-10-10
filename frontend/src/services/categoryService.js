@@ -20,13 +20,13 @@ export const categoryService = {
   async createCategory(data) {
     if (DEMO_MODE) {
       const categories = await this.getCategories();
-      const newCat = { 
-        id: 'cat-' + Date.now(), 
-        isPrivate: false, 
-        icon: 'folder', 
-        color: '#10B981', 
-        subcategories: [], 
-        ...data 
+      const newCat = {
+        id: 'cat-' + Date.now(),
+        isPrivate: false,
+        icon: 'folder',
+        color: '#10B981',
+        subcategories: [],
+        ...data,
       };
       categories.push(newCat);
       localStorage.setItem('demo_categories', JSON.stringify(categories));
@@ -59,5 +59,5 @@ export const categoryService = {
       return;
     }
     await api.delete(`/categories/${id}`);
-  }
+  },
 };

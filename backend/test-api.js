@@ -14,7 +14,7 @@ const colors = {
   red: '\x1b[31m',
   yellow: '\x1b[33m',
   blue: '\x1b[34m',
-  reset: '\x1b[0m'
+  reset: '\x1b[0m',
 };
 
 function log(message, color = 'reset') {
@@ -42,7 +42,7 @@ async function testRegister() {
     const response = await axios.post(`${API_URL}/auth/register`, {
       name: 'Test User',
       email: email,
-      password: 'password123'
+      password: 'password123',
     });
 
     if (response.data.success && response.data.data.token) {
@@ -62,7 +62,7 @@ async function testLogin() {
     log('\n🔐 اختبار تسجيل الدخول...', 'blue');
     const response = await axios.post(`${API_URL}/auth/login`, {
       email: 'test@test.com',
-      password: 'password123'
+      password: 'password123',
     });
 
     if (response.data.success && response.data.data.token) {
@@ -87,13 +87,16 @@ async function testProtectedRoute() {
     log('\n🔒 اختبار المسار المحمي (/auth/me)...', 'blue');
     const response = await axios.get(`${API_URL}/auth/me`, {
       headers: {
-        Authorization: `Bearer ${accessToken}`
-      }
+        Authorization: `Bearer ${accessToken}`,
+      },
     });
 
     if (response.data.success && response.data.data.user) {
       log('✅ المسار المحمي يعمل', 'green');
-      log(`   المستخدم: ${response.data.data.user.name} (${response.data.data.user.email})`, 'yellow');
+      log(
+        `   المستخدم: ${response.data.data.user.name} (${response.data.data.user.email})`,
+        'yellow'
+      );
       return true;
     }
   } catch (error) {
@@ -124,12 +127,15 @@ async function testValidation() {
     await axios.post(`${API_URL}/auth/register`, {
       name: 'Test',
       email: 'invalid-email',
-      password: '123'
+      password: '123',
     });
     log('❌ يجب أن يفشل لكنه نجح!', 'red');
     return false;
   } catch (error) {
-    if (error.response?.status === 400 && error.response?.data?.error?.code === 'VALIDATION_ERROR') {
+    if (
+      error.response?.status === 400 &&
+      error.response?.data?.error?.code === 'VALIDATION_ERROR'
+    ) {
       log('✅ التحقق من صحة البيانات يعمل', 'green');
       return true;
     }
@@ -148,12 +154,12 @@ async function runTests() {
     login: await testLogin(),
     protected: await testProtectedRoute(),
     protectedWithoutToken: await testProtectedRouteWithoutToken(),
-    validation: await testValidation()
+    validation: await testValidation(),
   };
 
   log('\n' + '='.repeat(50), 'blue');
   log('\n📊 نتائج الاختبارات:', 'blue');
-  
+
   Object.entries(results).forEach(([test, passed]) => {
     log(`  ${passed ? '✅' : '❌'} ${test}`, passed ? 'green' : 'red');
   });
@@ -161,8 +167,10 @@ async function runTests() {
   const passedCount = Object.values(results).filter(Boolean).length;
   const totalCount = Object.keys(results).length;
 
-  log(`\n🎯 النتيجة: ${passedCount}/${totalCount} اختبار نجح`, 
-    passedCount === totalCount ? 'green' : 'yellow');
+  log(
+    `\n🎯 النتيجة: ${passedCount}/${totalCount} اختبار نجح`,
+    passedCount === totalCount ? 'green' : 'yellow'
+  );
 
   if (passedCount === totalCount) {
     log('\n🎉 جميع الاختبارات نجحت!', 'green');
@@ -176,4 +184,3 @@ runTests().catch(error => {
   log('\n❌ خطأ في تشغيل الاختبارات: ' + error.message, 'red');
   process.exit(1);
 });
-

@@ -13,7 +13,7 @@ const DEFAULT_CATEGORIES = [
   { name: 'Salary', nameAr: 'راتب', icon: '💰', color: '#10B981', type: 'income' },
   { name: 'Freelance', nameAr: 'عمل حر', icon: '💼', color: '#3B82F6', type: 'income' },
   { name: 'Investments', nameAr: 'استثمارات', icon: '📈', color: '#8B5CF6', type: 'income' },
-  { name: 'Other Income', nameAr: 'دخل آخر', icon: '💵', color: '#6B7280', type: 'income' }
+  { name: 'Other Income', nameAr: 'دخل آخر', icon: '💵', color: '#6B7280', type: 'income' },
 ];
 
 module.exports = { DEFAULT_CATEGORIES };

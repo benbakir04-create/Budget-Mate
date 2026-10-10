@@ -10,7 +10,7 @@ function setRefreshCookie(res, token) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: REFRESH_MAX_AGE
+    maxAge: REFRESH_MAX_AGE,
   });
 }
 
@@ -20,7 +20,7 @@ const register = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() }
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() },
       });
     }
 
@@ -30,7 +30,7 @@ const register = async (req, res, next) => {
 
     return res.status(201).json({
       success: true,
-      data: { token: result.accessToken, user: result.user }
+      data: { token: result.accessToken, user: result.user },
     });
   } catch (err) {
     return next(err);
@@ -43,7 +43,7 @@ const login = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() }
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() },
       });
     }
 
@@ -53,7 +53,7 @@ const login = async (req, res, next) => {
 
     return res.json({
       success: true,
-      data: { token: result.accessToken, user: result.user }
+      data: { token: result.accessToken, user: result.user },
     });
   } catch (err) {
     return next(err);
@@ -66,7 +66,7 @@ const refreshToken = async (req, res, next) => {
     if (!refreshTokenValue) {
       return res.status(401).json({
         success: false,
-        error: { code: 'AUTHENTICATION_REQUIRED', message: 'No refresh token provided' }
+        error: { code: 'AUTHENTICATION_REQUIRED', message: 'No refresh token provided' },
       });
     }
     const result = await authService.refresh(refreshTokenValue);
@@ -74,7 +74,7 @@ const refreshToken = async (req, res, next) => {
 
     return res.json({
       success: true,
-      data: { token: result.accessToken, user: result.user }
+      data: { token: result.accessToken, user: result.user },
     });
   } catch (err) {
     return next(err);
@@ -85,13 +85,22 @@ const me = async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
-      select: { id: true, email: true, name: true, currency: true, language: true, role: true, parentId: true, createdAt: true }
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        currency: true,
+        language: true,
+        role: true,
+        parentId: true,
+        createdAt: true,
+      },
     });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: 'User not found' }
+        error: { code: 'NOT_FOUND', message: 'User not found' },
       });
     }
 
@@ -105,7 +114,7 @@ const logout = (req, res) => {
   res.clearCookie(REFRESH_COOKIE, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax'
+    sameSite: 'lax',
   });
   return res.json({ success: true, data: { message: 'Logged out' } });
 };
@@ -116,14 +125,14 @@ const registerPartner = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() }
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() },
       });
     }
 
     if (req.user.role !== 'owner') {
       return res.status(403).json({
         success: false,
-        error: { code: 'FORBIDDEN', message: 'Only owners can register partners' }
+        error: { code: 'FORBIDDEN', message: 'Only owners can register partners' },
       });
     }
 
@@ -132,12 +141,12 @@ const registerPartner = async (req, res, next) => {
       name,
       email,
       password,
-      parentId: req.user.id
+      parentId: req.user.id,
     });
 
     return res.status(201).json({
       success: true,
-      data: { partner: result.user }
+      data: { partner: result.user },
     });
   } catch (err) {
     return next(err);
@@ -145,5 +154,3 @@ const registerPartner = async (req, res, next) => {
 };
 
 module.exports = { register, registerPartner, login, refreshToken, me, logout };
-
-

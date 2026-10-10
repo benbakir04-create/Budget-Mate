@@ -12,7 +12,7 @@ export const shoppingOrderService = {
         localStorage.setItem('demo_orders', JSON.stringify(DEMO_ORDERS));
         orders = DEMO_ORDERS;
       }
-      
+
       let filtered = [...orders];
       if (params.fundId) {
         filtered = filtered.filter(o => o.fundId === params.fundId);
@@ -24,11 +24,11 @@ export const shoppingOrderService = {
       }
       return filtered;
     }
-    
+
     const queryParams = new URLSearchParams();
     if (params.fundId) queryParams.append('fundId', params.fundId);
     if (params.status) queryParams.append('status', params.status);
-    
+
     const response = await api.get(`/orders?${queryParams}`);
     return response.data.data.orders;
   },
@@ -37,10 +37,13 @@ export const shoppingOrderService = {
     if (DEMO_MODE) {
       const storedOrders = localStorage.getItem('demo_orders');
       const orders = storedOrders ? JSON.parse(storedOrders) : [];
-      
+
       const storedFunds = localStorage.getItem('demo_funds');
       const funds = storedFunds ? JSON.parse(storedFunds) : [];
-      const fund = funds.find(f => f.id === data.fundId) || { id: data.fundId, name: 'الصندوق المشترك' };
+      const fund = funds.find(f => f.id === data.fundId) || {
+        id: data.fundId,
+        name: 'الصندوق المشترك',
+      };
 
       const newOrder = {
         id: 'ord-' + Date.now(),
@@ -50,9 +53,9 @@ export const shoppingOrderService = {
         requestedBy: 'demo-partner',
         fundId: data.fundId,
         fund: { id: fund.id, name: fund.name, balance: fund.balance },
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
-      
+
       orders.push(newOrder);
       localStorage.setItem('demo_orders', JSON.stringify(orders));
       return newOrder;
@@ -83,10 +86,10 @@ export const shoppingOrderService = {
       const orders = stored ? JSON.parse(stored) : [];
       const orderIndex = orders.findIndex(o => o.id === id);
       if (orderIndex === -1) throw new Error('Order not found');
-      
+
       const order = orders[orderIndex];
       order.status = 'purchased';
-      
+
       // Deduct from fund balance
       const finalAmount = parseFloat(data.actualAmount || order.estAmount);
       const storedFunds = localStorage.getItem('demo_funds');
@@ -98,15 +101,21 @@ export const shoppingOrderService = {
         fund = funds[fundIndex];
         localStorage.setItem('demo_funds', JSON.stringify(funds));
       }
-      
+
       // Create transaction
       const storedTx = localStorage.getItem('demo_transactions');
       const transactions = storedTx ? JSON.parse(storedTx) : [];
-      
+
       const storedCategories = localStorage.getItem('demo_categories');
       const categories = storedCategories ? JSON.parse(storedCategories) : [];
-      const category = categories.find(c => c.id === data.categoryId) || { id: data.categoryId, name: 'Expense', nameAr: 'مصروف', icon: 'shopping-cart', color: '#EF4444' };
-      
+      const category = categories.find(c => c.id === data.categoryId) || {
+        id: data.categoryId,
+        name: 'Expense',
+        nameAr: 'مصروف',
+        icon: 'shopping-cart',
+        color: '#EF4444',
+      };
+
       const newTx = {
         id: 'tx-' + Date.now(),
         amount: finalAmount,
@@ -118,13 +127,13 @@ export const shoppingOrderService = {
         category,
         user: { id: 'demo-partner', name: 'الشريك', role: 'partner' },
         fund: fund ? { id: fund.id, name: fund.name } : null,
-        receiptUrl: data.receiptUrl || null
+        receiptUrl: data.receiptUrl || null,
       };
-      
+
       transactions.unshift(newTx);
       localStorage.setItem('demo_transactions', JSON.stringify(transactions));
       localStorage.setItem('demo_orders', JSON.stringify(orders));
-      
+
       return { order, fund, transaction: newTx };
     }
     const response = await api.post(`/orders/${id}/purchase`, data);
@@ -140,5 +149,5 @@ export const shoppingOrderService = {
       return;
     }
     await api.delete(`/orders/${id}`);
-  }
+  },
 };

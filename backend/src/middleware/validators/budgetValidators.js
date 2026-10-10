@@ -1,17 +1,13 @@
 const { body, param } = require('express-validator');
 const prisma = require('../../config/database');
 
-const amountValidator = body('amount')
-  .isFloat({ min: 0.01 })
-  .withMessage('AMOUNT_MIN_001');
+const amountValidator = body('amount').isFloat({ min: 0.01 }).withMessage('AMOUNT_MIN_001');
 
 const periodValidator = body('period')
   .isIn(['monthly', 'weekly', 'yearly'])
   .withMessage('INVALID_PERIOD');
 
-const startDateValidator = body('startDate')
-  .isISO8601()
-  .withMessage('INVALID_START_DATE');
+const startDateValidator = body('startDate').isISO8601().withMessage('INVALID_START_DATE');
 
 const endDateValidator = body('endDate')
   .isISO8601()
@@ -28,7 +24,7 @@ const categoryIdValidator = body('categoryId')
   .withMessage('INVALID_CATEGORY_ID')
   .custom(async (value, { req }) => {
     const category = await prisma.category.findFirst({
-      where: { id: value, userId: req.user.id }
+      where: { id: value, userId: req.user.id },
     });
     if (!category) {
       throw new Error('CATEGORY_NOT_FOUND');
@@ -41,7 +37,7 @@ const budgetIdValidator = param('id')
   .withMessage('INVALID_BUDGET_ID')
   .custom(async (value, { req }) => {
     const budget = await prisma.budget.findFirst({
-      where: { id: value, userId: req.user.id }
+      where: { id: value, userId: req.user.id },
     });
     if (!budget) {
       throw new Error('BUDGET_NOT_FOUND');
@@ -54,7 +50,7 @@ const createBudgetValidator = [
   periodValidator,
   startDateValidator,
   endDateValidator,
-  categoryIdValidator
+  categoryIdValidator,
 ];
 
 const updateBudgetValidator = [
@@ -63,11 +59,11 @@ const updateBudgetValidator = [
   periodValidator.optional(),
   startDateValidator.optional(),
   endDateValidator.optional(),
-  categoryIdValidator.optional()
+  categoryIdValidator.optional(),
 ];
 
 module.exports = {
   createBudgetValidator,
   updateBudgetValidator,
-  budgetIdValidator
+  budgetIdValidator,
 };

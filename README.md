@@ -31,11 +31,13 @@ budget-mate/
 ### الطريقة الأسهل - استخدام السكريبت التلقائي
 
 **على Windows:**
+
 ```bash
 setup.bat
 ```
 
 **على Linux/Mac:**
+
 ```bash
 chmod +x setup.sh
 ./setup.sh
@@ -70,6 +72,7 @@ docker-compose up --build
 ```
 
 **سيتم تشغيل التطبيق على:**
+
 - الواجهة الأمامية: http://localhost:5173
 - الواجهة الخلفية: http://localhost:5000
 
@@ -80,12 +83,14 @@ docker-compose up --build
 إذا كنت تريد تجربة التطبيق بدون إعداد قاعدة بيانات:
 
 **الطريقة السريعة:**
+
 ```bash
 run-demo.bat    # على Windows
 ./run-demo.sh   # على Linux/Mac
 ```
 
 **الطريقة اليدوية:**
+
 1. شغّل السكريبت التلقائي
 2. في الفرونت إند، أنشئ ملف `.env` وأضف:
    ```
@@ -106,6 +111,7 @@ run-demo.bat    # على Windows
 ### 🐳 وضع Docker
 
 للإعداد السريع جداً:
+
 ```bash
 docker-compose up --build
 ```
@@ -113,6 +119,7 @@ docker-compose up --build
 ## 🛠️ أدوات التطوير
 
 ### أوامر سريعة
+
 ```bash
 # إعداد المشروع
 npm run setup
@@ -138,6 +145,7 @@ npm run docker:down
 ```
 
 ### أدوات الكود
+
 - **ESLint**: فحص أخطاء الكود
 - **Prettier**: تنسيق الكود تلقائياً
 - **Husky**: Git hooks للتحقق قبل الالتزام
@@ -157,6 +165,7 @@ npm run docker:down
 نرحب بمساهماتكم! راجع [دليل المساهمة](CONTRIBUTING.md) للمزيد من التفاصيل.
 
 ### كيفية المساهمة:
+
 1. Fork المشروع
 2. أنشئ فرع للميزة: `git checkout -b feature/amazing-feature`
 3. Commit التغييرات: `git commit -m 'Add amazing feature'`

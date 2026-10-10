@@ -43,10 +43,15 @@ export const authService = {
   async registerPartner(name, email, password) {
     const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
     if (DEMO_MODE) {
-      return { id: 'demo-partner-' + Date.now(), name, email, role: 'partner', parentId: 'demo-user' };
+      return {
+        id: 'demo-partner-' + Date.now(),
+        name,
+        email,
+        role: 'partner',
+        parentId: 'demo-user',
+      };
     }
     const response = await api.post('/auth/register-partner', { name, email, password });
     return response.data.data.partner;
-  }
+  },
 };
-
