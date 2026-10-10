@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 const PrivateRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isDemoMode } = useAuth();
 
   if (isLoading) {
     return (
@@ -12,8 +12,13 @@ const PrivateRoute = ({ children }) => {
     );
   }
 
+  // في وضع Demo، السماح بالدخول مباشرة (isAuthenticated يجب أن يكون true)
+  if (isDemoMode) {
+    return isAuthenticated ? children : <Navigate to="/login" replace />;
+  }
+
+  // الوضع العادي - يتطلب تسجيل الدخول
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
 export default PrivateRoute;
-

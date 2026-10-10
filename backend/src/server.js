@@ -26,7 +26,7 @@ app.use(helmet());
 app.use(
   cors({
     origin: FRONTEND_URL,
-    credentials: true
+    credentials: true,
   })
 );
 app.use(express.json());
@@ -41,8 +41,8 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   message: {
     success: false,
-    error: { code: 'RATE_LIMITED', message: 'Too many attempts, try again later.' }
-  }
+    error: { code: 'RATE_LIMITED', message: 'Too many attempts, try again later.' },
+  },
 });
 
 // Routes
@@ -54,7 +54,9 @@ app.use('/api/funds', jointFundRoutes);
 app.use('/api/orders', shoppingOrderRoutes);
 
 app.get('/api/health', (req, res) =>
-  res.status(200).json({ success: true, data: { status: 'OK', message: 'Budget Mate API is running' } })
+  res
+    .status(200)
+    .json({ success: true, data: { status: 'OK', message: 'Budget Mate API is running' } })
 );
 
 // 404 handler
@@ -71,5 +73,3 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
-
-

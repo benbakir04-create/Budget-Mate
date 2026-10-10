@@ -2,6 +2,7 @@
   "auth": {
     "login": "تسجيل الدخول",
     "register": "إنشاء حساب",
+    "logout": "تسجيل الخروج",
     "email": "البريد الإلكتروني",
     "password": "كلمة المرور",
     "name": "الاسم",
@@ -11,20 +12,75 @@
     "loginSuccess": "تم تسجيل الدخول بنجاح",
     "registerSuccess": "تم إنشاء الحساب بنجاح",
     "invalidCredentials": "بيانات الدخول غير صحيحة",
-    "userExists": "المستخدم موجود بالفعل"
+    "userExists": "المستخدم موجود بالفعل",
+    "passwordsNotMatch": "كلمات المرور غير متطابقة",
+    "passwordTooShort": "كلمة المرور يجب أن تكون 8 أحرف على الأقل"
   },
   "dashboard": {
     "title": "لوحة التحكم",
     "totalIncome": "إجمالي الدخل",
     "totalExpense": "إجمالي المصروفات",
     "balance": "الرصيد",
-    "savingsRate": "معدل الادخار"
+    "savingsRate": "معدل الادخار",
+    "welcome": "مرحباً بك، {{name}}!",
+    "recentTransactions": "المعاملات الأخيرة",
+    "quickActions": "إجراءات سريعة",
+    "addTransaction": "إضافة معاملة",
+    "manageBudget": "إدارة الميزانية",
+    "recordIncomeExpense": "تسجيل دخل أو مصروف",
+    "setSpendingLimits": "تحديد حدود الإنفاق",
+    "activeBudgets": "الميزانيات النشطة",
+    "viewAll": "عرض الكل"
   },
   "transactions": {
+    "title": "المعاملات",
     "add": "إضافة معاملة",
+    "addNew": "إضافة معاملة جديدة",
     "income": "دخل",
     "expense": "مصروف",
-    "title": "المعاملات"
+    "noTransactions": "لا توجد معاملات بعد.",
+    "addFirstTransaction": "أضف معاملتك الأولى من هنا",
+    "filterTitle": "تصفية المعاملات",
+    "type": "النوع",
+    "category": "الفئة",
+    "search": "بحث",
+    "searchPlaceholder": "ابحث بالوصف أو الفئة...",
+    "all": "الكل",
+    "amount": "المبلغ",
+    "date": "التاريخ",
+    "description": "الوصف",
+    "confirmDelete": "هل أنت متأكد من رغبتك في حذف هذه المعاملة؟",
+    "selectCategory": "اختر الفئة"
+  },
+  "budget": {
+    "title": "الميزانيات",
+    "add": "إضافة ميزانية",
+    "addNew": "إضافة ميزانية جديدة",
+    "totalBudget": "إجمالي الميزانية",
+    "totalSpent": "إجمالي المصروف",
+    "remaining": "المتبقي",
+    "period": "الفترة",
+    "startDate": "تاريخ البدء",
+    "endDate": "تاريخ الانتهاء",
+    "weekly": "أسبوعي",
+    "monthly": "شهري",
+    "yearly": "سنوي",
+    "currentBudgets": "الميزانيات الحالية",
+    "confirmDelete": "هل أنت متأكد من رغبتك في حذف هذه الميزانية؟",
+    "label": "الميزانية",
+    "spent": "المصروف",
+    "usedPercentage": "تم استهلاك {{percentage}}% من الميزانية",
+    "overBudget": "تجاوزت الميزانية!",
+    "nearLimit": "قريب من الحد",
+    "noBudgets": "لا توجد ميزانيات بعد. أضف ميزانيتك الأولى للبدء.",
+    "periodLabel": "الفترة: {{period}}",
+    "selectCategory": "اختر الفئة"
+  },
+  "profile": {
+    "title": "الملف الشخصي"
+  },
+  "settings": {
+    "title": "الإعدادات"
   },
   "common": {
     "loading": "جاري التحميل...",
@@ -37,4 +93,3 @@
     "submit": "إرسال"
   }
 }
-

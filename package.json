@@ -1,0 +1,74 @@
+{
+  "name": "budget-mate",
+  "version": "1.0.0",
+  "description": "Personal and family budget management application",
+  "main": "index.js",
+  "scripts": {
+    "setup": "node scripts/setup.js",
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "dev": "npm run dev:full",
+    "dev:full": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:demo": "cd frontend && VITE_DEMO_MODE=true npm run dev",
+    "build": "npm run build:frontend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "docker:up": "docker-compose up --build",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "clean": "npm run clean:deps && npm run clean:builds",
+    "clean:deps": "rm -rf backend/node_modules frontend/node_modules node_modules",
+    "clean:builds": "rm -rf frontend/dist backend/build",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "db:migrate": "cd backend && npm run prisma:migrate",
+    "db:seed": "cd backend && npm run prisma:seed",
+    "db:studio": "cd backend && npm run prisma:studio",
+    "db:reset": "cd backend && npm run prisma:migrate reset",
+    "prepare": "husky install"
+  },
+  "keywords": [
+    "budget",
+    "finance",
+    "expense-tracker",
+    "react",
+    "nodejs",
+    "postgresql"
+  ],
+  "author": "Budget Mate Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "concurrently": "^8.0.0",
+    "eslint": "^8.0.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^13.0.0",
+    "prettier": "^3.0.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/username/budget-mate.git"
+  },
+  "bugs": {
+    "url": "https://github.com/username/budget-mate/issues"
+  },
+  "homepage": "https://github.com/username/budget-mate#readme"
+}

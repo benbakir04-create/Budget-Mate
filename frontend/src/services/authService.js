@@ -25,7 +25,10 @@ export const authService = {
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    api.post('/auth/logout');
+    // Fire and forget - don't wait for server response
+    api.post('/auth/logout').catch(() => {
+      // Silently ignore errors
+    });
   },
 
   getToken() {
@@ -35,6 +38,20 @@ export const authService = {
   getUser() {
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
-  }
-};
+  },
 
+  async registerPartner(name, email, password) {
+    const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
+    if (DEMO_MODE) {
+      return {
+        id: 'demo-partner-' + Date.now(),
+        name,
+        email,
+        role: 'partner',
+        parentId: 'demo-user',
+      };
+    }
+    const response = await api.post('/auth/register-partner', { name, email, password });
+    return response.data.data.partner;
+  },
+};

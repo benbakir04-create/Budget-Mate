@@ -78,3 +78,17 @@ pids
 # Local development files
 .dev
 .local
+
+# Third-party / AI tooling folders (not part of the app)
+everything-claude-code-main/
+.zencoder/
+.zenflow/
+.qodo/
+.brainlink
+.sync_state.json
+
+# Personal notes, analyses and spreadsheets (kept locally, not in git)
+تحليل ai *.txt
+📄 *.txt
+*.xlsm
+*.bundle

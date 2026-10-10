@@ -11,27 +11,27 @@ const Register = () => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth.passwordsNotMatch'));
       return;
     }
 
     if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError(t('auth.passwordTooShort'));
       return;
     }
 
@@ -135,10 +135,7 @@ const Register = () => {
           </div>
 
           <div className="text-center">
-            <Link
-              to="/login"
-              className="font-medium text-primary hover:text-green-600"
-            >
+            <Link to="/login" className="font-medium text-primary hover:text-green-600">
               {t('auth.alreadyHaveAccount')}
             </Link>
           </div>
@@ -149,4 +146,3 @@ const Register = () => {
 };
 
 export default Register;
-

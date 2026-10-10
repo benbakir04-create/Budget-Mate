@@ -3,17 +3,20 @@
 ## 📋 متطلبات ما قبل الاختبار
 
 ### 1. التأكد من تثبيت المتطلبات:
-- ✅ Node.js 18+ 
+
+- ✅ Node.js 18+
 - ✅ PostgreSQL مثبت ويعمل
 - ✅ npm أو yarn
 
 ### 2. التحقق من تثبيت Node.js:
+
 ```bash
 node --version
 # يجب أن يكون v18 أو أعلى
 ```
 
 ### 3. التحقق من PostgreSQL:
+
 ```bash
 # على Windows (PowerShell)
 psql --version
@@ -29,6 +32,7 @@ psql --version
 
 1. افتح PostgreSQL (pgAdmin أو psql)
 2. أنشئ قاعدة بيانات جديدة:
+
 ```sql
 CREATE DATABASE budgetmate;
 ```
@@ -45,16 +49,19 @@ CREATE DATABASE budgetmate;
 ### الخطوة 2: إعداد الباكند
 
 1. انتقل إلى مجلد الباكند:
+
 ```bash
 cd backend
 ```
 
 2. ثبت الحزم:
+
 ```bash
 npm install
 ```
 
 3. أنشئ ملف `.env`:
+
 ```bash
 # على Windows PowerShell
 Copy-Item env.example .env
@@ -64,6 +71,7 @@ cp env.example .env
 ```
 
 4. افتح ملف `.env` وعدّل القيم:
+
 ```env
 # Database - استبدل بالقيم الصحيحة
 DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/budgetmate"
@@ -83,22 +91,26 @@ FRONTEND_URL="http://localhost:5173"
 ```
 
 5. أنشئ جداول قاعدة البيانات:
+
 ```bash
 npm run prisma:generate
 npm run prisma:migrate
 ```
 
 6. أضف البيانات الأولية (الفئات الافتراضية):
+
 ```bash
 npm run prisma:seed
 ```
 
 7. شغّل الباكند:
+
 ```bash
 npm run dev
 ```
 
 **✅ يجب أن ترى:**
+
 ```
 Server running on port 5000
 ```
@@ -108,27 +120,32 @@ Server running on port 5000
 ### الخطوة 3: إعداد الواجهة الأمامية
 
 1. افتح نافذة terminal جديدة وانتقل إلى مجلد الواجهة:
+
 ```bash
 cd frontend
 ```
 
 2. ثبت الحزم:
+
 ```bash
 npm install
 ```
 
 3. (اختياري) أنشئ ملف `.env` إذا أردت تغيير الإعدادات:
+
 ```bash
 # على Windows PowerShell
 Copy-Item .env.example .env
 ```
 
 4. شغّل الواجهة الأمامية:
+
 ```bash
 npm run dev
 ```
 
 **✅ يجب أن ترى:**
+
 ```
   VITE v4.x.x  ready in xxx ms
 
@@ -143,11 +160,13 @@ npm run dev
 ### الاختبار 1: التحقق من صحة الباكند
 
 1. افتح المتصفح واذهب إلى:
+
 ```
 http://localhost:5000/api/health
 ```
 
 **✅ النتيجة المتوقعة:**
+
 ```json
 {
   "success": true,
@@ -163,6 +182,7 @@ http://localhost:5000/api/health
 ### الاختبار 2: تسجيل مستخدم جديد
 
 1. افتح المتصفح واذهب إلى:
+
 ```
 http://localhost:5173/register
 ```
@@ -176,10 +196,12 @@ http://localhost:5173/register
 3. اضغط "إنشاء حساب"
 
 **✅ النتيجة المتوقعة:**
+
 - يتم توجيهك تلقائياً إلى صفحة Dashboard
 - ترى رسالة ترحيب باسمك
 
 **❌ إذا ظهر خطأ:**
+
 - تحقق من أن الباكند يعمل على المنفذ 5000
 - تحقق من console المتصفح (F12) للأخطاء
 - تحقق من terminal الباكند للأخطاء
@@ -190,6 +212,7 @@ http://localhost:5173/register
 
 1. اضغط على Logout (إذا كنت مسجلاً)
 2. اذهب إلى:
+
 ```
 http://localhost:5173/login
 ```
@@ -201,6 +224,7 @@ http://localhost:5173/login
 4. اضغط "تسجيل الدخول"
 
 **✅ النتيجة المتوقعة:**
+
 - يتم توجيهك إلى Dashboard
 - ترى اسمك في الصفحة
 
@@ -212,17 +236,20 @@ http://localhost:5173/login
 2. افتح Developer Tools (F12)
 3. اذهب إلى Console
 4. نفّذ هذا الأمر:
+
 ```javascript
-localStorage.removeItem('token')
-localStorage.removeItem('user')
+localStorage.removeItem('token');
+localStorage.removeItem('user');
 ```
 
 5. حاول الوصول إلى:
+
 ```
 http://localhost:5173/dashboard
 ```
 
 **✅ النتيجة المتوقعة:**
+
 - يتم توجيهك تلقائياً إلى صفحة Login
 - لا يمكنك الوصول إلى Dashboard بدون تسجيل الدخول
 
@@ -235,11 +262,13 @@ http://localhost:5173/dashboard
 **POST** `http://localhost:5000/api/auth/register`
 
 Headers:
+
 ```
 Content-Type: application/json
 ```
 
 Body (JSON):
+
 ```json
 {
   "name": "محمد علي",
@@ -249,6 +278,7 @@ Body (JSON):
 ```
 
 **✅ النتيجة المتوقعة:**
+
 ```json
 {
   "success": true,
@@ -270,6 +300,7 @@ Body (JSON):
 **POST** `http://localhost:5000/api/auth/login`
 
 Body (JSON):
+
 ```json
 {
   "email": "mohammed@test.com",
@@ -285,11 +316,13 @@ Body (JSON):
 **GET** `http://localhost:5000/api/auth/me`
 
 Headers:
+
 ```
 Authorization: Bearer YOUR_TOKEN_HERE
 ```
 
 **✅ النتيجة المتوقعة:**
+
 ```json
 {
   "success": true,
@@ -307,6 +340,7 @@ Authorization: Bearer YOUR_TOKEN_HERE
 ```
 
 **❌ بدون Token:**
+
 ```json
 {
   "success": false,
@@ -326,6 +360,7 @@ Authorization: Bearer YOUR_TOKEN_HERE
 **POST** `http://localhost:5000/api/auth/register`
 
 Body:
+
 ```json
 {
   "name": "Test",
@@ -335,6 +370,7 @@ Body:
 ```
 
 **✅ النتيجة المتوقعة:**
+
 ```json
 {
   "success": false,
@@ -350,6 +386,7 @@ Body:
 **POST** `http://localhost:5000/api/auth/register`
 
 Body:
+
 ```json
 {
   "name": "Test",
@@ -359,6 +396,7 @@ Body:
 ```
 
 **✅ النتيجة المتوقعة:**
+
 ```json
 {
   "success": false,
@@ -377,6 +415,7 @@ Body:
 ### خطأ: "Cannot connect to database"
 
 **الحل:**
+
 1. تأكد من أن PostgreSQL يعمل
 2. تحقق من `DATABASE_URL` في ملف `.env`
 3. تأكد من أن قاعدة البيانات `budgetmate` موجودة
@@ -386,6 +425,7 @@ Body:
 ### خطأ: "Port 5000 already in use"
 
 **الحل:**
+
 1. غيّر PORT في ملف `.env` إلى 5001
 2. أو أوقف التطبيق الذي يستخدم المنفذ 5000
 
@@ -394,6 +434,7 @@ Body:
 ### خطأ: "Port 5173 already in use"
 
 **الحل:**
+
 1. Vite سيستخدم منفذ آخر تلقائياً (5174، 5175...)
 2. أو أوقف التطبيق الذي يستخدم المنفذ 5173
 
@@ -402,6 +443,7 @@ Body:
 ### خطأ: "Missing required environment variables"
 
 **الحل:**
+
 1. تأكد من وجود ملف `.env` في مجلد `backend`
 2. تأكد من أن جميع المتغيرات موجودة في `.env`
 3. أعد تشغيل الباكند
@@ -411,6 +453,7 @@ Body:
 ### خطأ: "Prisma Client not generated"
 
 **الحل:**
+
 ```bash
 cd backend
 npm run prisma:generate
@@ -421,6 +464,7 @@ npm run prisma:generate
 ### خطأ في الواجهة: "Network Error" أو "CORS Error"
 
 **الحل:**
+
 1. تأكد من أن الباكند يعمل
 2. تحقق من `FRONTEND_URL` في `.env` الخاص بالباكند
 3. تأكد من أن `VITE_API_URL` في الواجهة صحيح
@@ -452,4 +496,3 @@ npm run prisma:generate
 ---
 
 **🎉 إذا نجحت جميع الاختبارات، المرحلة الأولى مكتملة بنجاح!**
-

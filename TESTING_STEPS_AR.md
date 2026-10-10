@@ -1,6 +1,7 @@
 # خطوات اختبار المرحلة الأولى - بالعربية
 
 ## 🎯 الهدف
+
 اختبار نظام المصادقة والتسجيل والدخول بشكل كامل.
 
 ---
@@ -8,14 +9,17 @@
 ## 📦 الخطوة 1: إعداد قاعدة البيانات
 
 ### أ) افتح PostgreSQL
+
 - افتح **pgAdmin** أو **psql**
 
 ### ب) أنشئ قاعدة البيانات
+
 ```sql
 CREATE DATABASE budgetmate;
 ```
 
 ### ج) احفظ معلومات الاتصال
+
 - Host: `localhost`
 - Port: `5432`
 - Database: `budgetmate`
@@ -29,16 +33,19 @@ CREATE DATABASE budgetmate;
 ### أ) افتح Terminal في مجلد المشروع
 
 ### ب) انتقل إلى مجلد الباكند
+
 ```bash
 cd backend
 ```
 
 ### ج) ثبت الحزم
+
 ```bash
 npm install
 ```
 
 ### د) أنشئ ملف `.env`
+
 ```bash
 # على Windows PowerShell
 Copy-Item env.example .env
@@ -47,6 +54,7 @@ Copy-Item env.example .env
 ```
 
 ### هـ) عدّل ملف `.env`
+
 افتح ملف `backend/.env` وعدّل القيم:
 
 ```env
@@ -63,6 +71,7 @@ FRONTEND_URL="http://localhost:5173"
 **⚠️ مهم:** استبدل `كلمة_المرور` بكلمة مرور PostgreSQL!
 
 ### و) أنشئ جداول قاعدة البيانات
+
 ```bash
 npm run prisma:generate
 npm run prisma:migrate
@@ -71,16 +80,19 @@ npm run prisma:migrate
 عند السؤال عن اسم الـ migration، اكتب: `init`
 
 ### ز) أضف البيانات الأولية
+
 ```bash
 npm run prisma:seed
 ```
 
 ### ح) شغّل الباكند
+
 ```bash
 npm run dev
 ```
 
 **✅ يجب أن ترى:**
+
 ```
 Server running on port 5000
 ```
@@ -94,21 +106,25 @@ Server running on port 5000
 ### أ) افتح Terminal جديد
 
 ### ب) انتقل إلى مجلد الواجهة
+
 ```bash
 cd frontend
 ```
 
 ### ج) ثبت الحزم
+
 ```bash
 npm install
 ```
 
 ### د) شغّل الواجهة
+
 ```bash
 npm run dev
 ```
 
 **✅ يجب أن ترى:**
+
 ```
   VITE v4.x.x  ready in xxx ms
   ➜  Local:   http://localhost:5173/
@@ -126,6 +142,7 @@ npm run dev
 2. اذهب إلى: `http://localhost:5000/api/health`
 
 **✅ النتيجة المتوقعة:**
+
 ```json
 {
   "success": true,
@@ -162,6 +179,7 @@ npm run test:api
 3. اضغط "إنشاء حساب"
 
 **✅ النتيجة:**
+
 - يتم توجيهك إلى Dashboard
 - ترى رسالة ترحيب
 
@@ -176,6 +194,7 @@ npm run test:api
 3. اضغط "تسجيل الدخول"
 
 **✅ النتيجة:**
+
 - يتم توجيهك إلى Dashboard
 
 ---
@@ -186,15 +205,17 @@ npm run test:api
 2. اضغط F12 (Developer Tools)
 3. اذهب إلى Console
 4. نفّذ:
+
 ```javascript
-localStorage.removeItem('token')
-localStorage.removeItem('user')
-location.reload()
+localStorage.removeItem('token');
+localStorage.removeItem('user');
+location.reload();
 ```
 
 5. حاول الوصول إلى Dashboard
 
 **✅ النتيجة:**
+
 - يتم توجيهك إلى صفحة Login
 - لا يمكنك الوصول بدون تسجيل الدخول
 
@@ -207,11 +228,13 @@ location.reload()
 **POST** `http://localhost:5000/api/auth/register`
 
 Headers:
+
 ```
 Content-Type: application/json
 ```
 
 Body:
+
 ```json
 {
   "name": "محمد علي",
@@ -221,6 +244,7 @@ Body:
 ```
 
 **✅ النتيجة:**
+
 ```json
 {
   "success": true,
@@ -236,6 +260,7 @@ Body:
 **GET** `http://localhost:5000/api/auth/me`
 
 Headers:
+
 ```
 Authorization: Bearer YOUR_TOKEN_HERE
 ```
@@ -244,6 +269,7 @@ Authorization: Bearer YOUR_TOKEN_HERE
 معلومات المستخدم
 
 **❌ بدون Token:**
+
 ```json
 {
   "success": false,
@@ -274,20 +300,24 @@ Authorization: Bearer YOUR_TOKEN_HERE
 ## 🐛 حل المشاكل
 
 ### الباكند لا يعمل:
+
 - تحقق من ملف `.env`
 - تحقق من أن PostgreSQL يعمل
 - تحقق من أن المنفذ 5000 غير مستخدم
 
 ### الواجهة لا تعمل:
+
 - تحقق من أن `npm install` تم بنجاح
 - تحقق من أن المنفذ 5173 غير مستخدم
 
 ### خطأ في قاعدة البيانات:
+
 - تحقق من `DATABASE_URL` في `.env`
 - تأكد من أن قاعدة البيانات موجودة
 - تأكد من كلمة المرور
 
 ### خطأ CORS:
+
 - تحقق من `FRONTEND_URL` في `.env`
 - تأكد من أن الباكند يعمل
 
@@ -298,4 +328,3 @@ Authorization: Bearer YOUR_TOKEN_HERE
 إذا نجحت جميع الاختبارات، **المرحلة الأولى مكتملة!** ✅
 
 يمكنك الآن الانتقال إلى المرحلة الثانية (الميزات الأساسية).
-

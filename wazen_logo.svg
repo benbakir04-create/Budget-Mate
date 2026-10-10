@@ -1,0 +1,60 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Defs for Gradients and Filters -->
+  <defs>
+    <!-- Teal Gradient for Home -->
+    <linearGradient id="tealHomeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34D399" /> <!-- Teal 400ish -->
+      <stop offset="100%" stop-color="#059669" /> <!-- Teal 600ish -->
+    </linearGradient>
+
+    <!-- Deep Teal Gradient for Biz/Pro -->
+    <linearGradient id="tealBizGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F6E56" />
+      <stop offset="100%" stop-color="#022C22" />
+    </linearGradient>
+
+    <!-- Sleek Glow Filter -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Modern Geometric Balance Scale -->
+  <g transform="translate(0, 0)">
+    <!-- Base / Stand (Stability) -->
+    <!-- The Bottom Pedestal -->
+    <path d="M190 440 H322 C335 440 340 430 330 420 L300 390 C295 385 285 380 275 380 H237 C227 380 217 385 212 390 L182 420 C172 430 177 440 190 440 Z" fill="url(#tealBizGrad)" opacity="0.9"/>
+    
+    <!-- Central Pillar (The Axis of Wazen) -->
+    <rect x="246" y="110" width="20" height="280" rx="10" fill="url(#tealBizGrad)" />
+    
+    <!-- Central Accent Core (The Pivot Point) -->
+    <circle cx="256" cy="140" r="24" fill="url(#tealHomeGrad)" filter="url(#glow)" opacity="0.3" />
+    <circle cx="256" cy="140" r="12" fill="url(#tealHomeGrad)" />
+    <circle cx="256" cy="140" r="4" fill="#FFFFFF" />
+
+    <!-- Main Horizontal Balanced Beam -->
+    <!-- Curved elegant aerodynamic beam -->
+    <path d="M96 135 C160 120 200 140 256 140 C312 140 352 120 416 135 C422 136 426 142 424 148 C422 154 416 156 410 155 C350 140 312 160 256 160 C200 160 162 140 102 155 C96 156 90 154 88 148 C86 142 90 136 96 135 Z" fill="url(#tealHomeGrad)" />
+
+    <!-- LEFT SCALE (Representing 'Private' / Personal Expenses) -->
+    <!-- Elegant thin suspension lines -->
+    <path d="M102 150 L60 280 H144 L102 150 Z" stroke="url(#tealHomeGrad)" stroke-width="3" stroke-linejoin="round" opacity="0.7" />
+    <!-- The Hanging Plate / Dish -->
+    <path d="M40 280 C40 310 164 310 164 280 H40 Z" fill="url(#tealHomeGrad)" />
+    <!-- Floating Token inside private scale (representing private funds) -->
+    <circle cx="102" cy="245" r="14" fill="#FFFFFF" opacity="0.9" />
+    <path d="M97 245 H107 M102 240 V250" stroke="#0F6E56" stroke-width="3" stroke-linecap="round" />
+
+    <!-- RIGHT SCALE (Representing 'Shared' / Joint Expenses) -->
+    <!-- Elegant thin suspension lines -->
+    <path d="M410 150 L368 280 H452 L410 150 Z" stroke="url(#tealHomeGrad)" stroke-width="3" stroke-linejoin="round" opacity="0.7" />
+    <!-- The Hanging Plate / Dish -->
+    <path d="M348 280 C348 310 472 310 472 280 H348 Z" fill="url(#tealHomeGrad)" />
+    <!-- Floating Token inside shared scale (representing collaborative funds) -->
+    <circle cx="410" cy="245" r="14" fill="url(#tealHomeGrad)" />
+    <!-- Handshake / Collaborative icon inside the shared token -->
+    <circle cx="410" cy="245" r="7" stroke="#FFFFFF" stroke-width="2" fill="none" />
+  </g>
+</svg>

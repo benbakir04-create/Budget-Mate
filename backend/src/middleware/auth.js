@@ -8,7 +8,7 @@ function authMiddleware(req, res, next) {
     if (!token) {
       return res.status(401).json({
         success: false,
-        error: { code: 'AUTHENTICATION_REQUIRED', message: 'No token provided' }
+        error: { code: 'AUTHENTICATION_REQUIRED', message: 'No token provided' },
       });
     }
 
@@ -18,11 +18,9 @@ function authMiddleware(req, res, next) {
   } catch (err) {
     return res.status(401).json({
       success: false,
-      error: { code: 'INVALID_TOKEN', message: 'Invalid or expired token' }
+      error: { code: 'INVALID_TOKEN', message: 'Invalid or expired token' },
     });
   }
 }
 
 module.exports = authMiddleware;
-
-
