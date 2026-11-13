@@ -30,7 +30,8 @@
     "recordIncomeExpense": "تسجيل دخل أو مصروف",
     "setSpendingLimits": "تحديد حدود الإنفاق",
     "activeBudgets": "الميزانيات النشطة",
-    "viewAll": "عرض الكل"
+    "viewAll": "عرض الكل",
+    "transactions": "عدد العمليات"
   },
   "transactions": {
     "title": "المعاملات",

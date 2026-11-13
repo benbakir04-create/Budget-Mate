@@ -3,6 +3,16 @@ import { DEMO_FUNDS } from './demoData';
 
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
+// A deposit moves the owner's money into the fund: a transfer, not income.
+const DEMO_FUNDING_CATEGORY = {
+  id: 'cat-funding',
+  name: 'Funding',
+  nameAr: 'تمويل الصندوق',
+  icon: 'account-balance-wallet',
+  color: '#1D9E75',
+  type: 'transfer',
+};
+
 export const jointFundService = {
   async getJointFunds() {
     if (DEMO_MODE) {
@@ -66,18 +76,12 @@ export const jointFundService = {
         const fundingTx = {
           id: 'tx-' + Date.now(),
           amount: newFund.balance,
-          type: 'income',
+          type: 'transfer',
           description: `التمويل الأولي لصندوق: ${newFund.name}`,
           date: new Date().toISOString(),
           userId: 'demo-user',
-          categoryId: 'cat-7', // Funding
-          category: {
-            id: 'cat-7',
-            name: 'Funding',
-            nameAr: 'تمويل العهدة',
-            icon: 'account-balance-wallet',
-            color: '#1D9E75',
-          },
+          categoryId: DEMO_FUNDING_CATEGORY.id,
+          category: DEMO_FUNDING_CATEGORY,
           user: { id: 'demo-user', name: 'المالك الرئيسي', role: 'owner' },
           fund: { id: newFund.id, name: newFund.name },
         };
@@ -130,18 +134,12 @@ export const jointFundService = {
         const fundingTx = {
           id: 'tx-' + Date.now(),
           amount: parseFloat(data.amount),
-          type: 'income',
+          type: 'transfer',
           description: data.description || 'ضخ تمويل إضافي للصندوق المشترك',
           date: new Date().toISOString(),
           userId: 'demo-user',
-          categoryId: 'cat-7',
-          category: {
-            id: 'cat-7',
-            name: 'Funding',
-            nameAr: 'تمويل العهدة',
-            icon: 'account-balance-wallet',
-            color: '#1D9E75',
-          },
+          categoryId: DEMO_FUNDING_CATEGORY.id,
+          category: DEMO_FUNDING_CATEGORY,
           user: { id: 'demo-user', name: 'المالك الرئيسي', role: 'owner' },
           fund: { id: funds[index].id, name: funds[index].name },
         };

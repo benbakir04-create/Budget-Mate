@@ -6,6 +6,7 @@ import { jointFundService } from '../services/jointFundService';
 import { shoppingOrderService } from '../services/shoppingOrderService';
 import { categoryService } from '../services/categoryService';
 import { authService } from '../services/authService';
+import { currencyLabel } from '../utils/currency';
 
 const Funds = () => {
   const { t } = useTranslation();
@@ -533,7 +534,7 @@ const Funds = () => {
                                 {fund.balance.toLocaleString()}
                               </p>
                               <span className="text-sm font-medium mr-1.5 mb-1 opacity-70">
-                                {user.currency || 'SAR'}
+                                {currencyLabel(user.currency)}
                               </span>
                             </div>
 
@@ -598,7 +599,7 @@ const Funds = () => {
                               <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">
                                 {selectedFund.balance.toLocaleString()}{' '}
                                 <span className="text-lg font-medium text-slate-400">
-                                  {user.currency || 'SAR'}
+                                  {currencyLabel(user.currency)}
                                 </span>
                               </p>
                             </div>
@@ -626,7 +627,7 @@ const Funds = () => {
                                   >
                                     <div className="flex items-center space-x-3 space-x-reverse">
                                       <div
-                                        className={`p-3 rounded-xl ${tx.type === 'income' ? 'bg-green-50 dark:bg-green-500/10 text-green-500' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-500'}`}
+                                        className={`p-3 rounded-xl ${tx.type !== 'expense' ? 'bg-green-50 dark:bg-green-500/10 text-green-500' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-500'}`}
                                       >
                                         <svg
                                           xmlns="http://www.w3.org/2000/svg"
@@ -635,7 +636,7 @@ const Funds = () => {
                                           viewBox="0 0 24 24"
                                           stroke="currentColor"
                                         >
-                                          {tx.type === 'income' ? (
+                                          {tx.type !== 'expense' ? (
                                             <path
                                               strokeLinecap="round"
                                               strokeLinejoin="round"
@@ -668,11 +669,11 @@ const Funds = () => {
                                       </div>
                                     </div>
                                     <span
-                                      className={`font-extrabold text-sm ${tx.type === 'income' ? 'text-green-500' : 'text-slate-900 dark:text-white'}`}
+                                      className={`font-extrabold text-sm ${tx.type !== 'expense' ? 'text-green-500' : 'text-slate-900 dark:text-white'}`}
                                     >
-                                      {tx.type === 'income' ? '+' : '-'}
+                                      {tx.type !== 'expense' ? '+' : '-'}
                                       {parseFloat(tx.amount).toLocaleString()}{' '}
-                                      {user.currency || 'SAR'}
+                                      {currencyLabel(user.currency)}
                                     </span>
                                   </div>
                                 ))}
@@ -727,7 +728,7 @@ const Funds = () => {
 
                         <div>
                           <label className="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">
-                            المبلغ التقريبي المطلق (SAR)
+                            المبلغ التقريبي المطلق ({currencyLabel(user.currency)})
                           </label>
                           <input
                             type="number"
@@ -752,7 +753,7 @@ const Funds = () => {
                             {funds.map(f => (
                               <option key={f.id} value={f.id}>
                                 {f.name} (رصيد: {f.balance.toLocaleString()}{' '}
-                                {user.currency || 'SAR'})
+                                {currencyLabel(user.currency)})
                               </option>
                             ))}
                           </select>
@@ -834,7 +835,8 @@ const Funds = () => {
                                   <span>
                                     المبلغ المقدر:{' '}
                                     <strong className="text-slate-700 dark:text-slate-200">
-                                      {order.estAmount.toLocaleString()} {user.currency || 'SAR'}
+                                      {order.estAmount.toLocaleString()}{' '}
+                                      {currencyLabel(user.currency)}
                                     </strong>
                                   </span>
                                   <span>•</span>
@@ -1130,7 +1132,7 @@ const Funds = () => {
 
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">
-                  المبلغ المراد إضافته (SAR)
+                  المبلغ المراد إضافته ({currencyLabel(user.currency)})
                 </label>
                 <input
                   type="number"
@@ -1218,7 +1220,7 @@ const Funds = () => {
 
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">
-                  المبلغ الفعلي المدفوع (SAR)
+                  المبلغ الفعلي المدفوع ({currencyLabel(user.currency)})
                 </label>
                 <input
                   type="number"

@@ -4,6 +4,20 @@ import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/common/Sidebar';
 import { transactionService } from '../services/transactionService';
 import { categoryService } from '../services/categoryService';
+import { currencyLabel, DEFAULT_CURRENCY } from '../utils/currency';
+import { amountSign, typeLabel } from '../utils/money';
+
+// Income green, expense red, a deposit into a fund (transfer) blue: it is neither.
+const TYPE_STYLE = {
+  income: { badge: 'bg-green-100', text: 'text-green-600', path: 'M12 4v16m8-8l-8 8-8-8' },
+  expense: { badge: 'bg-red-100', text: 'text-red-600', path: 'M12 20V4m8 8l-8-8-8 8' },
+  transfer: {
+    badge: 'bg-blue-100',
+    text: 'text-blue-600',
+    path: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4',
+  },
+};
+const typeStyle = type => TYPE_STYLE[type] || TYPE_STYLE.transfer;
 
 const Transactions = () => {
   const { t } = useTranslation();
@@ -41,25 +55,17 @@ const Transactions = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [transactionsData, categoriesData] = await Promise.all([
-        transactionService.getTransactions(),
+      // Totals come from the server over every transaction; fund deposits are excluded.
+      const [transactionsData, categoriesData, summary] = await Promise.all([
+        transactionService.getTransactions({ limit: 100 }),
         categoryService.getCategories(),
+        transactionService.getSummary(),
       ]);
 
       setTransactions(transactionsData.transactions);
       setCategories(categoriesData);
-
-      // Calculate totals
-      const income = transactionsData.transactions
-        .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-
-      const expense = transactionsData.transactions
-        .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-
-      setTotalIncome(income);
-      setTotalExpense(expense);
+      setTotalIncome(summary.income);
+      setTotalExpense(summary.expense);
     } catch (err) {
       setError('Failed to load data');
       console.error(err);
@@ -104,7 +110,9 @@ const Transactions = () => {
     const headers = [
       isAr ? 'الوصف' : 'Description',
       isAr ? 'التصنيف' : 'Category',
-      isAr ? 'المبلغ' : 'Amount',
+      isAr
+        ? `المبلغ (${currencyLabel(user?.currency)})`
+        : `Amount (${user?.currency || DEFAULT_CURRENCY})`,
       isAr ? 'النوع' : 'Type',
       isAr ? 'التاريخ' : 'Date',
       isAr ? 'المصدر' : 'Source',
@@ -114,7 +122,7 @@ const Transactions = () => {
       tx.description,
       isAr ? tx.category.nameAr : tx.category.name,
       tx.amount,
-      tx.type === 'income' ? (isAr ? 'دخل' : 'Income') : isAr ? 'مصروف' : 'Expense',
+      isAr ? typeLabel(tx.type) : tx.type,
       new Date(tx.date).toLocaleDateString(),
       tx.fund ? tx.fund.name : isAr ? 'شخصي' : 'Personal',
     ]);
@@ -239,7 +247,7 @@ const Transactions = () => {
                   {t('dashboard.totalIncome', 'Total Income')}
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {totalIncome.toLocaleString()} {user?.currency || 'SAR'}
+                  {totalIncome.toLocaleString()} {currencyLabel(user?.currency)}
                 </p>
               </div>
               <div className="bg-green-100 rounded-full p-3">
@@ -268,7 +276,7 @@ const Transactions = () => {
                   {t('dashboard.totalExpense', 'Total Expense')}
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {totalExpense.toLocaleString()} {user?.currency || 'SAR'}
+                  {totalExpense.toLocaleString()} {currencyLabel(user?.currency)}
                 </p>
               </div>
               <div className="bg-red-100 rounded-full p-3">
@@ -460,6 +468,7 @@ const Transactions = () => {
                 <option value="all">{t('transactions.all', 'All')}</option>
                 <option value="income">{t('transactions.income', 'Income')}</option>
                 <option value="expense">{t('transactions.expense', 'Expense')}</option>
+                <option value="transfer">تحويل للصندوق</option>
               </select>
             </div>
 
@@ -604,31 +613,20 @@ const Transactions = () => {
                 <div key={transaction.id} className="p-6 hover:bg-gray-50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3 space-x-reverse">
-                      <div
-                        className={`p-2 rounded-full ${transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'}`}
-                      >
+                      <div className={`p-2 rounded-full ${typeStyle(transaction.type).badge}`}>
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className={`h-5 w-5 ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}
+                          className={`h-5 w-5 ${typeStyle(transaction.type).text}`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
                         >
-                          {transaction.type === 'income' ? (
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 4v16m8-8l-8 8-8-8"
-                            />
-                          ) : (
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 20V4m8 8l-8-8-8 8"
-                            />
-                          )}
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d={typeStyle(transaction.type).path}
+                          />
                         </svg>
                       </div>
                       <div>
@@ -644,11 +642,10 @@ const Transactions = () => {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 space-x-reverse">
-                      <div
-                        className={`text-sm font-semibold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}
-                      >
-                        {transaction.type === 'income' ? '+' : '-'}
-                        {parseFloat(transaction.amount).toLocaleString()} {user?.currency || 'SAR'}
+                      <div className={`text-sm font-semibold ${typeStyle(transaction.type).text}`}>
+                        {amountSign(transaction.type)}
+                        {parseFloat(transaction.amount).toLocaleString()}{' '}
+                        {currencyLabel(user?.currency)}
                       </div>
                       <button
                         onClick={() => handleDelete(transaction.id)}

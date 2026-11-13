@@ -3,16 +3,17 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/common/Sidebar';
 import { categoryService } from '../services/categoryService';
+import { CURRENCIES, DEFAULT_CURRENCY } from '../utils/currency';
 
 const Settings = () => {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
   // App settings state
   const [appName, setAppName] = useState(
     localStorage.getItem('appName') || import.meta.env.VITE_APP_NAME || 'وازن'
   );
-  const [currency, setCurrency] = useState(user?.currency || 'SAR');
+  const [currency, setCurrency] = useState(user?.currency || DEFAULT_CURRENCY);
   const [lang] = useState('ar');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -53,23 +54,27 @@ const Settings = () => {
     }
   };
 
-  const handleSaveGeneralSettings = e => {
+  const handleSaveGeneralSettings = async e => {
     e.preventDefault();
+    const appNameChanged = appName !== localStorage.getItem('appName');
     localStorage.setItem('appName', appName);
 
-    // Update currency in current user session
-    if (user) {
-      const updatedUser = { ...user, currency };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      // Force reload page to apply changes app-wide
-      setSuccessMsg('تم حفظ الإعدادات بنجاح! جاري تحديث التطبيق...');
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-    } else {
+    try {
+      // The currency is saved on the server, so it follows the user to every device.
+      if (user && currency !== user.currency) {
+        await updateUser({ currency });
+      }
       setSuccessMsg('تم حفظ الإعدادات بنجاح!');
-      setTimeout(() => setSuccessMsg(''), 3000);
+      // The sidebar reads the app name once, so a new name needs a reload to show.
+      if (appNameChanged) {
+        setTimeout(() => window.location.reload(), 1000);
+        return;
+      }
+    } catch (err) {
+      console.error(err);
+      setSuccessMsg('تعذّر حفظ العملة، حاول مرة أخرى.');
     }
+    setTimeout(() => setSuccessMsg(''), 3000);
   };
 
   const handleAddCategory = async e => {
@@ -240,13 +245,11 @@ const Settings = () => {
                     onChange={e => setCurrency(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-primary focus:border-primary text-sm bg-white"
                   >
-                    <option value="SAR">ريال سعودي (SAR)</option>
-                    <option value="USD">دولار أمريكي (USD)</option>
-                    <option value="EUR">يورو (EUR)</option>
-                    <option value="AED">درهم إماراتي (AED)</option>
-                    <option value="KWD">دينار كويتي (KWD)</option>
-                    <option value="QAR">ريال قطري (QAR)</option>
-                    <option value="EGP">جنيه مصري (EGP)</option>
+                    {CURRENCIES.map(c => (
+                      <option key={c.code} value={c.code}>
+                        {c.name} ({c.symbol})
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -411,7 +414,11 @@ const Settings = () => {
                                 {category.nameAr}
                               </span>
                               <span className="text-[10px] text-gray-400 block">
-                                {category.type === 'income' ? 'قسم دخل' : 'قسم مصروف'}
+                                {category.type === 'income'
+                                  ? 'قسم دخل'
+                                  : category.type === 'transfer'
+                                    ? 'تمويل الصندوق (تلقائي)'
+                                    : 'قسم مصروف'}
                               </span>
                             </div>
                           </div>
