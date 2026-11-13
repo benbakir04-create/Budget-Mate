@@ -1,5 +1,15 @@
 const { validationResult } = require('express-validator');
 const prisma = require('../config/database');
+const { FUNDING_CATEGORY } = require('../constants/money');
+
+// Every deposit is filed under the owner's "Funding" category, created on first use.
+const findOrCreateFundingCategory = async (db, ownerId) => {
+  const existing = await db.category.findFirst({
+    where: { userId: ownerId, name: FUNDING_CATEGORY.name },
+  });
+  if (existing) return existing;
+  return db.category.create({ data: { ...FUNDING_CATEGORY, userId: ownerId } });
+};
 
 const getJointFunds = async (req, res, next) => {
   try {
@@ -79,47 +89,31 @@ const createJointFund = async (req, res, next) => {
     }
 
     const { name, initialBalance } = req.body;
-    const balance = initialBalance ? parseFloat(initialBalance) : 0.0;
+    const balance = initialBalance ? parseFloat(initialBalance) : 0;
 
-    const fund = await prisma.jointFund.create({
-      data: {
-        name,
-        balance,
-        ownerId: req.user.id,
-      },
-    });
-
-    // If initial balance is greater than 0, record an income transaction for funding auditing!
-    if (balance > 0) {
-      // Find or create a default "Funding" category for the owner
-      let category = await prisma.category.findFirst({
-        where: { userId: req.user.id, name: 'Funding' },
+    // The fund and its opening deposit are written together, or not at all.
+    const fund = await prisma.$transaction(async tx => {
+      const created = await tx.jointFund.create({
+        data: { name, balance, ownerId: req.user.id },
       });
 
-      if (!category) {
-        category = await prisma.category.create({
+      // The opening balance is the owner's own money moved into the fund: a transfer.
+      if (balance > 0) {
+        const category = await findOrCreateFundingCategory(tx, req.user.id);
+        await tx.transaction.create({
           data: {
-            name: 'Funding',
-            nameAr: 'تمويل العهدة',
-            icon: 'account-balance-wallet',
-            color: '#1D9E75',
-            type: 'income',
+            amount: balance,
+            type: 'transfer',
+            description: `التمويل الأولي لصندوق: ${name}`,
             userId: req.user.id,
+            categoryId: category.id,
+            fundId: created.id,
           },
         });
       }
 
-      await prisma.transaction.create({
-        data: {
-          amount: balance,
-          type: 'income',
-          description: `التمويل الأولي لصندوق: ${name}`,
-          userId: req.user.id,
-          categoryId: category.id,
-          fundId: fund.id,
-        },
-      });
-    }
+      return created;
+    });
 
     return res.status(201).json({ success: true, data: { fund } });
   } catch (err) {
@@ -253,41 +247,27 @@ const addMoneyToFund = async (req, res, next) => {
       });
     }
 
-    // Find or create default "Funding" category
-    let category = await prisma.category.findFirst({
-      where: { userId: req.user.id, name: 'Funding' },
-    });
+    const depositAmount = parseFloat(amount);
 
-    if (!category) {
-      category = await prisma.category.create({
-        data: {
-          name: 'Funding',
-          nameAr: 'تمويل العهدة',
-          icon: 'account-balance-wallet',
-          color: '#1D9E75',
-          type: 'income',
-          userId: req.user.id,
-        },
-      });
-    }
-
-    // Execute balance increment and transaction creation in a transaction block
-    const results = await prisma.$transaction([
-      prisma.jointFund.update({
+    const results = await prisma.$transaction(async tx => {
+      const category = await findOrCreateFundingCategory(tx, req.user.id);
+      const updatedFund = await tx.jointFund.update({
         where: { id },
-        data: { balance: { increment: parseFloat(amount) } },
-      }),
-      prisma.transaction.create({
+        data: { balance: { increment: depositAmount } },
+      });
+      // A deposit moves the owner's own money into the fund: a transfer, not income.
+      const transaction = await tx.transaction.create({
         data: {
-          amount: parseFloat(amount),
-          type: 'income',
+          amount: depositAmount,
+          type: 'transfer',
           description: description || 'ضخ تمويل إضافي للصندوق المشترك',
           userId: req.user.id,
           categoryId: category.id,
           fundId: id,
         },
-      }),
-    ]);
+      });
+      return [updatedFund, transaction];
+    });
 
     return res.json({
       success: true,

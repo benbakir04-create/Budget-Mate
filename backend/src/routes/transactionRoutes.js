@@ -16,6 +16,9 @@ router.use(authMiddleware);
 // GET /api/transactions - Get all transactions with pagination and filters
 router.get('/', getTransactionsValidator, transactionController.getTransactions);
 
+// GET /api/transactions/summary - Income/expense totals over all visible transactions
+router.get('/summary', getTransactionsValidator, transactionController.getTransactionSummary);
+
 // GET /api/transactions/:id - Get single transaction
 router.get('/:id', transactionIdValidator, transactionController.getTransaction);
 

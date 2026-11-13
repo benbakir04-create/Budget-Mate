@@ -1,6 +1,10 @@
 const express = require('express');
 const authMiddleware = require('../middleware/auth');
 const jointFundController = require('../controllers/jointFundController');
+const {
+  createJointFundValidator,
+  depositValidator,
+} = require('../middleware/validators/jointFundValidators');
 
 const router = express.Router();
 
@@ -14,7 +18,7 @@ router.get('/', jointFundController.getJointFunds);
 router.get('/:id', jointFundController.getJointFund);
 
 // POST /api/funds - Create new joint fund (Owner only)
-router.post('/', jointFundController.createJointFund);
+router.post('/', createJointFundValidator, jointFundController.createJointFund);
 
 // PUT /api/funds/:id - Update joint fund name (Owner only, ownership checked)
 router.put('/:id', jointFundController.updateJointFund);
@@ -23,6 +27,6 @@ router.put('/:id', jointFundController.updateJointFund);
 router.delete('/:id', jointFundController.deleteJointFund);
 
 // POST /api/funds/:id/deposit - Deposit/Add money to a joint fund (Owner only, creates transaction audit)
-router.post('/:id/deposit', jointFundController.addMoneyToFund);
+router.post('/:id/deposit', depositValidator, jointFundController.addMoneyToFund);
 
 module.exports = router;

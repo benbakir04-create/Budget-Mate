@@ -21,7 +21,7 @@ async function main() {
       email: 'seed@budgetmate.local',
       password: hashed,
       name: 'Seed User',
-      currency: 'SAR',
+      currency: 'DZD',
       language: 'ar',
     },
   });

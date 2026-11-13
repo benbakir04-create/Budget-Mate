@@ -110,6 +110,39 @@ const me = async (req, res, next) => {
   }
 };
 
+// Updates the signed-in user's own preferences (currently the display currency).
+const updateMe = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: errors.array() },
+      });
+    }
+
+    const { currency } = req.body;
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { ...(currency !== undefined && { currency }) },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        currency: true,
+        language: true,
+        role: true,
+        parentId: true,
+        createdAt: true,
+      },
+    });
+
+    return res.json({ success: true, data: { user } });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 const logout = (req, res) => {
   res.clearCookie(REFRESH_COOKIE, {
     httpOnly: true,
@@ -153,4 +186,4 @@ const registerPartner = async (req, res, next) => {
   }
 };
 
-module.exports = { register, registerPartner, login, refreshToken, me, logout };
+module.exports = { register, registerPartner, login, refreshToken, me, updateMe, logout };
