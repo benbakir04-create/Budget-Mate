@@ -18,7 +18,7 @@ const DEMO_USER = {
   id: 'demo-user',
   name: 'مستخدم تجريبي',
   email: 'demo@budgetmate.com',
-  currency: 'SAR',
+  currency: 'DZD',
   language: 'ar',
 };
 
@@ -66,6 +66,16 @@ export const AuthProvider = ({ children }) => {
     return newUser;
   };
 
+  // Saves preferences on the server and keeps the in-memory user in step.
+  const updateUser = async changes => {
+    if (DEMO_MODE) {
+      setUser(current => ({ ...current, ...changes }));
+      return;
+    }
+    const updated = await authService.updateMe(changes);
+    setUser(current => ({ ...current, ...updated }));
+  };
+
   const logout = () => {
     if (DEMO_MODE) {
       // في وضع Demo، لا نحتاج للخروج من السيرفر
@@ -86,6 +96,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

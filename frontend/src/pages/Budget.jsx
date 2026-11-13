@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/common/Sidebar';
 import { budgetService } from '../services/budgetService';
 import { categoryService } from '../services/categoryService';
+import { currencyLabel } from '../utils/currency';
 
 const Budget = () => {
   const { t } = useTranslation();
@@ -166,7 +167,7 @@ const Budget = () => {
               <div>
                 <p className="text-gray-500 text-sm">{t('budget.totalBudget', 'Total Budget')}</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {totalBudget.toLocaleString()} {user?.currency || 'SAR'}
+                  {totalBudget.toLocaleString()} {currencyLabel(user?.currency)}
                 </p>
               </div>
               <div className="bg-blue-100 rounded-full p-3">
@@ -193,7 +194,7 @@ const Budget = () => {
               <div>
                 <p className="text-gray-500 text-sm">{t('budget.totalSpent', 'Total Spent')}</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {totalSpent.toLocaleString()} {user?.currency || 'SAR'}
+                  {totalSpent.toLocaleString()} {currencyLabel(user?.currency)}
                 </p>
               </div>
               <div className="bg-red-100 rounded-full p-3">
@@ -222,7 +223,7 @@ const Budget = () => {
                 <p
                   className={`text-2xl font-bold ${totalBudget - totalSpent >= 0 ? 'text-gray-900' : 'text-red-600'}`}
                 >
-                  {(totalBudget - totalSpent).toLocaleString()} {user?.currency || 'SAR'}
+                  {(totalBudget - totalSpent).toLocaleString()} {currencyLabel(user?.currency)}
                 </p>
               </div>
               <div className="bg-green-100 rounded-full p-3">
@@ -415,14 +416,15 @@ const Budget = () => {
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-600">{t('budget.label', 'Budget')}</span>
                         <span className="text-gray-900 font-medium">
-                          {parseFloat(budget.amount).toLocaleString()} {user?.currency || 'SAR'}
+                          {parseFloat(budget.amount).toLocaleString()}{' '}
+                          {currencyLabel(user?.currency)}
                         </span>
                       </div>
 
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-600">{t('budget.spent', 'Spent')}</span>
                         <span className="text-gray-900 font-medium">
-                          {spent.toLocaleString()} {user?.currency || 'SAR'}
+                          {spent.toLocaleString()} {currencyLabel(user?.currency)}
                         </span>
                       </div>
 
@@ -431,7 +433,7 @@ const Budget = () => {
                         <span
                           className={`${remaining >= 0 ? 'text-gray-900' : 'text-red-600'} font-medium`}
                         >
-                          {remaining.toLocaleString()} {user?.currency || 'SAR'}
+                          {remaining.toLocaleString()} {currencyLabel(user?.currency)}
                         </span>
                       </div>
 

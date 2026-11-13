@@ -1,5 +1,9 @@
 const express = require('express');
-const { registerValidator, loginValidator } = require('../middleware/validators/authValidators');
+const {
+  registerValidator,
+  loginValidator,
+  updateMeValidator,
+} = require('../middleware/validators/authValidators');
 const authMiddleware = require('../middleware/auth');
 const authController = require('../controllers/authController');
 
@@ -10,6 +14,7 @@ router.post('/register-partner', authMiddleware, registerValidator, authControll
 router.post('/login', loginValidator, authController.login);
 router.post('/refresh', authController.refreshToken);
 router.get('/me', authMiddleware, authController.me);
+router.patch('/me', authMiddleware, updateMeValidator, authController.updateMe);
 router.post('/logout', authMiddleware, authController.logout);
 
 module.exports = router;

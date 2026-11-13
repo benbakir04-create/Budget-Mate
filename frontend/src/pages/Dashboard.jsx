@@ -5,7 +5,39 @@ import { Link } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import { transactionService } from '../services/transactionService';
 import { budgetService } from '../services/budgetService';
-import { DEMO_FUNDS } from '../services/demoData';
+import { jointFundService } from '../services/jointFundService';
+import QuickAdd from '../components/QuickAdd';
+import { currencyLabel } from '../utils/currency';
+import { amountSign } from '../utils/money';
+
+// Income green, expense neutral dark, a deposit into a fund (transfer) blue: it is neither.
+const typeTone = type => {
+  if (type === 'income') {
+    return {
+      badge: 'bg-green-50 dark:bg-green-500/10',
+      icon: 'text-green-500',
+      amount: 'text-green-500',
+    };
+  }
+  if (type === 'expense') {
+    return {
+      badge: 'bg-rose-50 dark:bg-rose-500/10',
+      icon: 'text-rose-500',
+      amount: 'text-slate-900 dark:text-white',
+    };
+  }
+  return {
+    badge: 'bg-blue-50 dark:bg-blue-500/10',
+    icon: 'text-blue-500',
+    amount: 'text-blue-500',
+  };
+};
+
+const TYPE_ICON_PATH = {
+  income: 'M12 4v16m8-8l-8 8-8-8',
+  expense: 'M12 20V4m8 8l-8-8-8 8',
+  transfer: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4',
+};
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -18,6 +50,7 @@ const Dashboard = () => {
     budgetCount: 0,
   });
   const [recentTransactions, setRecentTransactions] = useState([]);
+  const [funds, setFunds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -25,28 +58,27 @@ const Dashboard = () => {
     loadDashboardData();
   }, []);
 
-  const loadDashboardData = async () => {
+  // quiet: refresh after a quick entry without blanking the page behind a spinner.
+  const loadDashboardData = async ({ quiet = false } = {}) => {
     try {
-      setLoading(true);
-      const transactionsData = await transactionService.getTransactions({ limit: 5 });
-      const budgetsData = await budgetService.getBudgets();
+      if (!quiet) setLoading(true);
+      // Totals come from the server over every transaction, not just the five shown here.
+      const [transactionsData, summary, budgetsData, fundsData] = await Promise.all([
+        transactionService.getTransactions({ limit: 5 }),
+        transactionService.getSummary(),
+        budgetService.getBudgets(),
+        jointFundService.getJointFunds(),
+      ]);
       const transactions = transactionsData.transactions;
 
-      const totalIncome = transactions
-        .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-      const totalExpense = transactions
-        .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-      const balance = totalIncome - totalExpense;
-
       setStats({
-        totalIncome,
-        totalExpense,
-        balance,
-        transactionCount: transactions.length,
+        totalIncome: summary.income,
+        totalExpense: summary.expense,
+        balance: summary.balance,
+        transactionCount: summary.count,
         budgetCount: budgetsData.length,
       });
+      setFunds(fundsData);
       setRecentTransactions(transactions);
     } catch (err) {
       setError('Failed to load dashboard data');
@@ -104,7 +136,7 @@ const Dashboard = () => {
                 <p className="text-2xl font-extrabold text-slate-900 dark:text-white">
                   {stats.totalIncome.toLocaleString()}{' '}
                   <span className="text-sm font-medium text-slate-400">
-                    {user.currency || 'SAR'}
+                    {currencyLabel(user.currency)}
                   </span>
                 </p>
               </div>
@@ -137,7 +169,7 @@ const Dashboard = () => {
                 <p className="text-2xl font-extrabold text-slate-900 dark:text-white">
                   {stats.totalExpense.toLocaleString()}{' '}
                   <span className="text-sm font-medium text-slate-400">
-                    {user.currency || 'SAR'}
+                    {currencyLabel(user.currency)}
                   </span>
                 </p>
               </div>
@@ -172,7 +204,7 @@ const Dashboard = () => {
                 >
                   {stats.balance.toLocaleString()}{' '}
                   <span className="text-sm font-medium text-slate-400">
-                    {user.currency || 'SAR'}
+                    {currencyLabel(user.currency)}
                   </span>
                 </p>
               </div>
@@ -226,6 +258,8 @@ const Dashboard = () => {
           </div>
         </div>
 
+        <QuickAdd funds={funds} user={user} onSaved={() => loadDashboardData({ quiet: true })} />
+
         {/* Joint Funds Area (New Feature) */}
         <div className="mb-10">
           <div className="flex items-center justify-between mb-6">
@@ -241,7 +275,7 @@ const Dashboard = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {DEMO_FUNDS.map(fund => (
+            {funds.map(fund => (
               <div
                 key={fund.id}
                 className="luxury-gradient rounded-[2rem] shadow-xl p-7 text-white relative overflow-hidden transition-transform duration-300 hover:-translate-y-2 group cursor-pointer"
@@ -277,7 +311,7 @@ const Dashboard = () => {
                       {fund.balance.toLocaleString()}
                     </p>
                     <span className="text-lg font-medium ml-2 text-white/80 mb-1">
-                      {user.currency || 'SAR'}
+                      {currencyLabel(user.currency)}
                     </span>
                   </div>
                 </div>
@@ -286,7 +320,7 @@ const Dashboard = () => {
                   <div>
                     <h3 className="text-xl font-bold">{fund.name}</h3>
                     <p className="text-white/60 text-xs mt-1 font-medium">
-                      {fund._count.transactions} عمليات مسجلة
+                      {fund._count?.transactions ?? 0} عمليات مسجلة
                     </p>
                   </div>
                   <div className="flex -space-x-2 space-x-reverse">
@@ -304,7 +338,10 @@ const Dashboard = () => {
             ))}
 
             {/* Create New Fund Card */}
-            <div className="border-[3px] border-dashed border-slate-200 dark:border-slate-800 rounded-[2rem] flex flex-col items-center justify-center p-8 text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-[#0f172a]/50 hover:text-primary dark:hover:text-primary hover:border-primary/50 transition-all cursor-pointer group">
+            <Link
+              to="/funds"
+              className="border-[3px] border-dashed border-slate-200 dark:border-slate-800 rounded-[2rem] flex flex-col items-center justify-center p-8 text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-[#0f172a]/50 hover:text-primary dark:hover:text-primary hover:border-primary/50 transition-all cursor-pointer group"
+            >
               <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl p-5 mb-4 group-hover:scale-110 transition-transform duration-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -325,7 +362,7 @@ const Dashboard = () => {
                 إنشاء صندوق جديد
               </span>
               <span className="text-sm mt-2 font-medium">شارك ميزانيتك مع العائلة أو الشركاء</span>
-            </div>
+            </Link>
           </div>
         </div>
 
@@ -356,30 +393,21 @@ const Dashboard = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-5 space-x-reverse">
                         <div
-                          className={`p-4 rounded-2xl transition-transform group-hover:scale-105 ${transaction.type === 'income' ? 'bg-green-50 dark:bg-green-500/10' : 'bg-rose-50 dark:bg-rose-500/10'}`}
+                          className={`p-4 rounded-2xl transition-transform group-hover:scale-105 ${typeTone(transaction.type).badge}`}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className={`h-6 w-6 ${transaction.type === 'income' ? 'text-green-500' : 'text-rose-500'}`}
+                            className={`h-6 w-6 ${typeTone(transaction.type).icon}`}
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
                           >
-                            {transaction.type === 'income' ? (
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2.5}
-                                d="M12 4v16m8-8l-8 8-8-8"
-                              />
-                            ) : (
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2.5}
-                                d="M12 20V4m8 8l-8-8-8 8"
-                              />
-                            )}
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2.5}
+                              d={TYPE_ICON_PATH[transaction.type] || TYPE_ICON_PATH.transfer}
+                            />
                           </svg>
                         </div>
                         <div>
@@ -403,12 +431,12 @@ const Dashboard = () => {
                         </div>
                       </div>
                       <div
-                        className={`text-lg font-extrabold ${transaction.type === 'income' ? 'text-green-500' : 'text-slate-900 dark:text-white'}`}
+                        className={`text-lg font-extrabold ${typeTone(transaction.type).amount}`}
                       >
-                        {transaction.type === 'income' ? '+' : '-'}
+                        {amountSign(transaction.type)}
                         {parseFloat(transaction.amount).toLocaleString()}{' '}
                         <span className="text-sm font-medium text-slate-400">
-                          {user.currency || 'SAR'}
+                          {currencyLabel(user.currency)}
                         </span>
                       </div>
                     </div>

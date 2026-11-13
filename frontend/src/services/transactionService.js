@@ -1,5 +1,6 @@
 import api from './api';
 import { DEMO_TRANSACTIONS } from './demoData';
+import { summarizeTotals } from '../utils/money';
 
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
@@ -27,6 +28,26 @@ export const transactionService = {
 
     const response = await api.get(`/transactions?${queryParams}`);
     return response.data.data;
+  },
+
+  // Income and expense totals over every matching transaction, computed by the server.
+  // Fund deposits (transfers) are excluded.
+  async getSummary(params = {}) {
+    if (DEMO_MODE) {
+      let data = [...DEMO_TRANSACTIONS];
+      if (params.categoryId) data = data.filter(t => t.categoryId === params.categoryId);
+      return summarizeTotals(data);
+    }
+
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+
+    const response = await api.get(`/transactions/summary?${queryParams}`);
+    return response.data.data.summary;
   },
 
   async getTransaction(id) {

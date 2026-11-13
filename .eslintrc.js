@@ -17,7 +17,7 @@ module.exports = {
   rules: {
     // Code style (indentation is owned by Prettier)
     'linebreak-style': ['error', 'unix'],
-    quotes: ['error', 'single'],
+    quotes: ['error', 'single', { avoidEscape: true }],
     semi: ['error', 'always'],
 
     // Best practices
@@ -61,6 +61,13 @@ module.exports = {
       },
       rules: {
         'no-console': 'off', // Allow console in backend
+      },
+    },
+    {
+      files: ['backend/tests/**/*.js'],
+      env: {
+        node: true,
+        jest: true,
       },
     },
   ],

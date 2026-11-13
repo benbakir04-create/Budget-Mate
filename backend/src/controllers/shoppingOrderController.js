@@ -106,10 +106,20 @@ const approveShoppingOrder = async (req, res, next) => {
       });
     }
 
-    const updatedOrder = await prisma.shoppingOrder.update({
-      where: { id },
+    // Only a pending order can be approved. Approving a purchased order would reopen it
+    // and let it be bought, and deducted from the fund, a second time.
+    const approved = await prisma.shoppingOrder.updateMany({
+      where: { id, status: 'pending_approval' },
       data: { status: 'approved' },
     });
+    if (approved.count === 0) {
+      return res.status(409).json({
+        success: false,
+        error: { code: 'ORDER_NOT_PENDING', message: 'Only pending orders can be approved' },
+      });
+    }
+
+    const updatedOrder = await prisma.shoppingOrder.findUnique({ where: { id } });
 
     return res.json({ success: true, data: { order: updatedOrder } });
   } catch (err) {
@@ -152,9 +162,24 @@ const purchaseShoppingOrder = async (req, res, next) => {
       });
     }
 
+    if (order.status === 'purchased') {
+      return res.status(409).json({
+        success: false,
+        error: { code: 'ORDER_ALREADY_PURCHASED', message: 'This order was already purchased' },
+      });
+    }
+
+    // A partner buys only what the owner approved; the owner may buy a pending order directly.
+    if (order.status !== 'approved' && req.user.role !== 'owner') {
+      return res.status(409).json({
+        success: false,
+        error: { code: 'ORDER_NOT_APPROVED', message: 'This order is waiting for approval' },
+      });
+    }
+
     // Verify Category
     const category = await prisma.category.findUnique({ where: { id: categoryId } });
-    if (!category || category.userId !== ownerId) {
+    if (!category || category.userId !== ownerId || category.type !== 'expense') {
       return res.status(400).json({
         success: false,
         error: { code: 'INVALID_CATEGORY', message: 'Category not found or not accessible' },
@@ -174,20 +199,21 @@ const purchaseShoppingOrder = async (req, res, next) => {
 
     const finalAmount = parseFloat(actualAmount || order.estAmount);
 
-    // Convert order to transaction and deduct from joint fund
-    const results = await prisma.$transaction([
-      // 1. Update order status to purchased
-      prisma.shoppingOrder.update({
-        where: { id },
+    // Convert order to transaction and deduct from joint fund, all or nothing.
+    const result = await prisma.$transaction(async tx => {
+      // Claim the order first: if two "purchased" taps race, only one finds the order
+      // still in the status we read, so the fund is charged once.
+      const claimed = await tx.shoppingOrder.updateMany({
+        where: { id, status: order.status },
         data: { status: 'purchased' },
-      }),
-      // 2. Deduct from joint fund
-      prisma.jointFund.update({
+      });
+      if (claimed.count === 0) return null;
+
+      const fund = await tx.jointFund.update({
         where: { id: order.fundId },
         data: { balance: { decrement: finalAmount } },
-      }),
-      // 3. Create actual Transaction record
-      prisma.transaction.create({
+      });
+      const transaction = await tx.transaction.create({
         data: {
           amount: finalAmount,
           type: 'expense',
@@ -200,17 +226,19 @@ const purchaseShoppingOrder = async (req, res, next) => {
         include: {
           category: { select: { id: true, name: true, nameAr: true, icon: true, color: true } },
         },
-      }),
-    ]);
-
-    return res.json({
-      success: true,
-      data: {
-        order: results[0],
-        fund: results[1],
-        transaction: results[2],
-      },
+      });
+      const purchasedOrder = await tx.shoppingOrder.findUnique({ where: { id } });
+      return { order: purchasedOrder, fund, transaction };
     });
+
+    if (!result) {
+      return res.status(409).json({
+        success: false,
+        error: { code: 'ORDER_ALREADY_PURCHASED', message: 'This order was already purchased' },
+      });
+    }
+
+    return res.json({ success: true, data: result });
   } catch (err) {
     return next(err);
   }

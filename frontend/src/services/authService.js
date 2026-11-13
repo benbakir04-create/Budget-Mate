@@ -20,6 +20,12 @@ export const authService = {
     return response.data.data.user;
   },
 
+  // Saves the signed-in user's preferences (currently the display currency).
+  async updateMe(data) {
+    const response = await api.patch('/auth/me', data);
+    return response.data.data.user;
+  },
+
   // Restores the session from the httpOnly refresh cookie after a page reload.
   async restoreSession() {
     const { user } = await refreshAccessToken();
