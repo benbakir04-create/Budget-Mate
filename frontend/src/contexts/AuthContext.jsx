@@ -37,22 +37,13 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      // الوضع العادي - التحقق من تسجيل الدخول
+      // الوضع العادي: استعادة الجلسة من كوكي الـ refresh token
       try {
-        const token = authService.getToken();
-        const storedUser = authService.getUser();
-
-        if (token && storedUser) {
-          try {
-            const currentUser = await authService.getCurrentUser();
-            setUser(currentUser);
-            setIsAuthenticated(true);
-          } catch (error) {
-            authService.logout();
-          }
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
+        const currentUser = await authService.restoreSession();
+        setUser(currentUser);
+        setIsAuthenticated(true);
+      } catch {
+        // لا توجد جلسة صالحة: يبقى المستخدم غير مسجّل
       } finally {
         setIsLoading(false);
       }

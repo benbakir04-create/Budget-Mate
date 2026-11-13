@@ -33,7 +33,8 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(morgan('dev'));
 
-// Rate limiting for auth endpoints (5 requests / 15 min)
+// Rate limiting for credential endpoints (5 requests / 15 min).
+// /auth/refresh and /auth/me are not limited: the app calls refresh on every page load.
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
@@ -46,7 +47,8 @@ const authLimiter = rateLimit({
 });
 
 // Routes
-app.use('/api/auth', authLimiter, authRoutes);
+app.use(['/api/auth/login', '/api/auth/register'], authLimiter);
+app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/budgets', budgetRoutes);
 app.use('/api/categories', categoryRoutes);
