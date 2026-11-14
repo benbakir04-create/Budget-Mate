@@ -8,10 +8,11 @@ const QuickAddContext = createContext({ openQuickAdd: () => {}, savedCount: 0 })
 
 export const QuickAddProvider = ({ children }) => {
   const { user } = useAuth();
+  // false when closed, otherwise the kind to open on: 'expense' or 'income'.
   const [open, setOpen] = useState(false);
   const [savedCount, setSavedCount] = useState(0);
 
-  const openQuickAdd = useCallback(() => setOpen(true), []);
+  const openQuickAdd = useCallback(kind => setOpen(kind === 'income' ? 'income' : 'expense'), []);
   const close = useCallback(() => setOpen(false), []);
   const onSaved = useCallback(() => setSavedCount(n => n + 1), []);
   const value = useMemo(() => ({ openQuickAdd, savedCount }), [openQuickAdd, savedCount]);
@@ -19,7 +20,13 @@ export const QuickAddProvider = ({ children }) => {
   return (
     <QuickAddContext.Provider value={value}>
       {children}
-      <QuickAdd open={open && !!user} onClose={close} onSaved={onSaved} user={user} />
+      <QuickAdd
+        open={!!open && !!user}
+        initialKind={open || 'expense'}
+        onClose={close}
+        onSaved={onSaved}
+        user={user}
+      />
     </QuickAddContext.Provider>
   );
 };

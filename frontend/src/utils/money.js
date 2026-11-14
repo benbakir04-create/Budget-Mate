@@ -58,6 +58,18 @@ export const fundOutlook = ({ balance, spent, now = new Date() }) => {
   return { total, remainingPct, coversMonth: false, runsOutOn };
 };
 
+// Where a budget stands: what is left of it and its state. ok under 75%, near from 75%,
+// over at 100% or more, the same thresholds as the badges on the home screen.
+export const budgetStatus = budget => {
+  const limit = Math.max(Number(budget?.amount) || 0, 0);
+  const spent = Math.max(Number(budget?.spent) || 0, 0);
+  const pct = limit > 0 ? Math.round((spent / limit) * 100) : 0;
+  let state = 'ok';
+  if (limit > 0 && pct >= 100) state = 'over';
+  else if (pct >= 75) state = 'near';
+  return { limit, spent, left: limit - spent, pct, state };
+};
+
 // Amounts are always written with Western digits and comma grouping (4,350), as in Algeria,
 // whatever the browser's language. Decimals only when there are any.
 const AMOUNT_FORMAT = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });

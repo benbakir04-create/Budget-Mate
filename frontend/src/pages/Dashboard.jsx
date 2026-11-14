@@ -10,7 +10,7 @@ import { transactionService } from '../services/transactionService';
 import { budgetService } from '../services/budgetService';
 import { jointFundService } from '../services/jointFundService';
 import { categoryService } from '../services/categoryService';
-import { amountSign, fundOutlook } from '../utils/money';
+import { amountSign, budgetStatus, fundOutlook } from '../utils/money';
 import { formatDate, formatDay } from '../utils/dates';
 
 const MONTH = new Intl.DateTimeFormat('ar-DZ-u-nu-latn', { month: 'long' });
@@ -31,9 +31,9 @@ const outlookText = outlook => {
 // The badge on a category card: its share of the budget when it has one.
 const budgetBadge = budget => {
   if (!budget || !(Number(budget.amount) > 0)) return null;
-  const pct = Math.round((Number(budget.spent) / Number(budget.amount)) * 100);
-  if (pct >= 100) return { text: 'تجاوز', className: 'bg-alert-500 text-white' };
-  if (pct >= 75) return { text: `${pct}%`, className: 'bg-sun-400 text-ink' };
+  const { pct, state } = budgetStatus(budget);
+  if (state === 'over') return { text: 'تجاوز', className: 'bg-alert-500 text-white' };
+  if (state === 'near') return { text: `${pct}%`, className: 'bg-sun-400 text-ink' };
   return { text: `${pct}%`, className: 'bg-white/80 dark:bg-white/10 text-ink dark:text-white' };
 };
 
