@@ -10,6 +10,7 @@ const PATHS = {
   clock: 'M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM12 8v4l3 2',
   close: 'M6 6l12 12M18 6 6 18',
   chevron: 'm15 6-6 6 6 6',
+  trash: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
 };
 
 const Icon = ({ name, className = 'h-5 w-5', strokeWidth = 2 }) => (

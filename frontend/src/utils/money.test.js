@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { summarizeTotals, amountSign, formatAmount, fundOutlook } from './money.js';
+import { summarizeTotals, amountSign, formatAmount, fundOutlook, budgetStatus } from './money.js';
 import { currencyLabel } from './currency.js';
 
 test('fund deposits (transfers) count toward neither income nor expense', () => {
@@ -77,4 +77,25 @@ test('a fund with nothing spent yet covers the month, an empty one does not', ()
   const empty = fundOutlook({ balance: 0, spent: 60000 });
   assert.equal(empty.coversMonth, false);
   assert.equal(empty.remainingPct, 0);
+});
+
+test('budget status: ok under 75%, near from 75%, over at 100%', () => {
+  assert.deepEqual(budgetStatus({ amount: 20000, spent: 5000 }), {
+    limit: 20000,
+    spent: 5000,
+    left: 15000,
+    pct: 25,
+    state: 'ok',
+  });
+  assert.equal(budgetStatus({ amount: '20000', spent: '15000' }).state, 'near');
+  assert.equal(budgetStatus({ amount: 20000, spent: 20000 }).state, 'over');
+  const over = budgetStatus({ amount: 20000, spent: 23000 });
+  assert.equal(over.left, -3000);
+  assert.equal(over.pct, 115);
+});
+
+test('budget status with no limit or no spending stays calm', () => {
+  assert.equal(budgetStatus({ amount: 0, spent: 500 }).state, 'ok');
+  assert.equal(budgetStatus({ amount: 10000 }).pct, 0);
+  assert.equal(budgetStatus(null).state, 'ok');
 });

@@ -22,15 +22,24 @@ const byName = (a, b) => {
   return (a.nameAr || a.name).localeCompare(b.nameAr || b.name, 'ar');
 };
 
-// Records an expense in three taps: amount, category, save. Opens as a bottom sheet on the
-// phone and a centered card on a wide screen. A partner spends from the fund by default;
-// the owner from their own pocket.
-const QuickAdd = ({ open, onClose, onSaved, user }) => {
-  const [categories, setCategories] = useState([]);
+const todayInput = () => {
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+};
+
+// Records an expense (or income) in three taps: amount, category, save. Opens as a bottom
+// sheet on the phone and a centered card on a wide screen. A partner spends from the fund by
+// default; the owner from their own pocket. Income never goes into a fund.
+const QuickAdd = ({ open, initialKind = 'expense', onClose, onSaved, user }) => {
+  const [kind, setKind] = useState(initialKind);
+  const [allCategories, setAllCategories] = useState([]);
   const [funds, setFunds] = useState([]);
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [fundId, setFundId] = useState('');
+  const [note, setNote] = useState('');
+  const [day, setDay] = useState(todayInput());
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
   const amountRef = useRef(null);
@@ -38,9 +47,12 @@ const QuickAdd = ({ open, onClose, onSaved, user }) => {
   useEffect(() => {
     if (!open) return undefined;
     setMessage(null);
+    setKind(initialKind);
+    setCategoryId('');
+    setDay(todayInput());
     Promise.all([categoryService.getCategories(), jointFundService.getJointFunds()])
       .then(([allCategories, allFunds]) => {
-        setCategories(allCategories.filter(c => c.type === 'expense').sort(byName));
+        setAllCategories(allCategories.filter(c => c.type !== 'transfer').sort(byName));
         setFunds(allFunds);
         if (user?.role === 'partner' && allFunds.length > 0) {
           setFundId(current => current || allFunds[0].id);
@@ -54,9 +66,16 @@ const QuickAdd = ({ open, onClose, onSaved, user }) => {
       clearTimeout(focus);
       window.removeEventListener('keydown', onKey);
     };
-  }, [open, user, onClose]);
+  }, [open, initialKind, user, onClose]);
 
   if (!open) return null;
+
+  const isIncome = kind === 'income';
+  const categories = allCategories.filter(c => c.type === kind);
+  const switchKind = next => {
+    setKind(next);
+    setCategoryId('');
+  };
 
   const canSave = parseFloat(amount) > 0 && categoryId && !saving;
 
@@ -68,10 +87,13 @@ const QuickAdd = ({ open, onClose, onSaved, user }) => {
     try {
       await transactionService.createTransaction({
         amount: parseFloat(amount),
-        type: 'expense',
+        type: kind,
         categoryId,
-        fundId: fundId || undefined,
-        date: new Date().toISOString(),
+        fundId: isIncome ? undefined : fundId || undefined,
+        description: note.trim() || undefined,
+        // Today keeps the current time so the newest entry sorts first; another day gets noon.
+        date:
+          day === todayInput() ? new Date().toISOString() : new Date(`${day}T12:00`).toISOString(),
       });
       const category = categories.find(c => c.id === categoryId);
       setMessage({
@@ -80,6 +102,7 @@ const QuickAdd = ({ open, onClose, onSaved, user }) => {
       });
       setAmount('');
       setCategoryId('');
+      setNote('');
       onSaved?.();
     } catch (err) {
       const code = err.response?.data?.error?.code;
@@ -106,9 +129,33 @@ const QuickAdd = ({ open, onClose, onSaved, user }) => {
       >
         <span className="block md:hidden mx-auto mb-3 h-1.5 w-11 rounded-full bg-stone-200 dark:bg-white/10" />
         <div className="flex items-center justify-between mb-4">
-          <h2 id="quick-add-title" className="text-lg font-semibold text-ink dark:text-white">
-            مصروف جديد
+          <h2 id="quick-add-title" className="sr-only">
+            {isIncome ? 'دخل جديد' : 'مصروف جديد'}
           </h2>
+          <div
+            role="group"
+            aria-label="النوع"
+            className="grid grid-cols-2 bg-soft dark:bg-white/5 rounded-2xl p-1 w-56"
+          >
+            {[
+              ['expense', 'مصروف'],
+              ['income', 'دخل'],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={kind === value}
+                onClick={() => switchKind(value)}
+                className={`min-h-[38px] rounded-xl text-sm font-medium transition-colors ${
+                  kind === value
+                    ? 'bg-white dark:bg-night text-ink dark:text-white shadow-sm'
+                    : 'text-stone-500 dark:text-stone-400'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -139,7 +186,7 @@ const QuickAdd = ({ open, onClose, onSaved, user }) => {
           </span>
         </label>
 
-        {funds.length > 0 && (
+        {!isIncome && funds.length > 0 && (
           <div
             className="flex flex-wrap justify-center gap-2 mb-4"
             role="group"
@@ -199,12 +246,32 @@ const QuickAdd = ({ open, onClose, onSaved, user }) => {
           })}
         </div>
 
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 mb-4">
+          <input
+            type="text"
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            placeholder="ملاحظة (اختياري): بقالة الأسبوع"
+            aria-label="ملاحظة"
+            maxLength={200}
+            className="min-h-[46px] px-4 rounded-2xl bg-soft dark:bg-white/5 text-ink dark:text-white placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+          />
+          <input
+            type="date"
+            value={day}
+            max={todayInput()}
+            onChange={e => setDay(e.target.value || todayInput())}
+            aria-label="التاريخ"
+            className="w-[9.5rem] min-w-0 min-h-[46px] px-3 rounded-2xl bg-soft dark:bg-white/5 text-ink dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+          />
+        </div>
+
         <button
           type="submit"
           disabled={!canSave}
           className="w-full min-h-[52px] rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-semibold shadow-lg shadow-brand-500/30 disabled:opacity-40 disabled:shadow-none transition-all"
         >
-          {saving ? 'جارٍ الحفظ...' : 'حفظ المصروف'}
+          {saving ? 'جارٍ الحفظ...' : isIncome ? 'حفظ الدخل' : 'حفظ المصروف'}
         </button>
 
         {message && (

@@ -1,687 +1,428 @@
-import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useQuickAdd } from '../contexts/QuickAddContext';
 import Sidebar from '../components/common/Sidebar';
+import Money from '../components/common/Money';
+import Icon from '../components/common/Icon';
+import CategoryIcon from '../components/common/CategoryIcon';
 import { transactionService } from '../services/transactionService';
-import { categoryService } from '../services/categoryService';
 import { currencyLabel, DEFAULT_CURRENCY } from '../utils/currency';
 import { amountSign, typeLabel } from '../utils/money';
-import Money from '../components/common/Money';
 import { formatDay } from '../utils/dates';
 
-// Income green, expense red, a deposit into a fund (transfer) blue: it is neither.
-const TYPE_STYLE = {
-  income: { badge: 'bg-mint-100', text: 'text-mint-600', path: 'M12 4v16m8-8l-8 8-8-8' },
-  expense: { badge: 'bg-alert-100', text: 'text-alert-600', path: 'M12 20V4m8 8l-8-8-8 8' },
-  transfer: {
-    badge: 'bg-blue-100',
-    text: 'text-blue-600',
-    path: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4',
-  },
+const MONTH_YEAR = new Intl.DateTimeFormat('ar-DZ-u-nu-latn', { month: 'long', year: 'numeric' });
+const PAGE_SIZE = 100;
+const MAX_PAGES = 10;
+
+const monthRange = offset => {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0, 23, 59, 59, 999);
+  return { start, end };
 };
-const typeStyle = type => TYPE_STYLE[type] || TYPE_STYLE.transfer;
+
+const dayKey = value => {
+  const d = new Date(value);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+};
+
+const amountTone = type => {
+  if (type === 'income') return 'text-mint-600 dark:text-mint-400';
+  if (type === 'transfer') return 'text-brand-600 dark:text-brand-300';
+  return 'text-ink dark:text-white';
+};
+
+const firstName = name => name?.trim().split(/\s+/)[0] || '';
+
+// The month's transactions, newest first. The server pages at 100, so fetch until done.
+const loadMonth = async range => {
+  const all = [];
+  for (let page = 1; page <= MAX_PAGES; page += 1) {
+    const result = await transactionService.getTransactions({
+      startDate: range.start.toISOString(),
+      endDate: range.end.toISOString(),
+      limit: PAGE_SIZE,
+      page,
+    });
+    all.push(...(result.transactions || []));
+    if (!result.pagination || page >= result.pagination.pages) break;
+  }
+  // Kept to the month and newest first here too, so the day groups hold whatever the source.
+  return all
+    .filter(tx => {
+      const d = new Date(tx.date);
+      return d >= range.start && d <= range.end;
+    })
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+};
+
+const Chip = ({ active, onClick, children }) => (
+  <button
+    type="button"
+    aria-pressed={active}
+    onClick={onClick}
+    className={`shrink-0 inline-flex items-center gap-1.5 min-h-[38px] px-4 rounded-full text-sm font-medium transition-colors ${
+      active
+        ? 'bg-ink text-white dark:bg-white dark:text-ink'
+        : 'bg-white dark:bg-night-card text-stone-600 dark:text-stone-300 shadow-[0_3px_10px_rgba(20,24,60,0.05)]'
+    }`}
+  >
+    {children}
+  </button>
+);
 
 const Transactions = () => {
-  const { t } = useTranslation();
   const { user } = useAuth();
-  const [transactions, setTransactions] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [filteredTransactions, setFilteredTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [filter, setFilter] = useState({
-    type: 'all',
-    categoryId: 'all',
-    search: '',
-    scope: 'all', // 'all', 'personal', 'shared'
-  });
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [formData, setFormData] = useState({
-    type: 'expense',
-    categoryId: '',
-    amount: '',
-    description: '',
-    date: new Date().toISOString().split('T')[0],
-  });
-  const [totalIncome, setTotalIncome] = useState(0);
-  const [totalExpense, setTotalExpense] = useState(0);
+  const { openQuickAdd, savedCount } = useQuickAdd();
+  const [offset, setOffset] = useState(0);
+  const [transactions, setTransactions] = useState(null);
+  const [summary, setSummary] = useState(null);
+  const [error, setError] = useState(false);
+  const [filter, setFilter] = useState('all');
+  const [person, setPerson] = useState('all');
+  const [search, setSearch] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [notice, setNotice] = useState(null);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const range = useMemo(() => monthRange(offset), [offset]);
 
-  useEffect(() => {
-    applyFilters();
-  }, [transactions, filter]);
-
-  const loadData = async () => {
+  const load = useCallback(async () => {
     try {
-      setLoading(true);
-      // Totals come from the server over every transaction; fund deposits are excluded.
-      const [transactionsData, categoriesData, summary] = await Promise.all([
-        transactionService.getTransactions({ limit: 100 }),
-        categoryService.getCategories(),
-        transactionService.getSummary(),
+      const [list, totals] = await Promise.all([
+        loadMonth(range),
+        transactionService.getSummary({
+          startDate: range.start.toISOString(),
+          endDate: range.end.toISOString(),
+        }),
       ]);
-
-      setTransactions(transactionsData.transactions);
-      setCategories(categoriesData);
-      setTotalIncome(summary.income);
-      setTotalExpense(summary.expense);
+      setTransactions(list);
+      setSummary(totals);
+      setError(false);
     } catch (err) {
-      setError('Failed to load data');
-      console.error(err);
-    } finally {
-      setLoading(false);
+      console.error('Failed to load transactions', err);
+      setError(true);
     }
-  };
+  }, [range]);
 
-  const applyFilters = () => {
-    let filtered = [...transactions];
+  useEffect(() => {
+    setTransactions(null);
+    load();
+  }, [load, savedCount]);
 
-    if (filter.type !== 'all') {
-      filtered = filtered.filter(t => t.type === filter.type);
-    }
+  const people = useMemo(() => {
+    const seen = new Map();
+    (transactions || []).forEach(tx => tx.user && seen.set(tx.user.id, tx.user));
+    return [...seen.values()];
+  }, [transactions]);
 
-    if (filter.categoryId !== 'all') {
-      filtered = filtered.filter(t => t.categoryId === filter.categoryId);
-    }
+  const visible = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return (transactions || []).filter(tx => {
+      if (filter === 'expense' && tx.type !== 'expense') return false;
+      if (filter === 'income' && tx.type !== 'income') return false;
+      if (filter === 'fund' && !tx.fund) return false;
+      if (person !== 'all' && tx.user?.id !== person) return false;
+      if (!q) return true;
+      return [tx.description, tx.category?.nameAr, tx.category?.name, tx.fund?.name]
+        .filter(Boolean)
+        .some(text => text.toLowerCase().includes(q));
+    });
+  }, [transactions, filter, person, search]);
 
-    if (filter.scope !== 'all') {
-      if (filter.scope === 'personal') {
-        filtered = filtered.filter(t => !t.fundId && t.userId === user.id);
-      } else if (filter.scope === 'shared') {
-        filtered = filtered.filter(t => !!t.fundId);
+  const days = useMemo(() => {
+    const groups = [];
+    for (const tx of visible) {
+      const key = dayKey(tx.date);
+      let group = groups[groups.length - 1];
+      if (!group || group.key !== key) {
+        group = { key, date: tx.date, items: [], spent: 0 };
+        groups.push(group);
       }
+      group.items.push(tx);
+      if (tx.type === 'expense') group.spent += Number(tx.amount) || 0;
     }
+    return groups;
+  }, [visible]);
 
-    if (filter.search) {
-      filtered = filtered.filter(
-        t =>
-          t.description.toLowerCase().includes(filter.search.toLowerCase()) ||
-          t.category.name.toLowerCase().includes(filter.search.toLowerCase()) ||
-          t.category.nameAr.includes(filter.search.toLowerCase())
-      );
+  const handleDelete = async tx => {
+    const label = tx.description || tx.category?.nameAr || tx.category?.name || 'هذه العملية';
+    if (!window.confirm(`حذف «${label}»؟ لا يمكن التراجع عن الحذف.`)) return;
+    try {
+      await transactionService.deleteTransaction(tx.id);
+      setNotice({ tone: 'success', text: `حُذفت «${label}».` });
+      load();
+    } catch (err) {
+      console.error(err);
+      setNotice({ tone: 'error', text: 'تعذّر الحذف. قد لا تملك صلاحية حذف هذه العملية.' });
     }
-
-    setFilteredTransactions(filtered);
   };
 
   const exportToCSV = () => {
-    const isAr = user?.language === 'ar';
     const headers = [
-      isAr ? 'الوصف' : 'Description',
-      isAr ? 'التصنيف' : 'Category',
-      isAr
-        ? `المبلغ (${currencyLabel(user?.currency)})`
-        : `Amount (${user?.currency || DEFAULT_CURRENCY})`,
-      isAr ? 'النوع' : 'Type',
-      isAr ? 'التاريخ' : 'Date',
-      isAr ? 'المصدر' : 'Source',
+      'الوصف',
+      'القسم',
+      `المبلغ (${currencyLabel(user?.currency)})`,
+      'النوع',
+      'التاريخ',
+      'من',
+      'المصدر',
     ];
-
-    const rows = filteredTransactions.map(tx => [
-      tx.description,
-      isAr ? tx.category.nameAr : tx.category.name,
+    const rows = visible.map(tx => [
+      tx.description || '',
+      tx.category?.nameAr || tx.category?.name || '',
       tx.amount,
-      isAr ? typeLabel(tx.type) : tx.type,
-      new Date(tx.date).toLocaleDateString(),
-      tx.fund ? tx.fund.name : isAr ? 'شخصي' : 'Personal',
+      typeLabel(tx.type),
+      new Date(tx.date).toISOString().split('T')[0],
+      tx.user?.name || '',
+      tx.fund ? tx.fund.name : 'شخصي',
     ]);
-
-    const csvContent =
-      '\uFEFF' +
-      [
-        headers.join(','),
-        ...rows.map(row => row.map(val => `"${val.toString().replace(/"/g, '""')}"`).join(',')),
-      ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
+    const csv =
+      '﻿' +
+      [headers, ...rows]
+        .map(row => row.map(val => `"${String(val ?? '').replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
     const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute(
-      'download',
-      `wazen_transactions_${new Date().toISOString().split('T')[0]}.csv`
-    );
-    link.style.visibility = 'hidden';
+    link.href = url;
+    link.download = `wazen_${range.start.getFullYear()}-${String(range.start.getMonth() + 1).padStart(2, '0')}_${user?.currency || DEFAULT_CURRENCY}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
-  const handleFilterChange = e => {
-    const { name, value } = e.target;
-    setFilter(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleFormChange = e => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async e => {
-    e.preventDefault();
-    try {
-      const transactionData = {
-        ...formData,
-        amount: parseFloat(formData.amount),
-      };
-
-      await transactionService.createTransaction(transactionData);
-      setFormData({
-        type: 'expense',
-        categoryId: '',
-        amount: '',
-        description: '',
-        date: new Date().toISOString().split('T')[0],
-      });
-      setShowAddForm(false);
-      loadData(); // Reload data
-    } catch (err) {
-      setError('Failed to create transaction');
-      console.error(err);
-    }
-  };
-
-  const handleDelete = async id => {
-    if (
-      window.confirm(
-        t('transactions.confirmDelete', 'Are you sure you want to delete this transaction?')
-      )
-    ) {
-      try {
-        await transactionService.deleteTransaction(id);
-        loadData(); // Reload data
-      } catch (err) {
-        setError('Failed to delete transaction');
-        console.error(err);
-      }
-    }
-  };
-
-  const getFilteredCategories = () => {
-    return categories.filter(cat => formData.type === 'all' || cat.type === formData.type);
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-stone-50 flex">
-        <Sidebar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-stone-600">Loading...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const currency = user?.currency;
 
   return (
-    <div className="min-h-screen bg-stone-50 flex">
+    <div className="min-h-screen flex">
       <Sidebar />
-      <div className="flex-1 max-w-7xl mx-auto p-4 md:mr-64">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-stone-900">
-            {t('transactions.title', 'Transactions')}
-          </h1>
+      <main className="flex-1 md:mr-64 p-4 md:p-8 pt-20 md:pt-8 w-full max-w-4xl">
+        <header className="flex items-center justify-between gap-3 mb-4">
+          <h1 className="text-2xl font-bold text-ink dark:text-white">العمليات</h1>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowSearch(v => !v)}
+              aria-label="بحث"
+              aria-expanded={showSearch}
+              className="h-11 w-11 grid place-items-center rounded-full bg-white dark:bg-night-card text-stone-600 dark:text-stone-300 shadow-[0_4px_14px_rgba(20,24,60,0.07)]"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={exportToCSV}
+              disabled={!visible.length}
+              className="min-h-[44px] px-4 rounded-full bg-white dark:bg-night-card text-sm font-medium text-stone-700 dark:text-stone-200 shadow-[0_4px_14px_rgba(20,24,60,0.07)] disabled:opacity-40"
+            >
+              تصدير Excel
+            </button>
+          </div>
+        </header>
+
+        {showSearch && (
+          <input
+            type="search"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="ابحث في الوصف أو القسم أو الصندوق"
+            aria-label="بحث"
+            autoFocus
+            className="w-full mb-4 min-h-[48px] px-4 rounded-2xl bg-white dark:bg-night-card text-ink dark:text-white shadow-[0_4px_14px_rgba(20,24,60,0.05)] focus:outline-none focus:ring-2 focus:ring-brand-500"
+          />
+        )}
+
+        {/* Month switcher */}
+        <div className="flex items-center justify-between bg-white dark:bg-night-card rounded-2xl p-1.5 mb-4 shadow-[0_4px_14px_rgba(20,24,60,0.05)]">
           <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-primary hover:bg-brand-800 text-white px-4 py-2 rounded-md text-sm font-medium"
+            type="button"
+            onClick={() => setOffset(o => o - 1)}
+            aria-label="الشهر السابق"
+            className="h-10 w-10 grid place-items-center rounded-xl text-stone-600 dark:text-stone-300 hover:bg-soft dark:hover:bg-white/5"
           >
-            {showAddForm ? t('common.cancel', 'Cancel') : t('transactions.add', 'Add Transaction')}
+            <Icon name="chevron" className="h-5 w-5 rotate-180" />
+          </button>
+          <span className="font-semibold text-ink dark:text-white">
+            {MONTH_YEAR.format(range.start)}
+          </span>
+          <button
+            type="button"
+            onClick={() => setOffset(o => Math.min(o + 1, 0))}
+            disabled={offset === 0}
+            aria-label="الشهر التالي"
+            className="h-10 w-10 grid place-items-center rounded-xl text-stone-600 dark:text-stone-300 hover:bg-soft dark:hover:bg-white/5 disabled:opacity-30"
+          >
+            <Icon name="chevron" className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-mint-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-stone-500 text-sm">
-                  {t('dashboard.totalIncome', 'Total Income')}
-                </p>
-                <p className="text-2xl font-bold text-stone-900">
-                  <Money amount={totalIncome} currency={user?.currency} />
-                </p>
-              </div>
-              <div className="bg-mint-100 rounded-full p-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-mint-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8l-8 8-8-8"
-                  />
-                </svg>
-              </div>
-            </div>
+        {/* Month totals */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="rounded-[22px] p-4 bg-alert-50 dark:bg-alert-500/10">
+            <p className="text-xs text-alert-800 dark:text-alert-200">صُرف هذا الشهر</p>
+            <Money
+              amount={summary?.expense || 0}
+              currency={currency}
+              className="text-xl font-bold text-alert-800 dark:text-alert-200"
+            />
           </div>
-
-          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-alert-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-stone-500 text-sm">
-                  {t('dashboard.totalExpense', 'Total Expense')}
-                </p>
-                <p className="text-2xl font-bold text-stone-900">
-                  <Money amount={totalExpense} currency={user?.currency} />
-                </p>
-              </div>
-              <div className="bg-alert-100 rounded-full p-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-alert-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 20V4m8 8l-8-8-8 8"
-                  />
-                </svg>
-              </div>
-            </div>
+          <div className="rounded-[22px] p-4 bg-mint-100 dark:bg-mint-500/10">
+            <p className="text-xs text-mint-800 dark:text-mint-200">دخل هذا الشهر</p>
+            <Money
+              amount={summary?.income || 0}
+              currency={currency}
+              className="text-xl font-bold text-mint-800 dark:text-mint-200"
+            />
           </div>
         </div>
-
-        {/* Add Transaction Form */}
-        {showAddForm && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-semibold text-stone-900 mb-4">
-              {t('transactions.addNew', 'Add New Transaction')}
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-1">
-                    {t('transactions.type', 'Type')}
-                  </label>
-                  <select
-                    name="type"
-                    value={formData.type}
-                    onChange={handleFormChange}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                  >
-                    <option value="expense">{t('transactions.expense', 'Expense')}</option>
-                    <option value="income">{t('transactions.income', 'Income')}</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-1">
-                    {t('transactions.category', 'Category')}
-                  </label>
-                  <select
-                    name="categoryId"
-                    value={formData.categoryId}
-                    onChange={handleFormChange}
-                    required
-                    className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                  >
-                    <option value="">{t('transactions.selectCategory', 'Select Category')}</option>
-                    {getFilteredCategories().map(category => (
-                      <option key={category.id} value={category.id}>
-                        {user?.language === 'ar' ? category.nameAr : category.name}
-                      </option>
-                    ))}
-                  </select>
-                  {/* Quick Category Chips */}
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {getFilteredCategories()
-                      .slice(0, 5)
-                      .map(category => (
-                        <button
-                          key={category.id}
-                          type="button"
-                          onClick={() =>
-                            setFormData(prev => ({ ...prev, categoryId: category.id }))
-                          }
-                          className={`px-2.5 py-1 rounded-full text-xs font-bold border transition-all duration-200 ${
-                            formData.categoryId === category.id
-                              ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
-                              : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100 dark:bg-stone-800 dark:text-stone-300 dark:border-stone-700 dark:hover:bg-stone-700'
-                          }`}
-                        >
-                          {category.icon}{' '}
-                          {user?.language === 'ar' ? category.nameAr : category.name}
-                        </button>
-                      ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-1">
-                    {t('transactions.amount', 'Amount')}
-                  </label>
-                  <input
-                    type="number"
-                    name="amount"
-                    value={formData.amount}
-                    onChange={handleFormChange}
-                    required
-                    min="0.01"
-                    step="0.01"
-                    placeholder="0.00"
-                    className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                  />
-                  {/* Quick Amount Chips */}
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {[10, 50, 100, 200, 500, 1000].map(amt => (
-                      <button
-                        key={amt}
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, amount: amt.toString() }))}
-                        className={`px-2 py-0.5 rounded-full text-xs font-bold border transition-all duration-200 ${
-                          formData.amount === amt.toString()
-                            ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
-                            : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100 dark:bg-stone-800 dark:text-stone-300 dark:border-stone-700 dark:hover:bg-stone-700'
-                        }`}
-                      >
-                        {amt}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-1">
-                    {t('transactions.date', 'Date')}
-                  </label>
-                  <input
-                    type="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleFormChange}
-                    required
-                    className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">
-                  {t('transactions.description', 'Description')}
-                </label>
-                <input
-                  type="text"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleFormChange}
-                  required
-                  placeholder={t('transactions.description', 'Description')}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2 space-x-reverse">
-                <button
-                  type="button"
-                  onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-50"
-                >
-                  {t('common.cancel', 'Cancel')}
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                >
-                  {t('common.save', 'Save')}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold text-stone-900 mb-4">
-            {t('transactions.filterTitle', 'Filter Transactions')}
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">
-                {t('transactions.type', 'Type')}
-              </label>
-              <select
-                name="type"
-                value={filter.type}
-                onChange={handleFilterChange}
-                className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+        <div
+          className="flex gap-2 overflow-x-auto pb-2 mb-2 -mx-4 px-4 md:mx-0 md:px-0"
+          role="group"
+          aria-label="تصفية"
+        >
+          <Chip active={filter === 'all'} onClick={() => setFilter('all')}>
+            الكل
+          </Chip>
+          <Chip active={filter === 'expense'} onClick={() => setFilter('expense')}>
+            مصروف
+          </Chip>
+          <Chip active={filter === 'income'} onClick={() => setFilter('income')}>
+            دخل
+          </Chip>
+          <Chip active={filter === 'fund'} onClick={() => setFilter('fund')}>
+            من الصندوق
+          </Chip>
+          {people.length > 1 &&
+            people.map(p => (
+              <Chip
+                key={p.id}
+                active={person === p.id}
+                onClick={() => setPerson(person === p.id ? 'all' : p.id)}
               >
-                <option value="all">{t('transactions.all', 'All')}</option>
-                <option value="income">{t('transactions.income', 'Income')}</option>
-                <option value="expense">{t('transactions.expense', 'Expense')}</option>
-                <option value="transfer">تحويل للصندوق</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">
-                {t('transactions.category', 'Category')}
-              </label>
-              <select
-                name="categoryId"
-                value={filter.categoryId}
-                onChange={handleFilterChange}
-                className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-              >
-                <option value="all">{t('transactions.all', 'All')}</option>
-                {categories.map(category => (
-                  <option key={category.id} value={category.id}>
-                    {user?.language === 'ar' ? category.nameAr : category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">
-                {t('transactions.search', 'Search')}
-              </label>
-              <input
-                type="text"
-                name="search"
-                value={filter.search}
-                onChange={handleFilterChange}
-                placeholder={t(
-                  'transactions.searchPlaceholder',
-                  'Search by description or category...'
-                )}
-                className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-              />
-            </div>
-          </div>
+                <span className="h-5 w-5 rounded-full grid place-items-center bg-sun-300 text-sun-900 text-[10px] font-semibold">
+                  {p.name?.trim().charAt(0) || '؟'}
+                </span>
+                {firstName(p.name)}
+              </Chip>
+            ))}
         </div>
 
-        {/* Transactions List */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-stone-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center justify-between w-full sm:w-auto">
-              <h2 className="text-xl font-semibold text-stone-900">
-                {t('transactions.title', 'Transactions')} ({filteredTransactions.length})
-              </h2>
+        {notice && (
+          <p
+            role="status"
+            className={`mb-3 text-sm font-medium ${notice.tone === 'success' ? 'text-mint-700 dark:text-mint-300' : 'text-alert-600'}`}
+          >
+            {notice.text}
+          </p>
+        )}
 
-              {/* Mobile Export Button */}
+        {/* Grouped by day */}
+        {error ? (
+          <div className="premium-card p-6 text-center">
+            <p className="text-ink dark:text-white font-medium mb-3">تعذّر تحميل العمليات.</p>
+            <button
+              type="button"
+              onClick={load}
+              className="px-5 min-h-[44px] rounded-2xl bg-brand-500 text-white font-medium"
+            >
+              حاول مرة أخرى
+            </button>
+          </div>
+        ) : !transactions ? (
+          <div className="space-y-3 animate-pulse" aria-label="جارٍ التحميل">
+            <div className="h-24 rounded-[24px] bg-soft dark:bg-white/5" />
+            <div className="h-24 rounded-[24px] bg-soft dark:bg-white/5" />
+          </div>
+        ) : days.length === 0 ? (
+          <div className="premium-card p-8 text-center">
+            <p className="text-stone-500 dark:text-stone-400 mb-4">
+              {transactions.length ? 'لا عمليات تطابق التصفية.' : 'لا عمليات في هذا الشهر.'}
+            </p>
+            <div className="flex justify-center gap-2">
               <button
                 type="button"
-                onClick={exportToCSV}
-                className="sm:hidden flex items-center gap-1.5 px-3 py-1.5 bg-stone-50 hover:bg-stone-100 text-stone-700 hover:text-stone-900 border border-stone-200 rounded-lg text-xs font-bold transition-all duration-200"
+                onClick={() => openQuickAdd('expense')}
+                className="px-5 min-h-[44px] rounded-2xl bg-brand-500 text-white font-medium"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                  />
-                </svg>
-                {user?.language === 'ar' ? 'تصدير' : 'Export'}
+                سجّل مصروفًا
               </button>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Privacy Filter for Owners */}
-              {user?.role === 'owner' && (
-                <div className="flex bg-stone-100 dark:bg-stone-800/50 p-1 rounded-xl w-fit border border-stone-200/50 dark:border-stone-700/50">
-                  <button
-                    type="button"
-                    onClick={() => setFilter(prev => ({ ...prev, scope: 'all' }))}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
-                      filter.scope === 'all'
-                        ? 'bg-white text-stone-800 shadow-sm dark:bg-stone-700 dark:text-white'
-                        : 'text-stone-600 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200'
-                    }`}
-                  >
-                    {user?.language === 'ar' ? 'الكل' : 'All'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFilter(prev => ({ ...prev, scope: 'personal' }))}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
-                      filter.scope === 'personal'
-                        ? 'bg-white text-stone-800 shadow-sm dark:bg-stone-700 dark:text-white'
-                        : 'text-stone-600 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200'
-                    }`}
-                  >
-                    {user?.language === 'ar' ? 'الشخصية' : 'Personal'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFilter(prev => ({ ...prev, scope: 'shared' }))}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
-                      filter.scope === 'shared'
-                        ? 'bg-white text-stone-800 shadow-sm dark:bg-stone-700 dark:text-white'
-                        : 'text-stone-600 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200'
-                    }`}
-                  >
-                    {user?.language === 'ar' ? 'المشتركة' : 'Joint'}
-                  </button>
-                </div>
-              )}
-
-              {/* Desktop Export Button */}
               <button
                 type="button"
-                onClick={exportToCSV}
-                className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-stone-50 hover:bg-stone-100 text-stone-700 hover:text-stone-900 border border-stone-200 rounded-xl text-xs font-bold transition-all duration-200 dark:bg-stone-800 dark:text-stone-300 dark:border-stone-700 dark:hover:bg-stone-700"
+                onClick={() => openQuickAdd('income')}
+                className="px-5 min-h-[44px] rounded-2xl bg-mint-100 text-mint-800 font-medium"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 text-brand-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                  />
-                </svg>
-                {user?.language === 'ar' ? 'تصدير CSV' : 'Export CSV'}
+                سجّل دخلًا
               </button>
             </div>
           </div>
-
-          <div className="divide-y divide-stone-200">
-            {filteredTransactions.length > 0 ? (
-              filteredTransactions.map(transaction => (
-                <div key={transaction.id} className="p-6 hover:bg-stone-50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3 space-x-reverse">
-                      <div className={`p-2 rounded-full ${typeStyle(transaction.type).badge}`}>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className={`h-5 w-5 ${typeStyle(transaction.type).text}`}
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d={typeStyle(transaction.type).path}
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-stone-900">
-                          {transaction.description}
-                        </p>
-                        <p className="text-xs text-stone-500">
-                          {user?.language === 'ar'
-                            ? transaction.category.nameAr
-                            : transaction.category.name}{' '}
-                          • {formatDay(transaction.date)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2 space-x-reverse">
-                      <div className={`text-sm font-semibold ${typeStyle(transaction.type).text}`}>
-                        <Money
-                          amount={parseFloat(transaction.amount)}
-                          currency={user?.currency}
-                          sign={amountSign(transaction.type)}
-                        />
-                      </div>
-                      <button
-                        onClick={() => handleDelete(transaction.id)}
-                        className="text-alert-600 hover:text-alert-800"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
+        ) : (
+          <div className="space-y-4">
+            {days.map(day => (
+              <section key={day.key} aria-label={formatDay(day.date)}>
+                <div className="flex items-baseline justify-between px-1 mb-2 text-xs text-stone-500 dark:text-stone-400">
+                  <span className="font-semibold">{formatDay(day.date)}</span>
+                  {day.spent > 0 && (
+                    <span>
+                      صُرف <Money amount={day.spent} currency={currency} />
+                    </span>
+                  )}
                 </div>
-              ))
-            ) : (
-              <div className="p-6 text-center text-stone-500">
-                No transactions match the selected filters
-              </div>
-            )}
+                <div className="premium-card divide-y divide-stone-100 dark:divide-white/5 overflow-hidden">
+                  {day.items.map(tx => (
+                    <div key={tx.id} className="group flex items-center gap-3 px-4 py-3">
+                      <CategoryIcon category={tx.category} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-ink dark:text-white truncate">
+                          {tx.description || tx.category?.nameAr || tx.category?.name}
+                        </p>
+                        <p className="text-xs text-stone-500 dark:text-stone-400 truncate">
+                          {[
+                            firstName(tx.user?.name),
+                            tx.description ? tx.category?.nameAr || tx.category?.name : null,
+                            tx.fund?.name,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </p>
+                      </div>
+                      <Money
+                        amount={tx.amount}
+                        currency={tx.currency || currency}
+                        sign={amountSign(tx.type)}
+                        className={`text-[15px] font-semibold ${amountTone(tx.type)}`}
+                        currencyClassName="text-stone-400"
+                      />
+                      {tx.type !== 'transfer' && (
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(tx)}
+                          aria-label={`حذف ${tx.description || tx.category?.nameAr || ''}`}
+                          className="h-9 w-9 grid place-items-center rounded-full text-stone-300 hover:text-alert-600 hover:bg-alert-50 dark:hover:bg-alert-500/10 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition"
+                        >
+                          <Icon name="close" className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
           </div>
-        </div>
-      </div>
+        )}
+      </main>
     </div>
   );
 };
