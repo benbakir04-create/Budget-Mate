@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import BrandMark from './BrandMark';
+import BottomNav from './BottomNav';
 import { APP_NAME } from '../../brand';
 
 const Sidebar = () => {
@@ -377,6 +378,8 @@ const Sidebar = () => {
           onClick={toggleSidebar}
         />
       )}
+
+      <BottomNav />
     </>
   );
 };

@@ -141,7 +141,8 @@ const getTransactions = async (req, res, next) => {
   }
 };
 
-// Income and expense totals over every visible transaction (not just one page).
+// Income and expense totals over every visible transaction (not just one page),
+// plus expense per category.
 // Transfers (deposits into a fund) are the owner's own money changing place, so they
 // count toward neither total.
 const getTransactionSummary = async (req, res, next) => {
@@ -166,7 +167,23 @@ const getTransactionSummary = async (req, res, next) => {
       return { total: Number(result._sum.amount || 0), count: result._count._all };
     };
 
-    const [income, expense] = await Promise.all([sumOf('income'), sumOf('expense')]);
+    // Spending per category, so the home screen can show where the money went this month.
+    const byCategoryOf = async () => {
+      const groups = await prisma.transaction.groupBy({
+        by: ['categoryId'],
+        where: { ...where, type: 'expense' },
+        _sum: { amount: true },
+      });
+      return (groups || [])
+        .map(g => ({ categoryId: g.categoryId, total: Number(g._sum.amount || 0) }))
+        .sort((a, b) => b.total - a.total);
+    };
+
+    const [income, expense, expenseByCategory] = await Promise.all([
+      sumOf('income'),
+      sumOf('expense'),
+      byCategoryOf(),
+    ]);
 
     return res.json({
       success: true,
@@ -176,6 +193,7 @@ const getTransactionSummary = async (req, res, next) => {
           expense: expense.total,
           balance: income.total - expense.total,
           count: income.count + expense.count,
+          expenseByCategory,
         },
       },
     });

@@ -36,6 +36,9 @@ export const transactionService = {
     if (DEMO_MODE) {
       let data = [...DEMO_TRANSACTIONS];
       if (params.categoryId) data = data.filter(t => t.categoryId === params.categoryId);
+      if (params.fundId) data = data.filter(t => (t.fundId ?? t.fund?.id) === params.fundId);
+      if (params.startDate) data = data.filter(t => new Date(t.date) >= new Date(params.startDate));
+      if (params.endDate) data = data.filter(t => new Date(t.date) <= new Date(params.endDate));
       return summarizeTotals(data);
     }
 

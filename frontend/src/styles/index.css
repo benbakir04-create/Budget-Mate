@@ -11,6 +11,13 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* مكان للشريط السفلي على الجوال حتى لا يغطي آخر سطر في الصفحة */
+  @media (max-width: 767px) {
+    body.has-bottom-nav {
+      padding-bottom: calc(96px + env(safe-area-inset-bottom));
+    }
+  }
+
   .dark body {
     @apply bg-night text-[#EEF0F6];
   }
