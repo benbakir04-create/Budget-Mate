@@ -177,6 +177,10 @@ describe('income and expense summary', () => {
           : { _sum: { amount: 35500 }, _count: { _all: 9 } }
       )
     );
+    prisma.transaction.groupBy.mockResolvedValue([
+      { categoryId: 'cat-bills', _sum: { amount: 5500 } },
+      { categoryId: 'cat-food', _sum: { amount: 30000 } },
+    ]);
 
     const res = mockRes();
     await getTransactionSummary({ user: OWNER, query: { type: 'transfer' } }, res, next);
@@ -187,19 +191,35 @@ describe('income and expense summary', () => {
       expense: 35500,
       balance: 44500,
       count: 11,
+      expenseByCategory: [
+        { categoryId: 'cat-food', total: 30000 },
+        { categoryId: 'cat-bills', total: 5500 },
+      ],
     });
+    // The per-category totals cover expenses only.
+    expect(prisma.transaction.groupBy.mock.calls[0][0].where.type).toBe('expense');
     const typesQueried = prisma.transaction.aggregate.mock.calls.map(([arg]) => arg.where.type);
     expect(typesQueried.sort()).toEqual(['expense', 'income']);
   });
 
   test('a partner summary never includes private categories', async () => {
     prisma.transaction.aggregate.mockResolvedValue({ _sum: { amount: null }, _count: { _all: 0 } });
+    prisma.transaction.groupBy.mockResolvedValue([]);
 
     const res = mockRes();
     await getTransactionSummary({ user: PARTNER, query: {} }, res, next);
 
-    expect(res.body.data.summary).toEqual({ income: 0, expense: 0, balance: 0, count: 0 });
-    for (const [arg] of prisma.transaction.aggregate.mock.calls) {
+    expect(res.body.data.summary).toEqual({
+      income: 0,
+      expense: 0,
+      balance: 0,
+      count: 0,
+      expenseByCategory: [],
+    });
+    for (const [arg] of [
+      ...prisma.transaction.aggregate.mock.calls,
+      ...prisma.transaction.groupBy.mock.calls,
+    ]) {
       expect(arg.where.category).toEqual({ isPrivate: false });
     }
   });

@@ -1,42 +1,62 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --primary: #10b981;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --info: #3b82f6;
-}
+/* الخط يُحمَّل مرة واحدة من index.html: Readex Pro للعناوين والنص والأرقام. */
 
 @layer base {
   body {
-    @apply bg-[#F8FAFC] text-slate-900 transition-colors duration-500 ease-in-out;
-    font-family: 'Cairo', 'Outfit', sans-serif;
+    @apply bg-canvas text-ink font-sans transition-colors duration-500 ease-in-out;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* مكان للشريط السفلي على الجوال حتى لا يغطي آخر سطر في الصفحة */
+  @media (max-width: 767px) {
+    body.has-bottom-nav {
+      padding-bottom: calc(96px + env(safe-area-inset-bottom));
+    }
+  }
+
   .dark body {
-    @apply bg-[#030712] text-white;
+    @apply bg-night text-[#EEF0F6];
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
   }
 }
 
 @layer utilities {
+  /* المبالغ: أرقام بعرض ثابت، واتجاه مستقل حتى لا تقفز الإشارة إلى آخر الرقم */
+  .num {
+    font-variant-numeric: tabular-nums;
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+
   .glass-panel {
-    @apply bg-white/80 dark:bg-[#0f172a]/70 backdrop-blur-xl border border-white/40 dark:border-white/5;
+    @apply bg-white/80 dark:bg-night-card/70 backdrop-blur-xl border border-white/40 dark:border-white/5;
   }
 
   .premium-card {
-    @apply bg-white dark:bg-[#0f172a] rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none dark:border dark:border-white/[0.05];
+    @apply bg-white dark:bg-night-card rounded-card border border-[#E8EAF2] dark:border-night-line shadow-[0_6px_18px_rgba(20,24,60,0.05)];
   }
 
+  /* بطاقة الرصيد: تدرّج زمردي بدائرتين خفيفتين */
   .luxury-gradient {
-    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    background-color: #12a26e;
+    background-image:
+      radial-gradient(circle at 15% -10%, rgba(255, 255, 255, 0.14) 0 30%, transparent 30.5%),
+      radial-gradient(circle at 30% 120%, rgba(255, 255, 255, 0.08) 0 25%, transparent 25.5%),
+      linear-gradient(145deg, #12a26e 0%, #0b7a59 100%);
   }
   .dark .luxury-gradient {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    background-image:
+      radial-gradient(circle at 15% -10%, rgba(255, 255, 255, 0.08) 0 30%, transparent 30.5%),
+      linear-gradient(145deg, #0e8a5d 0%, #084a37 100%);
   }
 }

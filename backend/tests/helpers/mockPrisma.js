@@ -12,6 +12,7 @@ const methods = [
   'delete',
   'count',
   'aggregate',
+  'groupBy',
 ];
 
 const prisma = {};

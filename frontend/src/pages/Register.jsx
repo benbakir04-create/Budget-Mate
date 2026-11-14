@@ -48,16 +48,16 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-stone-50 px-4">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-stone-900">
             {t('auth.register')}
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <div className="bg-alert-50 border border-alert-400 text-alert-700 px-4 py-3 rounded">
               {error}
             </div>
           )}
@@ -71,7 +71,7 @@ const Register = () => {
                 name="name"
                 type="text"
                 required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                className="appearance-none relative block w-full px-3 py-2 border border-stone-300 placeholder-stone-500 text-stone-900 rounded-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                 placeholder={t('auth.name')}
                 value={formData.name}
                 onChange={handleChange}
@@ -86,7 +86,7 @@ const Register = () => {
                 name="email"
                 type="email"
                 required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                className="appearance-none relative block w-full px-3 py-2 border border-stone-300 placeholder-stone-500 text-stone-900 rounded-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                 placeholder={t('auth.email')}
                 value={formData.email}
                 onChange={handleChange}
@@ -101,7 +101,7 @@ const Register = () => {
                 name="password"
                 type="password"
                 required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                className="appearance-none relative block w-full px-3 py-2 border border-stone-300 placeholder-stone-500 text-stone-900 rounded-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                 placeholder={t('auth.password')}
                 value={formData.password}
                 onChange={handleChange}
@@ -116,7 +116,7 @@ const Register = () => {
                 name="confirmPassword"
                 type="password"
                 required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                className="appearance-none relative block w-full px-3 py-2 border border-stone-300 placeholder-stone-500 text-stone-900 rounded-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                 placeholder={t('auth.confirmPassword')}
                 value={formData.confirmPassword}
                 onChange={handleChange}
@@ -128,14 +128,14 @@ const Register = () => {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
             >
               {loading ? t('common.loading') : t('auth.register')}
             </button>
           </div>
 
           <div className="text-center">
-            <Link to="/login" className="font-medium text-primary hover:text-green-600">
+            <Link to="/login" className="font-medium text-primary hover:text-brand-500">
               {t('auth.alreadyHaveAccount')}
             </Link>
           </div>

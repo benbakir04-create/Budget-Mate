@@ -5,6 +5,8 @@ import Sidebar from '../components/common/Sidebar';
 import { budgetService } from '../services/budgetService';
 import { categoryService } from '../services/categoryService';
 import { currencyLabel } from '../utils/currency';
+import Money from '../components/common/Money';
+import { formatDate } from '../utils/dates';
 
 const Budget = () => {
   const { t } = useTranslation();
@@ -132,12 +134,12 @@ const Budget = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen bg-stone-50 flex">
         <Sidebar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading...</p>
+            <p className="mt-4 text-stone-600">Loading...</p>
           </div>
         </div>
       </div>
@@ -145,16 +147,16 @@ const Budget = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-stone-50 flex">
       <Sidebar />
       <div className="flex-1 max-w-7xl mx-auto p-4 md:mr-64">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-stone-900">
             {t('budget.title', 'Budget Management')}
           </h1>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-primary hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium"
+            className="bg-primary hover:bg-brand-800 text-white px-4 py-2 rounded-md text-sm font-medium"
           >
             {showAddForm ? t('common.cancel', 'Cancel') : t('budget.add', 'Add Budget')}
           </button>
@@ -165,9 +167,9 @@ const Budget = () => {
           <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm">{t('budget.totalBudget', 'Total Budget')}</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {totalBudget.toLocaleString()} {currencyLabel(user?.currency)}
+                <p className="text-stone-500 text-sm">{t('budget.totalBudget', 'Total Budget')}</p>
+                <p className="text-2xl font-bold text-stone-900">
+                  <Money amount={totalBudget} currency={user?.currency} />
                 </p>
               </div>
               <div className="bg-blue-100 rounded-full p-3">
@@ -189,18 +191,18 @@ const Budget = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
+          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-alert-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm">{t('budget.totalSpent', 'Total Spent')}</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {totalSpent.toLocaleString()} {currencyLabel(user?.currency)}
+                <p className="text-stone-500 text-sm">{t('budget.totalSpent', 'Total Spent')}</p>
+                <p className="text-2xl font-bold text-stone-900">
+                  <Money amount={totalSpent} currency={user?.currency} />
                 </p>
               </div>
-              <div className="bg-red-100 rounded-full p-3">
+              <div className="bg-alert-100 rounded-full p-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-red-600"
+                  className="h-6 w-6 text-alert-600"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -216,20 +218,20 @@ const Budget = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-mint-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm">{t('budget.remaining', 'Remaining')}</p>
+                <p className="text-stone-500 text-sm">{t('budget.remaining', 'Remaining')}</p>
                 <p
-                  className={`text-2xl font-bold ${totalBudget - totalSpent >= 0 ? 'text-gray-900' : 'text-red-600'}`}
+                  className={`text-2xl font-bold ${totalBudget - totalSpent >= 0 ? 'text-stone-900' : 'text-alert-600'}`}
                 >
-                  {(totalBudget - totalSpent).toLocaleString()} {currencyLabel(user?.currency)}
+                  <Money amount={totalBudget - totalSpent} currency={user?.currency} />
                 </p>
               </div>
-              <div className="bg-green-100 rounded-full p-3">
+              <div className="bg-mint-100 rounded-full p-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-green-600"
+                  className="h-6 w-6 text-mint-600"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -249,14 +251,14 @@ const Budget = () => {
         {/* Add Budget Form */}
         {showAddForm && (
           <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <h2 className="text-xl font-semibold text-stone-900 mb-4">
               {t('budget.addNew', 'Add New Budget')}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-stone-700 mb-1">
                     {t('transactions.category', 'Category')}
                   </label>
                   <select
@@ -264,7 +266,7 @@ const Budget = () => {
                     value={formData.categoryId}
                     onChange={handleFormChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
                   >
                     <option value="">{t('budget.selectCategory', 'Select Category')}</option>
                     {categories.map(category => (
@@ -276,7 +278,7 @@ const Budget = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-stone-700 mb-1">
                     {t('transactions.amount', 'Amount')}
                   </label>
                   <input
@@ -288,19 +290,19 @@ const Budget = () => {
                     min="0.01"
                     step="0.01"
                     placeholder="0.00"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-stone-700 mb-1">
                     {t('budget.period', 'Period')}
                   </label>
                   <select
                     name="period"
                     value={formData.period}
                     onChange={e => handlePeriodChange(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
                   >
                     <option value="weekly">{t('budget.weekly', 'Weekly')}</option>
                     <option value="monthly">{t('budget.monthly', 'Monthly')}</option>
@@ -309,7 +311,7 @@ const Budget = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-stone-700 mb-1">
                     {t('budget.startDate', 'Start Date')}
                   </label>
                   <input
@@ -318,12 +320,12 @@ const Budget = () => {
                     value={formData.startDate}
                     onChange={handleFormChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-stone-700 mb-1">
                     {t('budget.endDate', 'End Date')}
                   </label>
                   <input
@@ -332,7 +334,7 @@ const Budget = () => {
                     value={formData.endDate}
                     onChange={handleFormChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
                   />
                 </div>
               </div>
@@ -341,13 +343,13 @@ const Budget = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-50"
                 >
                   {t('common.cancel', 'Cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                 >
                   {t('common.save', 'Save')}
                 </button>
@@ -358,13 +360,13 @@ const Budget = () => {
 
         {/* Budgets List */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">
+          <div className="px-6 py-4 border-b border-stone-200">
+            <h2 className="text-xl font-semibold text-stone-900">
               {t('budget.currentBudgets', 'Current Budgets')} ({budgets.length})
             </h2>
           </div>
 
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-stone-200">
             {budgets.length > 0 ? (
               budgets.map(budget => {
                 const spent = calculateSpent(budget);
@@ -374,25 +376,24 @@ const Budget = () => {
                 const remaining = parseFloat(budget.amount) - spent;
 
                 return (
-                  <div key={budget.id} className="p-6 hover:bg-gray-50">
+                  <div key={budget.id} className="p-6 hover:bg-stone-50">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-medium text-gray-900">
+                        <h3 className="text-lg font-medium text-stone-900">
                           {user?.language === 'ar' ? budget.category.nameAr : budget.category.name}
                         </h3>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-stone-500">
                           {t('budget.periodLabel', 'Period: {{period}}', {
                             period: t(`budget.${budget.period}`, budget.period),
                           })}{' '}
-                          • {new Date(budget.startDate).toLocaleDateString()} -{' '}
-                          {new Date(budget.endDate).toLocaleDateString()}
+                          • {formatDate(budget.startDate)} - {formatDate(budget.endDate)}
                         </p>
                       </div>
 
                       <div className="flex items-center space-x-2 space-x-reverse">
                         <button
                           onClick={() => handleDelete(budget.id)}
-                          className="text-red-600 hover:text-red-800"
+                          className="text-alert-600 hover:text-alert-800"
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -414,49 +415,48 @@ const Budget = () => {
 
                     <div className="space-y-2">
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">{t('budget.label', 'Budget')}</span>
-                        <span className="text-gray-900 font-medium">
-                          {parseFloat(budget.amount).toLocaleString()}{' '}
-                          {currencyLabel(user?.currency)}
+                        <span className="text-stone-600">{t('budget.label', 'Budget')}</span>
+                        <span className="text-stone-900 font-medium">
+                          <Money amount={parseFloat(budget.amount)} currency={user?.currency} />
                         </span>
                       </div>
 
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">{t('budget.spent', 'Spent')}</span>
-                        <span className="text-gray-900 font-medium">
-                          {spent.toLocaleString()} {currencyLabel(user?.currency)}
+                        <span className="text-stone-600">{t('budget.spent', 'Spent')}</span>
+                        <span className="text-stone-900 font-medium">
+                          <Money amount={spent} currency={user?.currency} />
                         </span>
                       </div>
 
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">{t('budget.remaining', 'Remaining')}</span>
+                        <span className="text-stone-600">{t('budget.remaining', 'Remaining')}</span>
                         <span
-                          className={`${remaining >= 0 ? 'text-gray-900' : 'text-red-600'} font-medium`}
+                          className={`${remaining >= 0 ? 'text-stone-900' : 'text-alert-600'} font-medium`}
                         >
-                          {remaining.toLocaleString()} {currencyLabel(user?.currency)}
+                          <Money amount={remaining} currency={user?.currency} />
                         </span>
                       </div>
 
-                      <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
+                      <div className="w-full bg-stone-200 rounded-full h-2 mt-3">
                         <div
-                          className={`h-2 rounded-full ${isOverBudget ? 'bg-red-500' : isNearLimit ? 'bg-yellow-500' : 'bg-green-500'}`}
+                          className={`h-2 rounded-full ${isOverBudget ? 'bg-alert-500' : isNearLimit ? 'bg-sun-500' : 'bg-mint-500'}`}
                           style={{ width: `${Math.min(percentage, 100)}%` }}
                         ></div>
                       </div>
 
-                      <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
+                      <div className="flex justify-between items-center text-xs text-stone-500 mt-1">
                         <span>
                           {t('budget.usedPercentage', 'Used {{percentage}}% of budget', {
                             percentage: Math.round(percentage),
                           })}
                         </span>
                         {isOverBudget && (
-                          <span className="text-red-600 font-medium">
+                          <span className="text-alert-600 font-medium">
                             {t('budget.overBudget', 'Over budget!')}
                           </span>
                         )}
                         {isNearLimit && (
-                          <span className="text-yellow-600 font-medium">
+                          <span className="text-sun-600 font-medium">
                             {t('budget.nearLimit', 'Near limit')}
                           </span>
                         )}
@@ -466,7 +466,7 @@ const Budget = () => {
                 );
               })
             ) : (
-              <div className="p-6 text-center text-gray-500">
+              <div className="p-6 text-center text-stone-500">
                 {t(
                   'budget.noBudgets',
                   'No budgets found. Create your first budget to get started.'

@@ -6,11 +6,13 @@ import { transactionService } from '../services/transactionService';
 import { categoryService } from '../services/categoryService';
 import { currencyLabel, DEFAULT_CURRENCY } from '../utils/currency';
 import { amountSign, typeLabel } from '../utils/money';
+import Money from '../components/common/Money';
+import { formatDay } from '../utils/dates';
 
 // Income green, expense red, a deposit into a fund (transfer) blue: it is neither.
 const TYPE_STYLE = {
-  income: { badge: 'bg-green-100', text: 'text-green-600', path: 'M12 4v16m8-8l-8 8-8-8' },
-  expense: { badge: 'bg-red-100', text: 'text-red-600', path: 'M12 20V4m8 8l-8-8-8 8' },
+  income: { badge: 'bg-mint-100', text: 'text-mint-600', path: 'M12 4v16m8-8l-8 8-8-8' },
+  expense: { badge: 'bg-alert-100', text: 'text-alert-600', path: 'M12 20V4m8 8l-8-8-8 8' },
   transfer: {
     badge: 'bg-blue-100',
     text: 'text-blue-600',
@@ -210,12 +212,12 @@ const Transactions = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen bg-stone-50 flex">
         <Sidebar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading...</p>
+            <p className="mt-4 text-stone-600">Loading...</p>
           </div>
         </div>
       </div>
@@ -223,16 +225,16 @@ const Transactions = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-stone-50 flex">
       <Sidebar />
       <div className="flex-1 max-w-7xl mx-auto p-4 md:mr-64">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-stone-900">
             {t('transactions.title', 'Transactions')}
           </h1>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-primary hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium"
+            className="bg-primary hover:bg-brand-800 text-white px-4 py-2 rounded-md text-sm font-medium"
           >
             {showAddForm ? t('common.cancel', 'Cancel') : t('transactions.add', 'Add Transaction')}
           </button>
@@ -240,20 +242,20 @@ const Transactions = () => {
 
         {/* Summary */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-mint-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm">
+                <p className="text-stone-500 text-sm">
                   {t('dashboard.totalIncome', 'Total Income')}
                 </p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {totalIncome.toLocaleString()} {currencyLabel(user?.currency)}
+                <p className="text-2xl font-bold text-stone-900">
+                  <Money amount={totalIncome} currency={user?.currency} />
                 </p>
               </div>
-              <div className="bg-green-100 rounded-full p-3">
+              <div className="bg-mint-100 rounded-full p-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-green-600"
+                  className="h-6 w-6 text-mint-600"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -269,20 +271,20 @@ const Transactions = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
+          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-alert-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm">
+                <p className="text-stone-500 text-sm">
                   {t('dashboard.totalExpense', 'Total Expense')}
                 </p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {totalExpense.toLocaleString()} {currencyLabel(user?.currency)}
+                <p className="text-2xl font-bold text-stone-900">
+                  <Money amount={totalExpense} currency={user?.currency} />
                 </p>
               </div>
-              <div className="bg-red-100 rounded-full p-3">
+              <div className="bg-alert-100 rounded-full p-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-red-600"
+                  className="h-6 w-6 text-alert-600"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -302,21 +304,21 @@ const Transactions = () => {
         {/* Add Transaction Form */}
         {showAddForm && (
           <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <h2 className="text-xl font-semibold text-stone-900 mb-4">
               {t('transactions.addNew', 'Add New Transaction')}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-stone-700 mb-1">
                     {t('transactions.type', 'Type')}
                   </label>
                   <select
                     name="type"
                     value={formData.type}
                     onChange={handleFormChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
                   >
                     <option value="expense">{t('transactions.expense', 'Expense')}</option>
                     <option value="income">{t('transactions.income', 'Income')}</option>
@@ -324,7 +326,7 @@ const Transactions = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-stone-700 mb-1">
                     {t('transactions.category', 'Category')}
                   </label>
                   <select
@@ -332,7 +334,7 @@ const Transactions = () => {
                     value={formData.categoryId}
                     onChange={handleFormChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
                   >
                     <option value="">{t('transactions.selectCategory', 'Select Category')}</option>
                     {getFilteredCategories().map(category => (
@@ -354,8 +356,8 @@ const Transactions = () => {
                           }
                           className={`px-2.5 py-1 rounded-full text-xs font-bold border transition-all duration-200 ${
                             formData.categoryId === category.id
-                              ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
-                              : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700'
+                              ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
+                              : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100 dark:bg-stone-800 dark:text-stone-300 dark:border-stone-700 dark:hover:bg-stone-700'
                           }`}
                         >
                           {category.icon}{' '}
@@ -366,7 +368,7 @@ const Transactions = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-stone-700 mb-1">
                     {t('transactions.amount', 'Amount')}
                   </label>
                   <input
@@ -378,7 +380,7 @@ const Transactions = () => {
                     min="0.01"
                     step="0.01"
                     placeholder="0.00"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
                   />
                   {/* Quick Amount Chips */}
                   <div className="flex flex-wrap gap-1.5 mt-2">
@@ -389,8 +391,8 @@ const Transactions = () => {
                         onClick={() => setFormData(prev => ({ ...prev, amount: amt.toString() }))}
                         className={`px-2 py-0.5 rounded-full text-xs font-bold border transition-all duration-200 ${
                           formData.amount === amt.toString()
-                            ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
-                            : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700'
+                            ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
+                            : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100 dark:bg-stone-800 dark:text-stone-300 dark:border-stone-700 dark:hover:bg-stone-700'
                         }`}
                       >
                         {amt}
@@ -400,7 +402,7 @@ const Transactions = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-stone-700 mb-1">
                     {t('transactions.date', 'Date')}
                   </label>
                   <input
@@ -409,13 +411,13 @@ const Transactions = () => {
                     value={formData.date}
                     onChange={handleFormChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-stone-700 mb-1">
                   {t('transactions.description', 'Description')}
                 </label>
                 <input
@@ -425,7 +427,7 @@ const Transactions = () => {
                   onChange={handleFormChange}
                   required
                   placeholder={t('transactions.description', 'Description')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
                 />
               </div>
 
@@ -433,13 +435,13 @@ const Transactions = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-50"
                 >
                   {t('common.cancel', 'Cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                 >
                   {t('common.save', 'Save')}
                 </button>
@@ -450,20 +452,20 @@ const Transactions = () => {
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <h2 className="text-xl font-semibold text-stone-900 mb-4">
             {t('transactions.filterTitle', 'Filter Transactions')}
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-stone-700 mb-1">
                 {t('transactions.type', 'Type')}
               </label>
               <select
                 name="type"
                 value={filter.type}
                 onChange={handleFilterChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
               >
                 <option value="all">{t('transactions.all', 'All')}</option>
                 <option value="income">{t('transactions.income', 'Income')}</option>
@@ -473,14 +475,14 @@ const Transactions = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-stone-700 mb-1">
                 {t('transactions.category', 'Category')}
               </label>
               <select
                 name="categoryId"
                 value={filter.categoryId}
                 onChange={handleFilterChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
               >
                 <option value="all">{t('transactions.all', 'All')}</option>
                 {categories.map(category => (
@@ -492,7 +494,7 @@ const Transactions = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-stone-700 mb-1">
                 {t('transactions.search', 'Search')}
               </label>
               <input
@@ -504,7 +506,7 @@ const Transactions = () => {
                   'transactions.searchPlaceholder',
                   'Search by description or category...'
                 )}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
               />
             </div>
           </div>
@@ -512,9 +514,9 @@ const Transactions = () => {
 
         {/* Transactions List */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="px-6 py-4 border-b border-stone-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center justify-between w-full sm:w-auto">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-stone-900">
                 {t('transactions.title', 'Transactions')} ({filteredTransactions.length})
               </h2>
 
@@ -522,7 +524,7 @@ const Transactions = () => {
               <button
                 type="button"
                 onClick={exportToCSV}
-                className="sm:hidden flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200 rounded-lg text-xs font-bold transition-all duration-200"
+                className="sm:hidden flex items-center gap-1.5 px-3 py-1.5 bg-stone-50 hover:bg-stone-100 text-stone-700 hover:text-stone-900 border border-stone-200 rounded-lg text-xs font-bold transition-all duration-200"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -545,14 +547,14 @@ const Transactions = () => {
             <div className="flex flex-wrap items-center gap-3">
               {/* Privacy Filter for Owners */}
               {user?.role === 'owner' && (
-                <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl w-fit border border-slate-200/50 dark:border-slate-700/50">
+                <div className="flex bg-stone-100 dark:bg-stone-800/50 p-1 rounded-xl w-fit border border-stone-200/50 dark:border-stone-700/50">
                   <button
                     type="button"
                     onClick={() => setFilter(prev => ({ ...prev, scope: 'all' }))}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
                       filter.scope === 'all'
-                        ? 'bg-white text-slate-800 shadow-sm dark:bg-slate-700 dark:text-white'
-                        : 'text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                        ? 'bg-white text-stone-800 shadow-sm dark:bg-stone-700 dark:text-white'
+                        : 'text-stone-600 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200'
                     }`}
                   >
                     {user?.language === 'ar' ? 'الكل' : 'All'}
@@ -562,8 +564,8 @@ const Transactions = () => {
                     onClick={() => setFilter(prev => ({ ...prev, scope: 'personal' }))}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
                       filter.scope === 'personal'
-                        ? 'bg-white text-slate-800 shadow-sm dark:bg-slate-700 dark:text-white'
-                        : 'text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                        ? 'bg-white text-stone-800 shadow-sm dark:bg-stone-700 dark:text-white'
+                        : 'text-stone-600 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200'
                     }`}
                   >
                     {user?.language === 'ar' ? 'الشخصية' : 'Personal'}
@@ -573,8 +575,8 @@ const Transactions = () => {
                     onClick={() => setFilter(prev => ({ ...prev, scope: 'shared' }))}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
                       filter.scope === 'shared'
-                        ? 'bg-white text-slate-800 shadow-sm dark:bg-slate-700 dark:text-white'
-                        : 'text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                        ? 'bg-white text-stone-800 shadow-sm dark:bg-stone-700 dark:text-white'
+                        : 'text-stone-600 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200'
                     }`}
                   >
                     {user?.language === 'ar' ? 'المشتركة' : 'Joint'}
@@ -586,11 +588,11 @@ const Transactions = () => {
               <button
                 type="button"
                 onClick={exportToCSV}
-                className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200 rounded-xl text-xs font-bold transition-all duration-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700"
+                className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-stone-50 hover:bg-stone-100 text-stone-700 hover:text-stone-900 border border-stone-200 rounded-xl text-xs font-bold transition-all duration-200 dark:bg-stone-800 dark:text-stone-300 dark:border-stone-700 dark:hover:bg-stone-700"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 text-emerald-500"
+                  className="h-4 w-4 text-brand-500"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -607,10 +609,10 @@ const Transactions = () => {
             </div>
           </div>
 
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-stone-200">
             {filteredTransactions.length > 0 ? (
               filteredTransactions.map(transaction => (
-                <div key={transaction.id} className="p-6 hover:bg-gray-50">
+                <div key={transaction.id} className="p-6 hover:bg-stone-50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3 space-x-reverse">
                       <div className={`p-2 rounded-full ${typeStyle(transaction.type).badge}`}>
@@ -630,26 +632,28 @@ const Transactions = () => {
                         </svg>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-stone-900">
                           {transaction.description}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-stone-500">
                           {user?.language === 'ar'
                             ? transaction.category.nameAr
                             : transaction.category.name}{' '}
-                          • {new Date(transaction.date).toLocaleDateString()}
+                          • {formatDay(transaction.date)}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 space-x-reverse">
                       <div className={`text-sm font-semibold ${typeStyle(transaction.type).text}`}>
-                        {amountSign(transaction.type)}
-                        {parseFloat(transaction.amount).toLocaleString()}{' '}
-                        {currencyLabel(user?.currency)}
+                        <Money
+                          amount={parseFloat(transaction.amount)}
+                          currency={user?.currency}
+                          sign={amountSign(transaction.type)}
+                        />
                       </div>
                       <button
                         onClick={() => handleDelete(transaction.id)}
-                        className="text-red-600 hover:text-red-800"
+                        className="text-alert-600 hover:text-alert-800"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -671,7 +675,7 @@ const Transactions = () => {
                 </div>
               ))
             ) : (
-              <div className="p-6 text-center text-gray-500">
+              <div className="p-6 text-center text-stone-500">
                 No transactions match the selected filters
               </div>
             )}

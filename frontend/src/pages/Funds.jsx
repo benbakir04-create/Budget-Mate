@@ -7,6 +7,8 @@ import { shoppingOrderService } from '../services/shoppingOrderService';
 import { categoryService } from '../services/categoryService';
 import { authService } from '../services/authService';
 import { currencyLabel } from '../utils/currency';
+import Money from '../components/common/Money';
+import { formatDate, formatDay } from '../utils/dates';
 
 const Funds = () => {
   const { t } = useTranslation();
@@ -323,16 +325,16 @@ const Funds = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#090d16] flex transition-colors duration-300">
+    <div className="min-h-screen bg-canvas dark:bg-night flex transition-colors duration-300">
       <Sidebar />
       <div className="flex-1 max-w-7xl mx-auto p-4 md:p-8 md:mr-64 transition-all duration-300">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 space-y-4 md:space-y-0">
           <div>
-            <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white mb-1">
+            <h1 className="text-3xl font-extrabold text-stone-900 dark:text-white mb-1">
               إدارة الصناديق والطلبيات المشتركة
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 font-medium text-sm md:text-base">
+            <p className="text-stone-500 dark:text-stone-400 font-medium text-sm md:text-base">
               إدارة المصاريف العائلية والعهد المالية المشتركة مع شركائك بكل شفافية وفخامة.
             </p>
           </div>
@@ -340,7 +342,7 @@ const Funds = () => {
 
         {/* Global Notifications */}
         {error && (
-          <div className="mb-6 p-4 bg-rose-50 dark:bg-rose-500/10 border-r-4 border-rose-500 text-rose-800 dark:text-rose-400 rounded-xl font-bold flex items-center">
+          <div className="mb-6 p-4 bg-alert-50 dark:bg-alert-500/10 border-r-4 border-alert-500 text-alert-800 dark:text-alert-400 rounded-xl font-bold flex items-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5 ml-2"
@@ -360,7 +362,7 @@ const Funds = () => {
         )}
 
         {successMsg && (
-          <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-500/10 border-r-4 border-emerald-500 text-emerald-800 dark:text-emerald-400 rounded-xl font-bold flex items-center animate-fade-in">
+          <div className="mb-6 p-4 bg-brand-50 dark:bg-brand-500/10 border-r-4 border-brand-500 text-brand-800 dark:text-brand-400 rounded-xl font-bold flex items-center animate-fade-in">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5 ml-2"
@@ -380,13 +382,13 @@ const Funds = () => {
         )}
 
         {/* Tab Navigation Menu */}
-        <div className="flex space-x-2 space-x-reverse mb-8 p-1.5 bg-slate-100 dark:bg-white/[0.02] border border-slate-200/50 dark:border-white/[0.05] rounded-2xl w-max">
+        <div className="flex space-x-2 space-x-reverse mb-8 p-1.5 bg-stone-100 dark:bg-white/[0.02] border border-stone-200/50 dark:border-white/[0.05] rounded-2xl w-max">
           <button
             onClick={() => setActiveTab('funds')}
             className={`px-6 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 ${
               activeTab === 'funds'
-                ? 'bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white shadow-md'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                ? 'bg-white dark:bg-night-card text-stone-900 dark:text-white shadow-md'
+                : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
             }`}
           >
             الصناديق المشتركة
@@ -396,8 +398,8 @@ const Funds = () => {
             onClick={() => setActiveTab('orders')}
             className={`px-6 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 ${
               activeTab === 'orders'
-                ? 'bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white shadow-md'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                ? 'bg-white dark:bg-night-card text-stone-900 dark:text-white shadow-md'
+                : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
             }`}
           >
             طلبيات الشراء ({orders.filter(o => o.status !== 'purchased').length})
@@ -408,8 +410,8 @@ const Funds = () => {
               onClick={() => setActiveTab('invite')}
               className={`px-6 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 ${
                 activeTab === 'invite'
-                  ? 'bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white shadow-md'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-white dark:bg-night-card text-stone-900 dark:text-white shadow-md'
+                  : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
               }`}
             >
               دعوة الشركاء
@@ -421,7 +423,7 @@ const Funds = () => {
         {loading ? (
           <div className="py-20 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-slate-500 dark:text-slate-400">جاري تحميل البيانات...</p>
+            <p className="text-stone-500 dark:text-stone-400">جاري تحميل البيانات...</p>
           </div>
         ) : (
           <>
@@ -430,13 +432,13 @@ const Funds = () => {
               <div className="space-y-10">
                 {/* Header Action inside tab */}
                 <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
+                  <h2 className="text-2xl font-extrabold text-stone-900 dark:text-white">
                     الصناديق المتاحة
                   </h2>
                   {user.role === 'owner' && (
                     <button
                       onClick={() => setShowCreateFund(true)}
-                      className="bg-primary hover:bg-emerald-600 text-white px-5 py-3 rounded-full font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all flex items-center space-x-2 space-x-reverse"
+                      className="bg-primary hover:bg-brand-600 text-white px-5 py-3 rounded-full font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all flex items-center space-x-2 space-x-reverse"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -449,7 +451,7 @@ const Funds = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2.5}
-                          d="M12 4v16m8-8l-8 8-8-8"
+                          d="M12 4v16m8-8H4"
                         />
                       </svg>
                       <span>إنشاء صندوق جديد</span>
@@ -459,11 +461,11 @@ const Funds = () => {
 
                 {/* Funds Grid */}
                 {funds.length === 0 ? (
-                  <div className="premium-card p-12 text-center text-slate-500 dark:text-slate-400">
-                    <div className="bg-slate-100 dark:bg-[#0f172a] h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-5 border border-slate-200 dark:border-white/[0.05]">
+                  <div className="premium-card p-12 text-center text-stone-500 dark:text-stone-400">
+                    <div className="bg-stone-100 dark:bg-night-card h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-5 border border-stone-200 dark:border-white/[0.05]">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-10 w-10 text-slate-400"
+                        className="h-10 w-10 text-stone-400"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -476,7 +478,7 @@ const Funds = () => {
                         />
                       </svg>
                     </div>
-                    <p className="font-extrabold text-lg text-slate-800 dark:text-slate-200">
+                    <p className="font-extrabold text-lg text-stone-800 dark:text-stone-200">
                       لا توجد صناديق مشتركة حالياً
                     </p>
                     <p className="text-sm mt-1">الرجاء الضغط على زر "إنشاء صندوق جديد" للبدء.</p>
@@ -493,8 +495,8 @@ const Funds = () => {
                             onClick={() => handleSelectFund(fund)}
                             className={`p-6 rounded-[2rem] cursor-pointer transition-all duration-300 border ${
                               isSelected
-                                ? 'bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-xl scale-[1.02] border-slate-700 dark:border-white/10'
-                                : 'bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white border-slate-100 dark:border-white/[0.05] hover:border-primary/40 hover:-translate-y-1 shadow-[0_4px_20px_rgb(0,0,0,0.02)]'
+                                ? 'bg-gradient-to-br from-stone-900 to-stone-800 text-white shadow-xl scale-[1.02] border-stone-700 dark:border-white/10'
+                                : 'bg-white dark:bg-night-card text-stone-900 dark:text-white border-stone-100 dark:border-white/[0.05] hover:border-primary/40 hover:-translate-y-1 shadow-[0_4px_20px_rgb(0,0,0,0.02)]'
                             }`}
                           >
                             <div className="flex justify-between items-start mb-6">
@@ -502,7 +504,7 @@ const Funds = () => {
                                 className={`px-3 py-1 rounded-full text-xs font-extrabold ${
                                   isSelected
                                     ? 'bg-white/20 text-white'
-                                    : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400'
+                                    : 'bg-stone-100 dark:bg-white/5 text-stone-500 dark:text-stone-400'
                                 }`}
                               >
                                 {fund.ownerId === user.id ? 'أنت المالك' : 'شريك'}
@@ -510,7 +512,7 @@ const Funds = () => {
 
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                className={`h-6 w-6 ${isSelected ? 'text-white/60' : 'text-slate-400'}`}
+                                className={`h-6 w-6 ${isSelected ? 'text-white/60' : 'text-stone-400'}`}
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -525,7 +527,7 @@ const Funds = () => {
                             </div>
 
                             <p
-                              className={`text-xs font-bold uppercase tracking-wider mb-1 ${isSelected ? 'text-slate-400' : 'text-slate-400'}`}
+                              className={`text-xs font-bold uppercase tracking-wider mb-1 ${isSelected ? 'text-stone-400' : 'text-stone-400'}`}
                             >
                               الرصيد المتاح
                             </p>
@@ -549,18 +551,18 @@ const Funds = () => {
                       {selectedFund ? (
                         <div className="premium-card p-8 space-y-8">
                           {/* Top Detail Card Header */}
-                          <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-100 dark:border-white/[0.05] pb-6 space-y-4 md:space-y-0">
+                          <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-stone-100 dark:border-white/[0.05] pb-6 space-y-4 md:space-y-0">
                             <div>
                               <div className="flex items-center space-x-3 space-x-reverse mb-1">
-                                <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white">
+                                <h3 className="text-2xl font-extrabold text-stone-900 dark:text-white">
                                   {selectedFund.name}
                                 </h3>
-                                <span className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-xs font-bold border border-emerald-100 dark:border-transparent">
+                                <span className="bg-brand-50 dark:bg-brand-500/10 text-brand-500 px-3 py-1 rounded-full text-xs font-bold border border-brand-100 dark:border-transparent">
                                   نشط
                                 </span>
                               </div>
-                              <p className="text-slate-500 dark:text-slate-400 text-sm">
-                                أُنشئ في {new Date(selectedFund.createdAt).toLocaleDateString()}
+                              <p className="text-stone-500 dark:text-stone-400 text-sm">
+                                أُنشئ في {formatDate(selectedFund.createdAt)}
                               </p>
                             </div>
 
@@ -568,7 +570,7 @@ const Funds = () => {
                               <div className="flex space-x-2 space-x-reverse">
                                 <button
                                   onClick={() => setShowAddMoney(true)}
-                                  className="bg-primary hover:bg-emerald-600 text-white px-5 py-3 rounded-full font-bold shadow-md shadow-primary/10 hover:shadow-primary/20 transition-all flex items-center space-x-1.5 space-x-reverse"
+                                  className="bg-primary hover:bg-brand-600 text-white px-5 py-3 rounded-full font-bold shadow-md shadow-primary/10 hover:shadow-primary/20 transition-all flex items-center space-x-1.5 space-x-reverse"
                                 >
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -581,7 +583,7 @@ const Funds = () => {
                                       strokeLinecap="round"
                                       strokeLinejoin="round"
                                       strokeWidth={2.5}
-                                      d="M12 4v16m8-8l-8 8-8-8"
+                                      d="M12 4v16m8-8H4"
                                     />
                                   </svg>
                                   <span>ضخ تمويل للصندوق</span>
@@ -592,22 +594,23 @@ const Funds = () => {
 
                           {/* Stats Info Grid inside fund */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="p-6 bg-slate-50 dark:bg-white/[0.01] rounded-2xl border border-slate-100 dark:border-white/[0.03]">
-                              <span className="text-slate-400 text-xs font-bold uppercase">
+                            <div className="p-6 bg-stone-50 dark:bg-white/[0.01] rounded-2xl border border-stone-100 dark:border-white/[0.03]">
+                              <span className="text-stone-400 text-xs font-bold uppercase">
                                 الرصيد الكلي
                               </span>
-                              <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">
-                                {selectedFund.balance.toLocaleString()}{' '}
-                                <span className="text-lg font-medium text-slate-400">
-                                  {currencyLabel(user.currency)}
-                                </span>
+                              <p className="text-3xl font-extrabold text-stone-900 dark:text-white mt-2">
+                                <Money
+                                  amount={selectedFund.balance}
+                                  currency={user.currency}
+                                  currencyClassName="font-medium text-stone-500"
+                                />
                               </p>
                             </div>
-                            <div className="p-6 bg-slate-50 dark:bg-white/[0.01] rounded-2xl border border-slate-100 dark:border-white/[0.03]">
-                              <span className="text-slate-400 text-xs font-bold uppercase">
+                            <div className="p-6 bg-stone-50 dark:bg-white/[0.01] rounded-2xl border border-stone-100 dark:border-white/[0.03]">
+                              <span className="text-stone-400 text-xs font-bold uppercase">
                                 إجمالي العمليات المسجلة
                               </span>
-                              <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">
+                              <p className="text-3xl font-extrabold text-stone-900 dark:text-white mt-2">
                                 {fundDetails?.transactions?.length || 0} عملية
                               </p>
                             </div>
@@ -615,11 +618,11 @@ const Funds = () => {
 
                           {/* Recent Transactions inside this Joint Fund */}
                           <div>
-                            <h4 className="text-lg font-extrabold text-slate-900 dark:text-white mb-4">
+                            <h4 className="text-lg font-extrabold text-stone-900 dark:text-white mb-4">
                               آخر العمليات على الصندوق
                             </h4>
                             {fundDetails?.transactions && fundDetails.transactions.length > 0 ? (
-                              <div className="divide-y divide-slate-100 dark:divide-white/[0.05]">
+                              <div className="divide-y divide-stone-100 dark:divide-white/[0.05]">
                                 {fundDetails.transactions.map(tx => (
                                   <div
                                     key={tx.id}
@@ -627,7 +630,7 @@ const Funds = () => {
                                   >
                                     <div className="flex items-center space-x-3 space-x-reverse">
                                       <div
-                                        className={`p-3 rounded-xl ${tx.type !== 'expense' ? 'bg-green-50 dark:bg-green-500/10 text-green-500' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-500'}`}
+                                        className={`p-3 rounded-xl ${tx.type !== 'expense' ? 'bg-mint-50 dark:bg-mint-500/10 text-mint-500' : 'bg-alert-50 dark:bg-alert-500/10 text-alert-500'}`}
                                       >
                                         <svg
                                           xmlns="http://www.w3.org/2000/svg"
@@ -654,39 +657,41 @@ const Funds = () => {
                                         </svg>
                                       </div>
                                       <div>
-                                        <p className="font-bold text-slate-900 dark:text-white text-sm">
+                                        <p className="font-bold text-stone-900 dark:text-white text-sm">
                                           {tx.description}
                                         </p>
-                                        <div className="flex items-center space-x-2 space-x-reverse text-xs text-slate-400 font-medium">
+                                        <div className="flex items-center space-x-2 space-x-reverse text-xs text-stone-400 font-medium">
                                           <span>بواسطة {tx.user?.name}</span>
                                           <span>•</span>
-                                          <span>{new Date(tx.date).toLocaleDateString()}</span>
+                                          <span>{formatDay(tx.date)}</span>
                                           <span>•</span>
-                                          <span className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                          <span className="bg-stone-100 dark:bg-stone-800 px-1.5 py-0.5 rounded">
                                             {tx.category?.nameAr || tx.category?.name}
                                           </span>
                                         </div>
                                       </div>
                                     </div>
                                     <span
-                                      className={`font-extrabold text-sm ${tx.type !== 'expense' ? 'text-green-500' : 'text-slate-900 dark:text-white'}`}
+                                      className={`font-extrabold text-sm ${tx.type !== 'expense' ? 'text-mint-500' : 'text-stone-900 dark:text-white'}`}
                                     >
                                       {tx.type !== 'expense' ? '+' : '-'}
-                                      {parseFloat(tx.amount).toLocaleString()}{' '}
-                                      {currencyLabel(user.currency)}
+                                      <Money
+                                        amount={parseFloat(tx.amount)}
+                                        currency={user.currency}
+                                      />
                                     </span>
                                   </div>
                                 ))}
                               </div>
                             ) : (
-                              <p className="text-slate-400 text-sm py-4">
+                              <p className="text-stone-400 text-sm py-4">
                                 لا توجد عمليات مسجلة على هذا الصندوق حتى الآن.
                               </p>
                             )}
                           </div>
                         </div>
                       ) : (
-                        <div className="premium-card p-12 text-center text-slate-400">
+                        <div className="premium-card p-12 text-center text-stone-400">
                           يرجى اختيار صندوق من القائمة الجانبية لعرض تفاصيله وإدارته.
                         </div>
                       )}
@@ -702,18 +707,18 @@ const Funds = () => {
                 {/* Left side: request shopping order form */}
                 <div className="lg:col-span-1 space-y-6">
                   <div className="premium-card p-7">
-                    <h3 className="text-xl font-extrabold text-slate-900 dark:text-white mb-5">
+                    <h3 className="text-xl font-extrabold text-stone-900 dark:text-white mb-5">
                       طلب شراء جديد
                     </h3>
 
                     {funds.length === 0 ? (
-                      <p className="text-sm text-slate-400">
+                      <p className="text-sm text-stone-400">
                         يرجى إنشاء صندوق مشترك أولاً قبل طلب الشراء.
                       </p>
                     ) : (
                       <form onSubmit={handleRequestOrderSubmit} className="space-y-4">
                         <div>
-                          <label className="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">
+                          <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
                             اسم الطلب / الغرض
                           </label>
                           <input
@@ -722,12 +727,12 @@ const Funds = () => {
                             placeholder="مثال: مقاضي السوبرماركت للشهر"
                             value={newOrderTitle}
                             onChange={e => setNewOrderTitle(e.target.value)}
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-slate-900 dark:text-white text-sm transition-all"
+                            className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm transition-all"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">
+                          <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
                             المبلغ التقريبي المطلق ({currencyLabel(user.currency)})
                           </label>
                           <input
@@ -736,24 +741,24 @@ const Funds = () => {
                             placeholder="0.00"
                             value={newOrderEstAmount}
                             onChange={e => setNewOrderEstAmount(e.target.value)}
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-slate-900 dark:text-white text-sm transition-all"
+                            className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm transition-all"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">
+                          <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
                             الصندوق التمويلي المشترك
                           </label>
                           <select
                             value={newOrderFundId}
                             onChange={e => setNewOrderFundId(e.target.value)}
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-slate-900 dark:text-white text-sm transition-all"
+                            className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm transition-all"
                           >
                             <option value="">-- اختر الصندوق المشترك --</option>
                             {funds.map(f => (
                               <option key={f.id} value={f.id}>
-                                {f.name} (رصيد: {f.balance.toLocaleString()}{' '}
-                                {currencyLabel(user.currency)})
+                                {f.name} (رصيد:{' '}
+                                <Money amount={f.balance} currency={user.currency} />)
                               </option>
                             ))}
                           </select>
@@ -762,7 +767,7 @@ const Funds = () => {
                         <button
                           type="submit"
                           disabled={submitting}
-                          className="w-full bg-primary hover:bg-emerald-600 disabled:bg-slate-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm mt-2"
+                          className="w-full bg-primary hover:bg-brand-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm mt-2"
                         >
                           {submitting ? 'جاري الإرسال...' : 'إرسال طلب الشراء'}
                         </button>
@@ -774,15 +779,15 @@ const Funds = () => {
                 {/* Right side: Shopping orders list */}
                 <div className="lg:col-span-2 space-y-6">
                   <div className="premium-card p-7">
-                    <h3 className="text-xl font-extrabold text-slate-900 dark:text-white mb-6">
+                    <h3 className="text-xl font-extrabold text-stone-900 dark:text-white mb-6">
                       قائمة الطلبات الجارية
                     </h3>
 
                     {orders.length === 0 ? (
-                      <div className="py-12 text-center text-slate-400">
+                      <div className="py-12 text-center text-stone-400">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-16 w-16 mx-auto mb-4 text-slate-300"
+                          className="h-16 w-16 mx-auto mb-4 text-stone-300"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -804,45 +809,42 @@ const Funds = () => {
                           return (
                             <div
                               key={order.id}
-                              className="p-5 bg-slate-50 dark:bg-white/[0.01] border border-slate-100 dark:border-white/[0.03] rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0"
+                              className="p-5 bg-stone-50 dark:bg-white/[0.01] border border-stone-100 dark:border-white/[0.03] rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0"
                             >
                               <div>
                                 <div className="flex items-center space-x-2 space-x-reverse mb-2">
-                                  <h4 className="font-extrabold text-slate-900 dark:text-white text-base">
+                                  <h4 className="font-extrabold text-stone-900 dark:text-white text-base">
                                     {order.title}
                                   </h4>
 
                                   {isPending && (
-                                    <span className="bg-amber-50 dark:bg-amber-500/10 text-amber-500 px-2 py-0.5 border border-amber-100 dark:border-transparent rounded-full text-xs font-bold">
+                                    <span className="bg-sun-50 dark:bg-sun-500/10 text-sun-500 px-2 py-0.5 border border-sun-100 dark:border-transparent rounded-full text-xs font-bold">
                                       بانتظار موافقة المالك
                                     </span>
                                   )}
                                   {isApproved && (
-                                    <span className="bg-green-50 dark:bg-green-500/10 text-green-500 px-2 py-0.5 border border-green-100 dark:border-transparent rounded-full text-xs font-bold">
+                                    <span className="bg-mint-50 dark:bg-mint-500/10 text-mint-500 px-2 py-0.5 border border-mint-100 dark:border-transparent rounded-full text-xs font-bold">
                                       معتمد للشراء
                                     </span>
                                   )}
                                 </div>
 
-                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-500 dark:text-stone-400 font-medium">
                                   <span>
                                     الصندوق:{' '}
-                                    <strong className="text-slate-700 dark:text-slate-200">
+                                    <strong className="text-stone-700 dark:text-stone-200">
                                       {order.fund?.name}
                                     </strong>
                                   </span>
                                   <span>•</span>
                                   <span>
                                     المبلغ المقدر:{' '}
-                                    <strong className="text-slate-700 dark:text-slate-200">
-                                      {order.estAmount.toLocaleString()}{' '}
-                                      {currencyLabel(user.currency)}
+                                    <strong className="text-stone-700 dark:text-stone-200">
+                                      <Money amount={order.estAmount} currency={user.currency} />
                                     </strong>
                                   </span>
                                   <span>•</span>
-                                  <span>
-                                    تاريخ الطلب: {new Date(order.createdAt).toLocaleDateString()}
-                                  </span>
+                                  <span>تاريخ الطلب: {formatDay(order.createdAt)}</span>
                                 </div>
                               </div>
 
@@ -852,13 +854,13 @@ const Funds = () => {
                                   <>
                                     <button
                                       onClick={() => handleApproveOrder(order.id)}
-                                      className="bg-primary hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm"
+                                      className="bg-primary hover:bg-brand-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm"
                                     >
                                       اعتماد
                                     </button>
                                     <button
                                       onClick={() => handleDeleteOrder(order.id)}
-                                      className="bg-rose-50 dark:bg-rose-500/15 text-rose-500 hover:bg-rose-100 px-4 py-2 rounded-xl text-xs font-bold transition-all"
+                                      className="bg-alert-50 dark:bg-alert-500/15 text-alert-500 hover:bg-alert-100 px-4 py-2 rounded-xl text-xs font-bold transition-all"
                                     >
                                       رفض الطلب
                                     </button>
@@ -869,7 +871,7 @@ const Funds = () => {
                                 {isPending && user.role !== 'owner' && (
                                   <button
                                     onClick={() => handleDeleteOrder(order.id)}
-                                    className="bg-rose-50 dark:bg-rose-500/15 text-rose-500 hover:bg-rose-100 px-4 py-2 rounded-xl text-xs font-bold transition-all w-full md:w-auto text-center"
+                                    className="bg-alert-50 dark:bg-alert-500/15 text-alert-500 hover:bg-alert-100 px-4 py-2 rounded-xl text-xs font-bold transition-all w-full md:w-auto text-center"
                                   >
                                     إلغاء الطلب
                                   </button>
@@ -900,7 +902,7 @@ const Funds = () => {
                                     </button>
                                     <button
                                       onClick={() => handleDeleteOrder(order.id)}
-                                      className="bg-slate-100 dark:bg-white/5 text-slate-500 hover:bg-slate-200 dark:hover:bg-white/10 px-4 py-2 rounded-xl text-xs font-bold transition-all"
+                                      className="bg-stone-100 dark:bg-white/5 text-stone-500 hover:bg-stone-200 dark:hover:bg-white/10 px-4 py-2 rounded-xl text-xs font-bold transition-all"
                                     >
                                       حذف
                                     </button>
@@ -938,10 +940,10 @@ const Funds = () => {
                         />
                       </svg>
                     </div>
-                    <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white">
+                    <h3 className="text-2xl font-extrabold text-stone-900 dark:text-white">
                       تسجيل شريك مالي جديد
                     </h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                    <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">
                       سجل حساباً لشريكك لكي يدخل للتطبيق ويطلب طلبيات شرائية ويتحكم في الصناديق
                       المشتركة.
                     </p>
@@ -949,7 +951,7 @@ const Funds = () => {
 
                   <form onSubmit={handleInvitePartnerSubmit} className="space-y-4">
                     <div>
-                      <label className="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">
+                      <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
                         اسم الشريك الكامل
                       </label>
                       <input
@@ -958,12 +960,12 @@ const Funds = () => {
                         placeholder="اسم الشريك (مثال: نورة أو محمد)"
                         value={partnerName}
                         onChange={e => setPartnerName(e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-slate-900 dark:text-white text-sm"
+                        className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">
+                      <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
                         البريد الإلكتروني للشريك
                       </label>
                       <input
@@ -972,12 +974,12 @@ const Funds = () => {
                         placeholder="partner@example.com"
                         value={partnerEmail}
                         onChange={e => setPartnerEmail(e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-slate-900 dark:text-white text-sm"
+                        className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">
+                      <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
                         كلمة المرور للشريك
                       </label>
                       <input
@@ -986,14 +988,14 @@ const Funds = () => {
                         placeholder="••••••••"
                         value={partnerPassword}
                         onChange={e => setPartnerPassword(e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-slate-900 dark:text-white text-sm"
+                        className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="w-full bg-primary hover:bg-emerald-600 disabled:bg-slate-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm mt-4"
+                      className="w-full bg-primary hover:bg-brand-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm mt-4"
                     >
                       {submitting ? 'جاري التسجيل...' : 'تسجيل الشريك الآن'}
                     </button>
@@ -1012,17 +1014,17 @@ const Funds = () => {
       {/* 1. Create Joint Fund Modal */}
       {showCreateFund && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-sm"
           dir="rtl"
         >
-          <div className="bg-white dark:bg-[#0f172a] rounded-[2rem] w-full max-w-md p-8 shadow-2xl border border-slate-100 dark:border-white/5 animate-scale-up">
+          <div className="bg-white dark:bg-night-card rounded-[2rem] w-full max-w-md p-8 shadow-2xl border border-stone-100 dark:border-white/5 animate-scale-up">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">
+              <h3 className="text-xl font-extrabold text-stone-900 dark:text-white">
                 إنشاء صندوق جديد
               </h3>
               <button
                 onClick={() => setShowCreateFund(false)}
-                className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400"
+                className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-white/5 text-stone-400"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -1043,7 +1045,7 @@ const Funds = () => {
 
             <form onSubmit={handleCreateFundSubmit} className="space-y-4">
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">
+                <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
                   اسم الصندوق
                 </label>
                 <input
@@ -1052,12 +1054,12 @@ const Funds = () => {
                   placeholder="مثال: ميزانية البقالة / مصروف المنزل"
                   value={fundName}
                   onChange={e => setFundName(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-slate-900 dark:text-white text-sm"
+                  className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">
+                <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
                   التمويل الأولي (اختياري)
                 </label>
                 <input
@@ -1065,7 +1067,7 @@ const Funds = () => {
                   placeholder="0.00"
                   value={fundInitialBalance}
                   onChange={e => setFundInitialBalance(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-slate-900 dark:text-white text-sm"
+                  className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
                 />
               </div>
 
@@ -1073,14 +1075,14 @@ const Funds = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 bg-primary hover:bg-emerald-600 disabled:bg-slate-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm"
+                  className="flex-1 bg-primary hover:bg-brand-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm"
                 >
                   {submitting ? 'جاري الإنشاء...' : 'تأكيد الإنشاء'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowCreateFund(false)}
-                  className="px-6 py-3.5 bg-slate-100 dark:bg-white/5 text-slate-500 hover:bg-slate-200 rounded-2xl font-bold text-sm"
+                  className="px-6 py-3.5 bg-stone-100 dark:bg-white/5 text-stone-500 hover:bg-stone-200 rounded-2xl font-bold text-sm"
                 >
                   إلغاء
                 </button>
@@ -1093,17 +1095,17 @@ const Funds = () => {
       {/* 2. Deposit Money Modal */}
       {showAddMoney && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-sm"
           dir="rtl"
         >
-          <div className="bg-white dark:bg-[#0f172a] rounded-[2rem] w-full max-w-md p-8 shadow-2xl border border-slate-100 dark:border-white/5 animate-scale-up">
+          <div className="bg-white dark:bg-night-card rounded-[2rem] w-full max-w-md p-8 shadow-2xl border border-stone-100 dark:border-white/5 animate-scale-up">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">
+              <h3 className="text-xl font-extrabold text-stone-900 dark:text-white">
                 ضخ تمويل إضافي
               </h3>
               <button
                 onClick={() => setShowAddMoney(false)}
-                className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400"
+                className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-white/5 text-stone-400"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -1123,15 +1125,15 @@ const Funds = () => {
             </div>
 
             <form onSubmit={handleDepositSubmit} className="space-y-4">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-stone-500 dark:text-stone-400">
                 أنت تقوم بضخ تمويل مالي مباشر إلى صندوق:{' '}
-                <strong className="text-slate-900 dark:text-white font-extrabold">
+                <strong className="text-stone-900 dark:text-white font-extrabold">
                   {selectedFund?.name}
                 </strong>
               </p>
 
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">
+                <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
                   المبلغ المراد إضافته ({currencyLabel(user.currency)})
                 </label>
                 <input
@@ -1140,12 +1142,12 @@ const Funds = () => {
                   placeholder="0.00"
                   value={depositAmount}
                   onChange={e => setDepositAmount(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-slate-900 dark:text-white text-sm"
+                  className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">
+                <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
                   الوصف / التفاصيل
                 </label>
                 <input
@@ -1153,7 +1155,7 @@ const Funds = () => {
                   placeholder="مثال: تمويل دورة البقالة الجديدة"
                   value={depositDesc}
                   onChange={e => setDepositDesc(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-slate-900 dark:text-white text-sm"
+                  className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
                 />
               </div>
 
@@ -1161,14 +1163,14 @@ const Funds = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 bg-primary hover:bg-emerald-600 disabled:bg-slate-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm"
+                  className="flex-1 bg-primary hover:bg-brand-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm"
                 >
                   {submitting ? 'جاري التمويل...' : 'تأكيد التمويل'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowAddMoney(false)}
-                  className="px-6 py-3.5 bg-slate-100 dark:bg-white/5 text-slate-500 hover:bg-slate-200 rounded-2xl font-bold text-sm"
+                  className="px-6 py-3.5 bg-stone-100 dark:bg-white/5 text-stone-500 hover:bg-stone-200 rounded-2xl font-bold text-sm"
                 >
                   إلغاء
                 </button>
@@ -1181,17 +1183,17 @@ const Funds = () => {
       {/* 3. Confirm Purchase Order Modal */}
       {showPurchaseOrder && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-sm"
           dir="rtl"
         >
-          <div className="bg-white dark:bg-[#0f172a] rounded-[2rem] w-full max-w-md p-8 shadow-2xl border border-slate-100 dark:border-white/5 animate-scale-up">
+          <div className="bg-white dark:bg-night-card rounded-[2rem] w-full max-w-md p-8 shadow-2xl border border-stone-100 dark:border-white/5 animate-scale-up">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">
+              <h3 className="text-xl font-extrabold text-stone-900 dark:text-white">
                 تأكيد عملية الشراء
               </h3>
               <button
                 onClick={() => setShowPurchaseOrder(false)}
-                className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400"
+                className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-white/5 text-stone-400"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -1211,15 +1213,15 @@ const Funds = () => {
             </div>
 
             <form onSubmit={handlePurchaseSubmit} className="space-y-4">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-stone-500 dark:text-stone-400">
                 تسجيل شراء غرض:{' '}
-                <strong className="text-slate-900 dark:text-white font-extrabold">
+                <strong className="text-stone-900 dark:text-white font-extrabold">
                   {purchaseOrderTitle}
                 </strong>
               </p>
 
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">
+                <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
                   المبلغ الفعلي المدفوع ({currencyLabel(user.currency)})
                 </label>
                 <input
@@ -1228,19 +1230,19 @@ const Funds = () => {
                   placeholder={purchaseEstAmount}
                   value={purchaseActualAmount}
                   onChange={e => setPurchaseActualAmount(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-slate-900 dark:text-white text-sm"
+                  className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">
+                <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
                   تصنيف المصروف
                 </label>
                 <select
                   required
                   value={purchaseCategoryId}
                   onChange={e => setPurchaseCategoryId(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-slate-900 dark:text-white text-sm transition-all"
+                  className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm transition-all"
                 >
                   <option value="">-- اختر التصنيف --</option>
                   {categories.map(cat => (
@@ -1252,7 +1254,7 @@ const Funds = () => {
               </div>
 
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">
+                <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
                   الوصف
                 </label>
                 <input
@@ -1260,7 +1262,7 @@ const Funds = () => {
                   placeholder="الوصف أو اسم المحل"
                   value={purchaseDesc}
                   onChange={e => setPurchaseDesc(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-slate-900 dark:text-white text-sm"
+                  className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
                 />
               </div>
 
@@ -1268,14 +1270,14 @@ const Funds = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 bg-primary hover:bg-emerald-600 disabled:bg-slate-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm"
+                  className="flex-1 bg-primary hover:bg-brand-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm"
                 >
                   {submitting ? 'جاري التسجيل والخصم...' : 'تأكيد الشراء والخصم'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowPurchaseOrder(false)}
-                  className="px-6 py-3.5 bg-slate-100 dark:bg-white/5 text-slate-500 hover:bg-slate-200 rounded-2xl font-bold text-sm"
+                  className="px-6 py-3.5 bg-stone-100 dark:bg-white/5 text-stone-500 hover:bg-stone-200 rounded-2xl font-bold text-sm"
                 >
                   إلغاء
                 </button>
