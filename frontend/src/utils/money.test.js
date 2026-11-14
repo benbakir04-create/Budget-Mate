@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { summarizeTotals, amountSign } from './money.js';
+import { summarizeTotals, amountSign, formatAmount } from './money.js';
 import { currencyLabel } from './currency.js';
 
 test('fund deposits (transfers) count toward neither income nor expense', () => {
@@ -29,4 +29,11 @@ test('the dinar is the default currency label', () => {
   assert.equal(currencyLabel('DZD'), 'د.ج');
   assert.equal(currencyLabel('EUR'), '€');
   assert.equal(currencyLabel('SAR'), 'SAR');
+});
+
+test('amounts use Western digits and comma grouping whatever the browser language', () => {
+  assert.equal(formatAmount(4350), '4,350');
+  assert.equal(formatAmount('60000'), '60,000');
+  assert.equal(formatAmount(1200.5), '1,200.5');
+  assert.equal(formatAmount(undefined), '0');
 });

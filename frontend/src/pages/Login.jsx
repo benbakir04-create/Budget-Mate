@@ -32,20 +32,20 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-stone-50 flex">
       <div
         className="flex-1 flex items-center justify-center px-4"
         style={{ minHeight: 'calc(100vh - 64px)' }}
       >
         <div className="max-w-md w-full space-y-8">
           <div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            <h2 className="mt-6 text-center text-3xl font-extrabold text-stone-900">
               {t('auth.login')}
             </h2>
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
+              <div className="bg-brick-50 border border-brick-400 text-brick-700 px-4 py-3 rounded">
                 {error}
               </div>
             )}
@@ -59,7 +59,7 @@ const Login = () => {
                   name="email"
                   type="email"
                   required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-stone-300 placeholder-stone-500 text-stone-900 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                   placeholder={t('auth.email')}
                   value={formData.email}
                   onChange={handleChange}
@@ -74,7 +74,7 @@ const Login = () => {
                   name="password"
                   type="password"
                   required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-stone-300 placeholder-stone-500 text-stone-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                   placeholder={t('auth.password')}
                   value={formData.password}
                   onChange={handleChange}
@@ -86,14 +86,14 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-qashani-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
               >
                 {loading ? t('common.loading') : t('auth.login')}
               </button>
             </div>
 
             <div className="text-center">
-              <Link to="/register" className="font-medium text-primary hover:text-green-600">
+              <Link to="/register" className="font-medium text-primary hover:text-qashani-500">
                 {t('auth.noAccount')}
               </Link>
             </div>

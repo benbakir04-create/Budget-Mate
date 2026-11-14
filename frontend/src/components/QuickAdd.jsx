@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { categoryService } from '../services/categoryService';
 import { transactionService } from '../services/transactionService';
 import { currencyLabel } from '../utils/currency';
+import { formatAmount } from '../utils/money';
 
 const ERROR_MESSAGES = {
   FUND_EXPENSE_ONLY: 'الصندوق يقبل المصاريف فقط.',
@@ -63,7 +64,7 @@ const QuickAdd = ({ funds, user, onSaved }) => {
       const category = categories.find(c => c.id === categoryId);
       setMessage({
         tone: 'success',
-        text: `سُجّل ${parseFloat(amount).toLocaleString()} ${currencyLabel(user?.currency)} في ${category?.nameAr || category?.name}.`,
+        text: `سُجّل ${formatAmount(amount)} ${currencyLabel(user?.currency)} في ${category?.nameAr || category?.name}.`,
       });
       setAmount('');
       setCategoryId('');
@@ -78,8 +79,8 @@ const QuickAdd = ({ funds, user, onSaved }) => {
 
   return (
     <form onSubmit={handleSubmit} className="premium-card p-6 mb-10">
-      <h2 className="text-xl font-extrabold text-slate-900 dark:text-white mb-1">إدخال سريع</h2>
-      <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-5">
+      <h2 className="text-xl font-extrabold text-stone-900 dark:text-white mb-1">إدخال سريع</h2>
+      <p className="text-sm text-stone-500 dark:text-stone-400 font-medium mb-5">
         اكتب المبلغ، اختر القسم، ثم سجّل.
       </p>
 
@@ -94,9 +95,9 @@ const QuickAdd = ({ funds, user, onSaved }) => {
             onChange={e => setAmount(e.target.value)}
             placeholder="المبلغ"
             aria-label="المبلغ"
-            className="w-full text-2xl font-extrabold px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full text-2xl font-extrabold px-4 py-3 rounded-2xl border border-stone-200 dark:border-white/10 bg-white dark:bg-night-card text-stone-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
           />
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-500 font-bold">
             {currencyLabel(user?.currency)}
           </span>
         </div>
@@ -105,7 +106,7 @@ const QuickAdd = ({ funds, user, onSaved }) => {
             value={fundId}
             onChange={e => setFundId(e.target.value)}
             aria-label="مصدر المال"
-            className="sm:w-56 px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-primary"
+            className="sm:w-56 px-4 py-3 rounded-2xl border border-stone-200 dark:border-white/10 bg-white dark:bg-night-card text-stone-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-primary"
           >
             {user?.role !== 'partner' && <option value="">من جيبي</option>}
             {funds.map(fund => (
@@ -129,9 +130,9 @@ const QuickAdd = ({ funds, user, onSaved }) => {
               className={`min-h-[44px] px-4 py-2 rounded-full text-sm font-bold border transition-all ${
                 selected
                   ? 'text-white border-transparent shadow-md scale-105'
-                  : 'bg-slate-50 dark:bg-white/5 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-white/10 hover:border-primary'
+                  : 'bg-stone-50 dark:bg-white/5 text-stone-700 dark:text-stone-200 border-stone-200 dark:border-white/10 hover:border-primary'
               }`}
-              style={selected ? { backgroundColor: category.color || '#1D9E75' } : undefined}
+              style={selected ? { backgroundColor: category.color || '#23336B' } : undefined}
             >
               {category.nameAr || category.name}
             </button>
@@ -150,7 +151,7 @@ const QuickAdd = ({ funds, user, onSaved }) => {
       {message && (
         <p
           role="status"
-          className={`mt-4 text-sm font-bold ${message.tone === 'success' ? 'text-green-600 dark:text-green-400' : 'text-rose-500'}`}
+          className={`mt-4 text-sm font-bold ${message.tone === 'success' ? 'text-mint-600 dark:text-mint-400' : 'text-brick-500'}`}
         >
           {message.text}
         </p>

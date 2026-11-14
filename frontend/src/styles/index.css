@@ -1,42 +1,50 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --primary: #10b981;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --info: #3b82f6;
-}
+/* الخطوط تُحمَّل مرة واحدة من index.html: Noto Kufi Arabic للعناوين والأرقام، وAlmarai للنص. */
 
 @layer base {
   body {
-    @apply bg-[#F8FAFC] text-slate-900 transition-colors duration-500 ease-in-out;
-    font-family: 'Cairo', 'Outfit', sans-serif;
+    @apply bg-ivory text-ink font-sans transition-colors duration-500 ease-in-out;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   .dark body {
-    @apply bg-[#030712] text-white;
+    @apply bg-night text-[#F3EEE4];
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
   }
 }
 
 @layer utilities {
+  /* المبالغ: أرقام بعرض ثابت، واتجاه مستقل حتى لا تقفز الإشارة إلى آخر الرقم */
+  .num {
+    font-variant-numeric: tabular-nums;
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+
   .glass-panel {
-    @apply bg-white/80 dark:bg-[#0f172a]/70 backdrop-blur-xl border border-white/40 dark:border-white/5;
+    @apply bg-white/80 dark:bg-night-card/70 backdrop-blur-xl border border-white/40 dark:border-white/5;
   }
 
   .premium-card {
-    @apply bg-white dark:bg-[#0f172a] rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none dark:border dark:border-white/[0.05];
+    @apply bg-white dark:bg-night-card rounded-card border border-[#EDE2CF] dark:border-night-line;
   }
 
+  /* بطاقة البطل: قاشاني بزخرفة زليج خفيفة */
   .luxury-gradient {
-    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    background-color: #23336b;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23E0A030' stroke-opacity='.22' stroke-width='1.2'%3E%3Crect x='16' y='16' width='24' height='24'/%3E%3Crect x='16' y='16' width='24' height='24' transform='rotate(45 28 28)'/%3E%3Ccircle cx='28' cy='28' r='5'/%3E%3C/g%3E%3C/svg%3E");
   }
   .dark .luxury-gradient {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    background-color: #1c275e;
   }
 }

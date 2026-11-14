@@ -31,3 +31,9 @@ export const summarizeTotals = transactions => {
   }
   return { income, expense, balance: income - expense, count };
 };
+
+// Amounts are always written with Western digits and comma grouping (4,350), as in Algeria,
+// whatever the browser's language. Decimals only when there are any.
+const AMOUNT_FORMAT = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
+
+export const formatAmount = value => AMOUNT_FORMAT.format(Number(value) || 0);

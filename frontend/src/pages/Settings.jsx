@@ -10,11 +10,7 @@ const Settings = () => {
   const { user, updateUser } = useAuth();
 
   // App settings state
-  const [appName, setAppName] = useState(
-    localStorage.getItem('appName') || import.meta.env.VITE_APP_NAME || 'وازن'
-  );
   const [currency, setCurrency] = useState(user?.currency || DEFAULT_CURRENCY);
-  const [lang] = useState('ar');
   const [successMsg, setSuccessMsg] = useState('');
 
   // Categories state
@@ -25,7 +21,7 @@ const Settings = () => {
     nameAr: '',
     name: '',
     type: 'expense',
-    color: '#10B981',
+    color: '#23336B',
     icon: 'folder',
   });
 
@@ -56,20 +52,12 @@ const Settings = () => {
 
   const handleSaveGeneralSettings = async e => {
     e.preventDefault();
-    const appNameChanged = appName !== localStorage.getItem('appName');
-    localStorage.setItem('appName', appName);
-
     try {
       // The currency is saved on the server, so it follows the user to every device.
       if (user && currency !== user.currency) {
         await updateUser({ currency });
       }
       setSuccessMsg('تم حفظ الإعدادات بنجاح!');
-      // The sidebar reads the app name once, so a new name needs a reload to show.
-      if (appNameChanged) {
-        setTimeout(() => window.location.reload(), 1000);
-        return;
-      }
     } catch (err) {
       console.error(err);
       setSuccessMsg('تعذّر حفظ العملة، حاول مرة أخرى.');
@@ -91,7 +79,7 @@ const Settings = () => {
         nameAr: '',
         name: '',
         type: 'expense',
-        color: '#10B981',
+        color: '#23336B',
         icon: 'folder',
       });
       await loadCategories();
@@ -176,16 +164,16 @@ const Settings = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-stone-50 flex">
       <Sidebar />
 
       <div className="flex-1 max-w-7xl mx-auto p-4 md:mr-64">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">إعدادات التطبيق</h1>
+          <h1 className="text-3xl font-bold text-stone-900">إعدادات التطبيق</h1>
         </div>
 
         {successMsg && (
-          <div className="mb-6 bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-sm transition-all duration-300">
+          <div className="mb-6 bg-mint-50 border border-mint-400 text-mint-700 px-4 py-3 rounded-lg shadow-sm transition-all duration-300">
             {successMsg}
           </div>
         )}
@@ -193,8 +181,8 @@ const Settings = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: General Settings */}
           <div className="space-y-6 lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100 flex items-center">
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-stone-100">
+              <h2 className="text-xl font-bold text-stone-900 mb-4 pb-2 border-b border-stone-100 flex items-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5 ml-2 text-primary"
@@ -220,30 +208,13 @@ const Settings = () => {
 
               <form onSubmit={handleSaveGeneralSettings} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    اسم التطبيق التجريبي
-                  </label>
-                  <input
-                    type="text"
-                    value={appName}
-                    onChange={e => setAppName(e.target.value)}
-                    required
-                    placeholder="أدخل اسم التطبيق"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-primary focus:border-primary text-sm"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    يتغير فوراً في أعلى القائمة الجانبية عند الحفظ.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-stone-700 mb-1">
                     العملة الافتراضية
                   </label>
                   <select
                     value={currency}
                     onChange={e => setCurrency(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-primary focus:border-primary text-sm bg-white"
+                    className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-primary focus:border-primary text-sm bg-white"
                   >
                     {CURRENCIES.map(c => (
                       <option key={c.code} value={c.code}>
@@ -253,30 +224,9 @@ const Settings = () => {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    لغة التطبيق
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={lang}
-                      disabled
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-400 cursor-not-allowed"
-                    >
-                      <option value="ar">العربية (RTL)</option>
-                    </select>
-                    <span className="absolute left-3 top-2 px-1.5 py-0.5 text-[10px] font-bold text-white bg-green-500 rounded-md">
-                      اللغة الحالية الوحيدة
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">
-                    تنسيق اتجاه الصفحات معتمد بشكل كامل من اليمين إلى اليسار.
-                  </p>
-                </div>
-
                 <button
                   type="submit"
-                  className="w-full bg-primary hover:bg-green-600 text-white font-medium py-2 rounded-lg text-sm shadow-sm transition-colors mt-6"
+                  className="w-full bg-primary hover:bg-qashani-800 text-white font-medium py-2 rounded-lg text-sm shadow-sm transition-colors mt-6"
                 >
                   حفظ الضبط العام
                 </button>
@@ -287,9 +237,9 @@ const Settings = () => {
           {/* Right/Middle Columns: Categories & Subcategories */}
           <div className="lg:col-span-2 space-y-6">
             {/* Category and Subcategory Layout */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900 flex items-center">
+            <div className="bg-white rounded-xl shadow-sm border border-stone-100 overflow-hidden">
+              <div className="p-6 border-b border-stone-100 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-stone-900 flex items-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5 ml-2 text-primary"
@@ -308,7 +258,7 @@ const Settings = () => {
                 </h2>
                 <button
                   onClick={() => setShowAddCategory(!showAddCategory)}
-                  className="bg-primary hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-colors"
+                  className="bg-primary hover:bg-qashani-800 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-colors"
                 >
                   {showAddCategory ? 'إلغاء' : 'إضافة قسم جديد'}
                 </button>
@@ -316,12 +266,12 @@ const Settings = () => {
 
               {/* Add Category Form Overlay */}
               {showAddCategory && (
-                <div className="p-6 bg-green-50/50 border-b border-gray-100">
+                <div className="p-6 bg-qashani-50/50 border-b border-stone-100">
                   <form onSubmit={handleAddCategory} className="space-y-4">
-                    <h3 className="text-sm font-bold text-green-800">إضافة قسم رئيسي جديد</h3>
+                    <h3 className="text-sm font-bold text-qashani-800">إضافة قسم رئيسي جديد</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                        <label className="block text-xs font-medium text-stone-700 mb-1">
                           اسم القسم (بالعربية)
                         </label>
                         <input
@@ -332,11 +282,11 @@ const Settings = () => {
                             setNewCategoryData({ ...newCategoryData, nameAr: e.target.value })
                           }
                           placeholder="مثال: اشتراكات، إيجار..."
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-primary focus:border-primary bg-white"
+                          className="w-full px-3 py-2 border border-stone-300 rounded-lg text-xs focus:outline-none focus:ring-primary focus:border-primary bg-white"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                        <label className="block text-xs font-medium text-stone-700 mb-1">
                           النوع
                         </label>
                         <select
@@ -344,14 +294,14 @@ const Settings = () => {
                           onChange={e =>
                             setNewCategoryData({ ...newCategoryData, type: e.target.value })
                           }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-primary focus:border-primary bg-white"
+                          className="w-full px-3 py-2 border border-stone-300 rounded-lg text-xs focus:outline-none focus:ring-primary focus:border-primary bg-white"
                         >
                           <option value="expense">مصروف (Expense)</option>
                           <option value="income">دخل (Income)</option>
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                        <label className="block text-xs font-medium text-stone-700 mb-1">
                           اللون المميز
                         </label>
                         <div className="flex space-x-1 space-x-reverse items-center h-8">
@@ -371,13 +321,13 @@ const Settings = () => {
                       <button
                         type="button"
                         onClick={() => setShowAddCategory(false)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 bg-white"
+                        className="px-4 py-2 border border-stone-300 rounded-lg text-xs font-semibold text-stone-700 hover:bg-stone-100 bg-white"
                       >
                         إلغاء
                       </button>
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-primary hover:bg-green-600 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
+                        className="px-4 py-2 bg-primary hover:bg-qashani-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
                       >
                         إضافة القسم
                       </button>
@@ -387,12 +337,12 @@ const Settings = () => {
               )}
 
               {loading ? (
-                <div className="p-8 text-center text-gray-500">جاري التحميل...</div>
+                <div className="p-8 text-center text-stone-500">جاري التحميل...</div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 divide-x divide-x-reverse divide-gray-100 min-h-[400px]">
+                <div className="grid grid-cols-1 md:grid-cols-2 divide-x divide-x-reverse divide-stone-100 min-h-[400px]">
                   {/* Category Selection List */}
                   <div className="p-6">
-                    <h3 className="text-sm font-bold text-gray-800 mb-3">الأقسام الرئيسية</h3>
+                    <h3 className="text-sm font-bold text-stone-800 mb-3">الأقسام الرئيسية</h3>
                     <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
                       {categories.map(category => (
                         <div
@@ -400,8 +350,8 @@ const Settings = () => {
                           onClick={() => setSelectedCategory(category)}
                           className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
                             selectedCategory?.id === category.id
-                              ? 'bg-green-50 border-green-200 ring-1 ring-primary'
-                              : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
+                              ? 'bg-qashani-50 border-qashani-200 ring-1 ring-primary'
+                              : 'bg-stone-50 hover:bg-stone-100 border-stone-200'
                           }`}
                         >
                           <div className="flex items-center space-x-3 space-x-reverse">
@@ -410,10 +360,10 @@ const Settings = () => {
                               style={{ backgroundColor: category.color }}
                             />
                             <div>
-                              <span className="text-sm font-semibold text-gray-900">
+                              <span className="text-sm font-semibold text-stone-900">
                                 {category.nameAr}
                               </span>
-                              <span className="text-[10px] text-gray-400 block">
+                              <span className="text-xs text-stone-400 block">
                                 {category.type === 'income'
                                   ? 'قسم دخل'
                                   : category.type === 'transfer'
@@ -423,7 +373,7 @@ const Settings = () => {
                             </div>
                           </div>
                           <div className="flex items-center space-x-2 space-x-reverse">
-                            <span className="text-[10px] px-2 py-0.5 bg-gray-200 text-gray-700 rounded-full">
+                            <span className="text-xs px-2 py-0.5 bg-stone-200 text-stone-700 rounded-full">
                               {(category.subcategories || []).length} أصناف
                             </span>
                             <button
@@ -431,7 +381,7 @@ const Settings = () => {
                                 e.stopPropagation();
                                 handleDeleteCategory(category.id);
                               }}
-                              className="text-red-500 hover:text-red-700 p-1 hover:bg-white rounded-md transition-colors"
+                              className="text-brick-500 hover:text-brick-700 p-1 hover:bg-white rounded-md transition-colors"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -455,16 +405,16 @@ const Settings = () => {
                   </div>
 
                   {/* Subcategories Management Panel */}
-                  <div className="p-6 bg-gray-50/30">
+                  <div className="p-6 bg-stone-50/30">
                     {selectedCategory ? (
                       <div>
-                        <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-100">
+                        <div className="flex justify-between items-center mb-4 pb-2 border-b border-stone-100">
                           <div>
-                            <h3 className="text-sm font-bold text-gray-800">
+                            <h3 className="text-sm font-bold text-stone-800">
                               الأصناف الفرعية لقسم{' '}
                               <span className="text-primary">{selectedCategory.nameAr}</span>
                             </h3>
-                            <p className="text-[11px] text-gray-500">
+                            <p className="text-xs text-stone-500">
                               قم بإضافة أصناف مخصصة دقيقة لمراقبة تفاصيل الصرف.
                             </p>
                           </div>
@@ -481,11 +431,11 @@ const Settings = () => {
                             value={newSubcategoryName}
                             onChange={e => setNewSubcategoryName(e.target.value)}
                             placeholder="صنف فرعي جديد (مثال: صيانة سيارة، مطاعم فطور...)"
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-primary focus:border-primary bg-white shadow-sm"
+                            className="flex-1 px-3 py-2 border border-stone-300 rounded-lg text-xs focus:outline-none focus:ring-primary focus:border-primary bg-white shadow-sm"
                           />
                           <button
                             type="submit"
-                            className="bg-primary hover:bg-green-600 text-white px-3 py-2 rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center"
+                            className="bg-primary hover:bg-qashani-800 text-white px-3 py-2 rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -498,7 +448,7 @@ const Settings = () => {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={2}
-                                d="M12 4v16m8-8l-8 8-8-8"
+                                d="M12 4v16m8-8H4"
                               />
                             </svg>
                             إضافة
@@ -511,15 +461,15 @@ const Settings = () => {
                             selectedCategory.subcategories.map(sub => (
                               <div
                                 key={sub.id}
-                                className="flex justify-between items-center bg-white border border-gray-150 p-2.5 rounded-lg shadow-sm hover:shadow transition-shadow"
+                                className="flex justify-between items-center bg-white border border-stone-150 p-2.5 rounded-lg shadow-sm hover:shadow transition-shadow"
                               >
-                                <span className="text-xs font-medium text-gray-800">
+                                <span className="text-xs font-medium text-stone-800">
                                   {sub.nameAr}
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => handleDeleteSubcategory(sub.id)}
-                                  className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded-md transition-colors"
+                                  className="text-brick-500 hover:text-brick-700 p-1 hover:bg-brick-50 rounded-md transition-colors"
                                 >
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -539,17 +489,17 @@ const Settings = () => {
                               </div>
                             ))
                           ) : (
-                            <div className="text-center py-10 text-xs text-gray-500">
+                            <div className="text-center py-10 text-xs text-stone-500">
                               لا توجد فئات فرعية مضافة في هذا القسم حالياً.
                             </div>
                           )}
                         </div>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center h-full text-center p-6 text-gray-400">
+                      <div className="flex flex-col items-center justify-center h-full text-center p-6 text-stone-400">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-10 w-10 mb-2 text-gray-300"
+                          className="h-10 w-10 mb-2 text-stone-300"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"

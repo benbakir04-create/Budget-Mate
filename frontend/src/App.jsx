@@ -8,6 +8,7 @@ import Transactions from './pages/Transactions';
 import Budget from './pages/Budget';
 import Settings from './pages/Settings';
 import Funds from './pages/Funds';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
@@ -58,6 +59,7 @@ function App() {
           />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/demo" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
