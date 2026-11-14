@@ -8,7 +8,7 @@
     "start": "vite --host --open",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test src/utils/money.test.js src/utils/dates.test.js"
+    "test": "node --test src/utils/money.test.js src/utils/dates.test.js src/utils/nav.test.js"
   },
   "dependencies": {
     "react": "^18.2.0",
