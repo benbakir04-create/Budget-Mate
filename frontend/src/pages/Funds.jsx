@@ -325,7 +325,7 @@ const Funds = () => {
   };
 
   return (
-    <div className="min-h-screen bg-ivory dark:bg-night flex transition-colors duration-300">
+    <div className="min-h-screen bg-canvas dark:bg-night flex transition-colors duration-300">
       <Sidebar />
       <div className="flex-1 max-w-7xl mx-auto p-4 md:p-8 md:mr-64 transition-all duration-300">
         {/* Header Section */}
@@ -342,7 +342,7 @@ const Funds = () => {
 
         {/* Global Notifications */}
         {error && (
-          <div className="mb-6 p-4 bg-brick-50 dark:bg-brick-500/10 border-r-4 border-brick-500 text-brick-800 dark:text-brick-400 rounded-xl font-bold flex items-center">
+          <div className="mb-6 p-4 bg-alert-50 dark:bg-alert-500/10 border-r-4 border-alert-500 text-alert-800 dark:text-alert-400 rounded-xl font-bold flex items-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5 ml-2"
@@ -362,7 +362,7 @@ const Funds = () => {
         )}
 
         {successMsg && (
-          <div className="mb-6 p-4 bg-qashani-50 dark:bg-qashani-500/10 border-r-4 border-qashani-500 text-qashani-800 dark:text-qashani-400 rounded-xl font-bold flex items-center animate-fade-in">
+          <div className="mb-6 p-4 bg-brand-50 dark:bg-brand-500/10 border-r-4 border-brand-500 text-brand-800 dark:text-brand-400 rounded-xl font-bold flex items-center animate-fade-in">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5 ml-2"
@@ -438,7 +438,7 @@ const Funds = () => {
                   {user.role === 'owner' && (
                     <button
                       onClick={() => setShowCreateFund(true)}
-                      className="bg-primary hover:bg-qashani-600 text-white px-5 py-3 rounded-full font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all flex items-center space-x-2 space-x-reverse"
+                      className="bg-primary hover:bg-brand-600 text-white px-5 py-3 rounded-full font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all flex items-center space-x-2 space-x-reverse"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -557,7 +557,7 @@ const Funds = () => {
                                 <h3 className="text-2xl font-extrabold text-stone-900 dark:text-white">
                                   {selectedFund.name}
                                 </h3>
-                                <span className="bg-qashani-50 dark:bg-qashani-500/10 text-qashani-500 px-3 py-1 rounded-full text-xs font-bold border border-qashani-100 dark:border-transparent">
+                                <span className="bg-brand-50 dark:bg-brand-500/10 text-brand-500 px-3 py-1 rounded-full text-xs font-bold border border-brand-100 dark:border-transparent">
                                   نشط
                                 </span>
                               </div>
@@ -570,7 +570,7 @@ const Funds = () => {
                               <div className="flex space-x-2 space-x-reverse">
                                 <button
                                   onClick={() => setShowAddMoney(true)}
-                                  className="bg-primary hover:bg-qashani-600 text-white px-5 py-3 rounded-full font-bold shadow-md shadow-primary/10 hover:shadow-primary/20 transition-all flex items-center space-x-1.5 space-x-reverse"
+                                  className="bg-primary hover:bg-brand-600 text-white px-5 py-3 rounded-full font-bold shadow-md shadow-primary/10 hover:shadow-primary/20 transition-all flex items-center space-x-1.5 space-x-reverse"
                                 >
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -630,7 +630,7 @@ const Funds = () => {
                                   >
                                     <div className="flex items-center space-x-3 space-x-reverse">
                                       <div
-                                        className={`p-3 rounded-xl ${tx.type !== 'expense' ? 'bg-mint-50 dark:bg-mint-500/10 text-mint-500' : 'bg-brick-50 dark:bg-brick-500/10 text-brick-500'}`}
+                                        className={`p-3 rounded-xl ${tx.type !== 'expense' ? 'bg-mint-50 dark:bg-mint-500/10 text-mint-500' : 'bg-alert-50 dark:bg-alert-500/10 text-alert-500'}`}
                                       >
                                         <svg
                                           xmlns="http://www.w3.org/2000/svg"
@@ -767,7 +767,7 @@ const Funds = () => {
                         <button
                           type="submit"
                           disabled={submitting}
-                          className="w-full bg-primary hover:bg-qashani-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm mt-2"
+                          className="w-full bg-primary hover:bg-brand-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm mt-2"
                         >
                           {submitting ? 'جاري الإرسال...' : 'إرسال طلب الشراء'}
                         </button>
@@ -818,7 +818,7 @@ const Funds = () => {
                                   </h4>
 
                                   {isPending && (
-                                    <span className="bg-saffron-50 dark:bg-saffron-500/10 text-saffron-500 px-2 py-0.5 border border-saffron-100 dark:border-transparent rounded-full text-xs font-bold">
+                                    <span className="bg-sun-50 dark:bg-sun-500/10 text-sun-500 px-2 py-0.5 border border-sun-100 dark:border-transparent rounded-full text-xs font-bold">
                                       بانتظار موافقة المالك
                                     </span>
                                   )}
@@ -854,13 +854,13 @@ const Funds = () => {
                                   <>
                                     <button
                                       onClick={() => handleApproveOrder(order.id)}
-                                      className="bg-primary hover:bg-qashani-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm"
+                                      className="bg-primary hover:bg-brand-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm"
                                     >
                                       اعتماد
                                     </button>
                                     <button
                                       onClick={() => handleDeleteOrder(order.id)}
-                                      className="bg-brick-50 dark:bg-brick-500/15 text-brick-500 hover:bg-brick-100 px-4 py-2 rounded-xl text-xs font-bold transition-all"
+                                      className="bg-alert-50 dark:bg-alert-500/15 text-alert-500 hover:bg-alert-100 px-4 py-2 rounded-xl text-xs font-bold transition-all"
                                     >
                                       رفض الطلب
                                     </button>
@@ -871,7 +871,7 @@ const Funds = () => {
                                 {isPending && user.role !== 'owner' && (
                                   <button
                                     onClick={() => handleDeleteOrder(order.id)}
-                                    className="bg-brick-50 dark:bg-brick-500/15 text-brick-500 hover:bg-brick-100 px-4 py-2 rounded-xl text-xs font-bold transition-all w-full md:w-auto text-center"
+                                    className="bg-alert-50 dark:bg-alert-500/15 text-alert-500 hover:bg-alert-100 px-4 py-2 rounded-xl text-xs font-bold transition-all w-full md:w-auto text-center"
                                   >
                                     إلغاء الطلب
                                   </button>
@@ -995,7 +995,7 @@ const Funds = () => {
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="w-full bg-primary hover:bg-qashani-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm mt-4"
+                      className="w-full bg-primary hover:bg-brand-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm mt-4"
                     >
                       {submitting ? 'جاري التسجيل...' : 'تسجيل الشريك الآن'}
                     </button>
@@ -1075,7 +1075,7 @@ const Funds = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 bg-primary hover:bg-qashani-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm"
+                  className="flex-1 bg-primary hover:bg-brand-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm"
                 >
                   {submitting ? 'جاري الإنشاء...' : 'تأكيد الإنشاء'}
                 </button>
@@ -1163,7 +1163,7 @@ const Funds = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 bg-primary hover:bg-qashani-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm"
+                  className="flex-1 bg-primary hover:bg-brand-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm"
                 >
                   {submitting ? 'جاري التمويل...' : 'تأكيد التمويل'}
                 </button>
@@ -1270,7 +1270,7 @@ const Funds = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 bg-primary hover:bg-qashani-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm"
+                  className="flex-1 bg-primary hover:bg-brand-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm"
                 >
                   {submitting ? 'جاري التسجيل والخصم...' : 'تأكيد الشراء والخصم'}
                 </button>

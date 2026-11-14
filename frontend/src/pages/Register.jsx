@@ -57,7 +57,7 @@ const Register = () => {
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-brick-50 border border-brick-400 text-brick-700 px-4 py-3 rounded">
+            <div className="bg-alert-50 border border-alert-400 text-alert-700 px-4 py-3 rounded">
               {error}
             </div>
           )}
@@ -128,14 +128,14 @@ const Register = () => {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-qashani-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
             >
               {loading ? t('common.loading') : t('auth.register')}
             </button>
           </div>
 
           <div className="text-center">
-            <Link to="/login" className="font-medium text-primary hover:text-qashani-500">
+            <Link to="/login" className="font-medium text-primary hover:text-brand-500">
               {t('auth.alreadyHaveAccount')}
             </Link>
           </div>

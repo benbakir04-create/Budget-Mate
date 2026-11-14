@@ -2,17 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/* الخطوط تُحمَّل مرة واحدة من index.html: Noto Kufi Arabic للعناوين والأرقام، وAlmarai للنص. */
+/* الخط يُحمَّل مرة واحدة من index.html: Readex Pro للعناوين والنص والأرقام. */
 
 @layer base {
   body {
-    @apply bg-ivory text-ink font-sans transition-colors duration-500 ease-in-out;
+    @apply bg-canvas text-ink font-sans transition-colors duration-500 ease-in-out;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   .dark body {
-    @apply bg-night text-[#F3EEE4];
+    @apply bg-night text-[#EEF0F6];
   }
 
   h1,
@@ -36,15 +36,20 @@
   }
 
   .premium-card {
-    @apply bg-white dark:bg-night-card rounded-card border border-[#EDE2CF] dark:border-night-line;
+    @apply bg-white dark:bg-night-card rounded-card border border-[#E8EAF2] dark:border-night-line shadow-[0_6px_18px_rgba(20,24,60,0.05)];
   }
 
-  /* بطاقة البطل: قاشاني بزخرفة زليج خفيفة */
+  /* بطاقة الرصيد: تدرّج زمردي بدائرتين خفيفتين */
   .luxury-gradient {
-    background-color: #23336b;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23E0A030' stroke-opacity='.22' stroke-width='1.2'%3E%3Crect x='16' y='16' width='24' height='24'/%3E%3Crect x='16' y='16' width='24' height='24' transform='rotate(45 28 28)'/%3E%3Ccircle cx='28' cy='28' r='5'/%3E%3C/g%3E%3C/svg%3E");
+    background-color: #12a26e;
+    background-image:
+      radial-gradient(circle at 15% -10%, rgba(255, 255, 255, 0.14) 0 30%, transparent 30.5%),
+      radial-gradient(circle at 30% 120%, rgba(255, 255, 255, 0.08) 0 25%, transparent 25.5%),
+      linear-gradient(145deg, #12a26e 0%, #0b7a59 100%);
   }
   .dark .luxury-gradient {
-    background-color: #1c275e;
+    background-image:
+      radial-gradient(circle at 15% -10%, rgba(255, 255, 255, 0.08) 0 30%, transparent 30.5%),
+      linear-gradient(145deg, #0e8a5d 0%, #084a37 100%);
   }
 }

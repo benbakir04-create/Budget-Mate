@@ -156,7 +156,7 @@ const Budget = () => {
           </h1>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-primary hover:bg-qashani-800 text-white px-4 py-2 rounded-md text-sm font-medium"
+            className="bg-primary hover:bg-brand-800 text-white px-4 py-2 rounded-md text-sm font-medium"
           >
             {showAddForm ? t('common.cancel', 'Cancel') : t('budget.add', 'Add Budget')}
           </button>
@@ -191,7 +191,7 @@ const Budget = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-brick-500">
+          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-alert-500">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-stone-500 text-sm">{t('budget.totalSpent', 'Total Spent')}</p>
@@ -199,10 +199,10 @@ const Budget = () => {
                   <Money amount={totalSpent} currency={user?.currency} />
                 </p>
               </div>
-              <div className="bg-brick-100 rounded-full p-3">
+              <div className="bg-alert-100 rounded-full p-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-brick-600"
+                  className="h-6 w-6 text-alert-600"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -223,7 +223,7 @@ const Budget = () => {
               <div>
                 <p className="text-stone-500 text-sm">{t('budget.remaining', 'Remaining')}</p>
                 <p
-                  className={`text-2xl font-bold ${totalBudget - totalSpent >= 0 ? 'text-stone-900' : 'text-brick-600'}`}
+                  className={`text-2xl font-bold ${totalBudget - totalSpent >= 0 ? 'text-stone-900' : 'text-alert-600'}`}
                 >
                   <Money amount={totalBudget - totalSpent} currency={user?.currency} />
                 </p>
@@ -349,7 +349,7 @@ const Budget = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-qashani-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                 >
                   {t('common.save', 'Save')}
                 </button>
@@ -393,7 +393,7 @@ const Budget = () => {
                       <div className="flex items-center space-x-2 space-x-reverse">
                         <button
                           onClick={() => handleDelete(budget.id)}
-                          className="text-brick-600 hover:text-brick-800"
+                          className="text-alert-600 hover:text-alert-800"
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -431,7 +431,7 @@ const Budget = () => {
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-stone-600">{t('budget.remaining', 'Remaining')}</span>
                         <span
-                          className={`${remaining >= 0 ? 'text-stone-900' : 'text-brick-600'} font-medium`}
+                          className={`${remaining >= 0 ? 'text-stone-900' : 'text-alert-600'} font-medium`}
                         >
                           <Money amount={remaining} currency={user?.currency} />
                         </span>
@@ -439,7 +439,7 @@ const Budget = () => {
 
                       <div className="w-full bg-stone-200 rounded-full h-2 mt-3">
                         <div
-                          className={`h-2 rounded-full ${isOverBudget ? 'bg-brick-500' : isNearLimit ? 'bg-saffron-500' : 'bg-mint-500'}`}
+                          className={`h-2 rounded-full ${isOverBudget ? 'bg-alert-500' : isNearLimit ? 'bg-sun-500' : 'bg-mint-500'}`}
                           style={{ width: `${Math.min(percentage, 100)}%` }}
                         ></div>
                       </div>
@@ -451,12 +451,12 @@ const Budget = () => {
                           })}
                         </span>
                         {isOverBudget && (
-                          <span className="text-brick-600 font-medium">
+                          <span className="text-alert-600 font-medium">
                             {t('budget.overBudget', 'Over budget!')}
                           </span>
                         )}
                         {isNearLimit && (
-                          <span className="text-saffron-600 font-medium">
+                          <span className="text-sun-600 font-medium">
                             {t('budget.nearLimit', 'Near limit')}
                           </span>
                         )}

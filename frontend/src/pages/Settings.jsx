@@ -21,7 +21,7 @@ const Settings = () => {
     nameAr: '',
     name: '',
     type: 'expense',
-    color: '#23336B',
+    color: '#12A26E',
     icon: 'folder',
   });
 
@@ -79,7 +79,7 @@ const Settings = () => {
         nameAr: '',
         name: '',
         type: 'expense',
-        color: '#23336B',
+        color: '#12A26E',
         icon: 'folder',
       });
       await loadCategories();
@@ -226,7 +226,7 @@ const Settings = () => {
 
                 <button
                   type="submit"
-                  className="w-full bg-primary hover:bg-qashani-800 text-white font-medium py-2 rounded-lg text-sm shadow-sm transition-colors mt-6"
+                  className="w-full bg-primary hover:bg-brand-800 text-white font-medium py-2 rounded-lg text-sm shadow-sm transition-colors mt-6"
                 >
                   حفظ الضبط العام
                 </button>
@@ -258,7 +258,7 @@ const Settings = () => {
                 </h2>
                 <button
                   onClick={() => setShowAddCategory(!showAddCategory)}
-                  className="bg-primary hover:bg-qashani-800 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-colors"
+                  className="bg-primary hover:bg-brand-800 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-colors"
                 >
                   {showAddCategory ? 'إلغاء' : 'إضافة قسم جديد'}
                 </button>
@@ -266,9 +266,9 @@ const Settings = () => {
 
               {/* Add Category Form Overlay */}
               {showAddCategory && (
-                <div className="p-6 bg-qashani-50/50 border-b border-stone-100">
+                <div className="p-6 bg-brand-50/50 border-b border-stone-100">
                   <form onSubmit={handleAddCategory} className="space-y-4">
-                    <h3 className="text-sm font-bold text-qashani-800">إضافة قسم رئيسي جديد</h3>
+                    <h3 className="text-sm font-bold text-brand-800">إضافة قسم رئيسي جديد</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-xs font-medium text-stone-700 mb-1">
@@ -327,7 +327,7 @@ const Settings = () => {
                       </button>
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-primary hover:bg-qashani-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
+                        className="px-4 py-2 bg-primary hover:bg-brand-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
                       >
                         إضافة القسم
                       </button>
@@ -350,7 +350,7 @@ const Settings = () => {
                           onClick={() => setSelectedCategory(category)}
                           className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
                             selectedCategory?.id === category.id
-                              ? 'bg-qashani-50 border-qashani-200 ring-1 ring-primary'
+                              ? 'bg-brand-50 border-brand-200 ring-1 ring-primary'
                               : 'bg-stone-50 hover:bg-stone-100 border-stone-200'
                           }`}
                         >
@@ -381,7 +381,7 @@ const Settings = () => {
                                 e.stopPropagation();
                                 handleDeleteCategory(category.id);
                               }}
-                              className="text-brick-500 hover:text-brick-700 p-1 hover:bg-white rounded-md transition-colors"
+                              className="text-alert-500 hover:text-alert-700 p-1 hover:bg-white rounded-md transition-colors"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -435,7 +435,7 @@ const Settings = () => {
                           />
                           <button
                             type="submit"
-                            className="bg-primary hover:bg-qashani-800 text-white px-3 py-2 rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center"
+                            className="bg-primary hover:bg-brand-800 text-white px-3 py-2 rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -469,7 +469,7 @@ const Settings = () => {
                                 <button
                                   type="button"
                                   onClick={() => handleDeleteSubcategory(sub.id)}
-                                  className="text-brick-500 hover:text-brick-700 p-1 hover:bg-brick-50 rounded-md transition-colors"
+                                  className="text-alert-500 hover:text-alert-700 p-1 hover:bg-alert-50 rounded-md transition-colors"
                                 >
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"

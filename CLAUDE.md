@@ -31,8 +31,9 @@ scripts/    setup.js لتهيئة المشروع
 - `src/pages/` الصفحات، `src/services/` استدعاءات API عبر axios، `src/contexts/AuthContext.jsx` المصادقة.
 - `src/utils/currency.js` العملات (الدينار افتراضيًا)، و`src/utils/money.js` حساب الإجماليات وتنسيق المبالغ، و`src/utils/dates.js` التواريخ («اليوم»، «أمس»، «12 نوفمبر»)، ولكل منهما اختبار `*.test.js`.
 - الترجمة في `src/i18n/locales/{ar,en}.json`، والاتجاه RTL من `dir="rtl"` في `index.html`.
-- **نظام التصميم «دفء البيت»:** الألوان والخطوط والزوايا في `tailwind.config.js` (قاشاني أساسي، زعفران للتمييز، نعناع للمال الداخل، آجر للتجاوز والحذف). لا ألوان مكتوبة يدويًا في الصفحات.
+- **نظام التصميم (الاتجاه الرابع «مشرق ومرح»، باللون الزمردي):** الألوان والخط والزوايا في `tailwind.config.js`: `brand` زمردي أساسي، و`sun` للتمييز وحالة «اقترب»، و`mint` للمال الداخل، و`alert` للتجاوز والحذف، والخلفية `canvas`. الخط Readex Pro. لا ألوان مكتوبة يدويًا في الصفحات.
   اعرض كل مبلغ عبر `components/common/Money.jsx` حتى لا تقفز الإشارة، واسم التطبيق من `src/brand.js`، والشعار المؤقت `BrandMark.jsx`.
+  مرجع ذوق علي في التصميم: لوحتاه في Pinterest (app-design ثم shopify-website-design). الشريط السفلي على الجوال يكون فاتحًا لا داكنًا.
 - وضع تجريبي بلا خادم: `src/services/demoData.js` ويُفعَّل بـ `VITE_DEMO_MODE=true`.
 - خادم Vite يعمل على المنفذ 3000 (`vite.config.js`)، وكل إعدادات CORS وDocker موحّدة عليه.
 

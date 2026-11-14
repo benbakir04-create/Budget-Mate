@@ -11,7 +11,7 @@ const NotFound = () => (
       </p>
       <Link
         to="/dashboard"
-        className="inline-block bg-primary hover:bg-qashani-800 text-white font-bold px-6 py-3 rounded-field transition-colors"
+        className="inline-block bg-primary hover:bg-brand-800 text-white font-bold px-6 py-3 rounded-field transition-colors"
       >
         العودة إلى الرئيسية
       </Link>

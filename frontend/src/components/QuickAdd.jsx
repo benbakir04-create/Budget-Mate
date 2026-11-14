@@ -132,7 +132,7 @@ const QuickAdd = ({ funds, user, onSaved }) => {
                   ? 'text-white border-transparent shadow-md scale-105'
                   : 'bg-stone-50 dark:bg-white/5 text-stone-700 dark:text-stone-200 border-stone-200 dark:border-white/10 hover:border-primary'
               }`}
-              style={selected ? { backgroundColor: category.color || '#23336B' } : undefined}
+              style={selected ? { backgroundColor: category.color || '#12A26E' } : undefined}
             >
               {category.nameAr || category.name}
             </button>
@@ -151,7 +151,7 @@ const QuickAdd = ({ funds, user, onSaved }) => {
       {message && (
         <p
           role="status"
-          className={`mt-4 text-sm font-bold ${message.tone === 'success' ? 'text-mint-600 dark:text-mint-400' : 'text-brick-500'}`}
+          className={`mt-4 text-sm font-bold ${message.tone === 'success' ? 'text-mint-600 dark:text-mint-400' : 'text-alert-500'}`}
         >
           {message.text}
         </p>

@@ -23,8 +23,8 @@ const typeTone = type => {
   }
   if (type === 'expense') {
     return {
-      badge: 'bg-brick-50 dark:bg-brick-500/10',
-      icon: 'text-brick-500',
+      badge: 'bg-alert-50 dark:bg-alert-500/10',
+      icon: 'text-alert-500',
       amount: 'text-stone-900 dark:text-white',
     };
   }
@@ -99,7 +99,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-ivory dark:bg-night flex transition-colors duration-500 ease-in-out">
+      <div className="min-h-screen bg-canvas dark:bg-night flex transition-colors duration-500 ease-in-out">
         <Sidebar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
@@ -162,8 +162,8 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="premium-card p-6 border-l-4 border-l-brick-500 relative overflow-hidden group">
-            <div className="absolute -right-6 -top-6 w-24 h-24 bg-brick-500/10 rounded-full blur-2xl group-hover:bg-brick-500/20 transition-all duration-500"></div>
+          <div className="premium-card p-6 border-l-4 border-l-alert-500 relative overflow-hidden group">
+            <div className="absolute -right-6 -top-6 w-24 h-24 bg-alert-500/10 rounded-full blur-2xl group-hover:bg-alert-500/20 transition-all duration-500"></div>
             <div className="flex items-center justify-between relative z-10">
               <div>
                 <p className="text-stone-500 dark:text-stone-400 text-sm font-bold mb-2">
@@ -177,10 +177,10 @@ const Dashboard = () => {
                   />
                 </p>
               </div>
-              <div className="bg-brick-50 dark:bg-brick-500/10 rounded-2xl p-3">
+              <div className="bg-alert-50 dark:bg-alert-500/10 rounded-2xl p-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-7 w-7 text-brick-500"
+                  className="h-7 w-7 text-alert-500"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -204,7 +204,7 @@ const Dashboard = () => {
                   {t('dashboard.balance', 'Balance')}
                 </p>
                 <p
-                  className={`text-2xl font-extrabold ${stats.balance >= 0 ? 'text-stone-900 dark:text-white' : 'text-brick-500'}`}
+                  className={`text-2xl font-extrabold ${stats.balance >= 0 ? 'text-stone-900 dark:text-white' : 'text-alert-500'}`}
                 >
                   <Money
                     amount={stats.balance}
@@ -273,7 +273,7 @@ const Dashboard = () => {
             </h2>
             <Link
               to="/funds"
-              className="text-primary hover:text-qashani-500 dark:hover:text-saffron-400 text-sm font-bold transition-colors bg-qashani-50 dark:bg-white/5 px-4 py-2 rounded-full"
+              className="text-primary hover:text-brand-500 dark:hover:text-sun-400 text-sm font-bold transition-colors bg-brand-50 dark:bg-white/5 px-4 py-2 rounded-full"
             >
               إدارة الصناديق
             </Link>
@@ -371,7 +371,7 @@ const Dashboard = () => {
                 </h2>
                 <Link
                   to="/transactions"
-                  className="text-primary hover:text-qashani-500 dark:hover:text-saffron-400 text-sm font-bold transition-colors"
+                  className="text-primary hover:text-brand-500 dark:hover:text-sun-400 text-sm font-bold transition-colors"
                 >
                   {t('dashboard.viewAll', 'View All')} &rarr;
                 </Link>
@@ -481,7 +481,7 @@ const Dashboard = () => {
             <div className="p-6 space-y-4">
               <Link
                 to="/transactions"
-                className="flex items-center justify-between p-5 bg-stone-50 dark:bg-night-card rounded-2xl hover:bg-sand dark:hover:bg-white/[0.02] border border-transparent dark:border-white/[0.05] hover:border-mint-200 dark:hover:border-white/10 transition-all group"
+                className="flex items-center justify-between p-5 bg-stone-50 dark:bg-night-card rounded-2xl hover:bg-soft dark:hover:bg-white/[0.02] border border-transparent dark:border-white/[0.05] hover:border-mint-200 dark:hover:border-white/10 transition-all group"
               >
                 <div className="flex items-center space-x-4 space-x-reverse">
                   <div className="bg-primary rounded-xl p-3 shadow-md shadow-primary/20 group-hover:scale-110 transition-transform duration-300">
@@ -578,7 +578,7 @@ const Dashboard = () => {
               <div className="pt-6 mt-6 border-t border-stone-100 dark:border-white/[0.05]">
                 <div className="flex items-center justify-between p-4 bg-gradient-to-r from-stone-100 to-transparent dark:from-stone-800/50 rounded-2xl">
                   <div className="flex items-center">
-                    <div className="w-2 h-2 bg-qashani-500 rounded-full animate-pulse mr-3 ml-3"></div>
+                    <div className="w-2 h-2 bg-brand-500 rounded-full animate-pulse mr-3 ml-3"></div>
                     <span className="text-sm font-extrabold text-stone-700 dark:text-stone-300">
                       {t('dashboard.activeBudgets', 'Active Budgets')}
                     </span>

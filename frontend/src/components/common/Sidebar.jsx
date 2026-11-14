@@ -315,7 +315,7 @@ const Sidebar = () => {
                   <>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 ml-4 text-saffron-400"
+                      className="h-5 w-5 ml-4 text-sun-400"
                       fill="currentColor"
                       viewBox="0 0 24 24"
                     >
@@ -347,7 +347,7 @@ const Sidebar = () => {
                   logout();
                   setIsSidebarOpen(false);
                 }}
-                className="flex items-center w-full px-4 py-3.5 rounded-2xl text-sm font-extrabold text-brick-500 dark:text-brick-400 hover:bg-brick-50 dark:hover:bg-brick-500/10 focus:outline-none transition-all duration-300"
+                className="flex items-center w-full px-4 py-3.5 rounded-2xl text-sm font-extrabold text-alert-500 dark:text-alert-400 hover:bg-alert-50 dark:hover:bg-alert-500/10 focus:outline-none transition-all duration-300"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

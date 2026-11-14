@@ -12,7 +12,7 @@ import { formatDay } from '../utils/dates';
 // Income green, expense red, a deposit into a fund (transfer) blue: it is neither.
 const TYPE_STYLE = {
   income: { badge: 'bg-mint-100', text: 'text-mint-600', path: 'M12 4v16m8-8l-8 8-8-8' },
-  expense: { badge: 'bg-brick-100', text: 'text-brick-600', path: 'M12 20V4m8 8l-8-8-8 8' },
+  expense: { badge: 'bg-alert-100', text: 'text-alert-600', path: 'M12 20V4m8 8l-8-8-8 8' },
   transfer: {
     badge: 'bg-blue-100',
     text: 'text-blue-600',
@@ -234,7 +234,7 @@ const Transactions = () => {
           </h1>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-primary hover:bg-qashani-800 text-white px-4 py-2 rounded-md text-sm font-medium"
+            className="bg-primary hover:bg-brand-800 text-white px-4 py-2 rounded-md text-sm font-medium"
           >
             {showAddForm ? t('common.cancel', 'Cancel') : t('transactions.add', 'Add Transaction')}
           </button>
@@ -271,7 +271,7 @@ const Transactions = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-brick-500">
+          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-alert-500">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-stone-500 text-sm">
@@ -281,10 +281,10 @@ const Transactions = () => {
                   <Money amount={totalExpense} currency={user?.currency} />
                 </p>
               </div>
-              <div className="bg-brick-100 rounded-full p-3">
+              <div className="bg-alert-100 rounded-full p-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-brick-600"
+                  className="h-6 w-6 text-alert-600"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -356,7 +356,7 @@ const Transactions = () => {
                           }
                           className={`px-2.5 py-1 rounded-full text-xs font-bold border transition-all duration-200 ${
                             formData.categoryId === category.id
-                              ? 'bg-qashani-500 text-white border-qashani-500 shadow-sm'
+                              ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
                               : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100 dark:bg-stone-800 dark:text-stone-300 dark:border-stone-700 dark:hover:bg-stone-700'
                           }`}
                         >
@@ -391,7 +391,7 @@ const Transactions = () => {
                         onClick={() => setFormData(prev => ({ ...prev, amount: amt.toString() }))}
                         className={`px-2 py-0.5 rounded-full text-xs font-bold border transition-all duration-200 ${
                           formData.amount === amt.toString()
-                            ? 'bg-qashani-500 text-white border-qashani-500 shadow-sm'
+                            ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
                             : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100 dark:bg-stone-800 dark:text-stone-300 dark:border-stone-700 dark:hover:bg-stone-700'
                         }`}
                       >
@@ -441,7 +441,7 @@ const Transactions = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-qashani-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                 >
                   {t('common.save', 'Save')}
                 </button>
@@ -592,7 +592,7 @@ const Transactions = () => {
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 text-qashani-500"
+                  className="h-4 w-4 text-brand-500"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -653,7 +653,7 @@ const Transactions = () => {
                       </div>
                       <button
                         onClick={() => handleDelete(transaction.id)}
-                        className="text-brick-600 hover:text-brick-800"
+                        className="text-alert-600 hover:text-alert-800"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
