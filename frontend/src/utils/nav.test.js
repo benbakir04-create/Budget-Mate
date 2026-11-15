@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { NAV_TABS, activeSlot, slotCenter } from './nav.js';
+import { NAV_TABS, activeSlot, slotCenter, slotSide } from './nav.js';
 
 test('activeSlot finds the tab of each page, skipping the «+» slot', () => {
   assert.equal(activeSlot('/dashboard'), 0);
@@ -26,4 +26,13 @@ test('slotCenter places each slot in the middle of its fifth of the bar', () => 
   assert.equal(slotCenter(0), 10);
   assert.equal(slotCenter(2), 50);
   assert.equal(slotCenter(4), 90);
+});
+
+test('slotSide splits the tabs into the two sides of the «+»', () => {
+  assert.equal(slotSide(0), 'start');
+  assert.equal(slotSide(1), 'start');
+  assert.equal(slotSide(2), null);
+  assert.equal(slotSide(3), 'end');
+  assert.equal(slotSide(4), 'end');
+  assert.equal(slotSide(-1), null);
 });

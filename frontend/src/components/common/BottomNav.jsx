@@ -1,27 +1,35 @@
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useQuickAdd } from '../../contexts/QuickAddContext';
-import { NAV_TABS, activeSlot, slotCenter } from '../../utils/nav';
+import { NAV_TABS, activeSlot, slotCenter, slotSide } from '../../utils/nav';
 import Icon from './Icon';
 
-// The bar's white shape with a round cradle cut out of its top edge for the «+».
-const CRADLE_MASK = 'radial-gradient(circle 40px at 50% 0, transparent 39px, #000 40px)';
+// The bar is one solid shape, so nothing scrolling behind it ever shows through. The cradle
+// holding the «+» is painted on it (Ali's idea): a disc in the page colour, cut at the bar's top
+// edge, with a soft inner shadow along its rim so it reads as a dip in the bar.
+const CRADLE_SHADOW = 'inset 0 -5px 8px -3px rgba(20,24,60,0.16)';
+// The bar's shadow darkens the page just above its top edge. The cradle gets the same shade at
+// its top, so the painted cradle and the real page meet without a visible step (light mode only:
+// the shadow does not show on the night background).
+const CRADLE_SHADE =
+  '[background-image:linear-gradient(to_bottom,transparent_50%,rgba(20,24,60,0.08)_50%,rgba(20,24,60,0)_75%)] dark:[background-image:none]';
 
-// The active-tab marker (Ali's design): a small green plate with rounded top corners hidden
-// behind the white bar, raised just enough (PEEK) that its top edge shows as a fine line whose
-// ends dip slightly. It is the same size on every tab and slides from tab to tab.
+// The active-tab marker (Ali's design): small green plates with rounded top corners hidden
+// behind the white bar, raised just enough (PEEK) that their top edge shows as a fine line whose
+// ends dip slightly. There is one plate on each side of the «+». Between two tabs on the same
+// side the plate slides across; to a tab on the other side, it sinks behind the bar and the
+// other side's plate rises under the new tab, so a marker never travels under the «+».
 const SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)'; // slight overshoot, then settles
 const SLIDE_MS = 450;
-const STRETCH_MS = 260; // the plate widens while it travels, then returns to its size
+const STRETCH_MS = 260; // the plate widens while it slides, then returns to its size
+const SINK_MS = 200;
+const RISE_MS = 380;
 const PLATE_W = 34; // a little wider than the 22px icon under it
 const PLATE_W_STRETCHED = 50;
-const PEEK = 3; // how much of the plate shows above the bar
+const PEEK = 3; // how much of a plate shows above the bar
 const PLATE_RADIUS = 8; // the line's ends dip over this length
-// The plate is hidden inside the cradle too, so it never shows around the «+» as it passes.
-const PLATE_MASK = `radial-gradient(circle 40px at 50% ${PEEK}px, transparent 39px, #000 40px)`;
-// The part of the cradle below the bar's top edge is filled with the page colour, so the page
-// scrolling behind the bar never shows through the ring around the «+».
-const CRADLE_FILL_CLIP = 'inset(50% 0 0 0)';
+const SIDES = ['start', 'end'];
+const CRADLE_CLIP = 'inset(50% 0 0 0)'; // only the half below the bar's top edge
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -29,6 +37,8 @@ const prefersReducedMotion = () =>
 // Each page draws its own Sidebar, and so its own bar: the bar is mounted afresh on every
 // navigation. It remembers where the marker last was, starts there, then glides to the new tab.
 let lastShownSlot = -1;
+// Where each side's plate last stood, so a plate rises where it sank (until it is moved).
+const lastSideSlot = { start: 0, end: NAV_TABS.length - 1 };
 
 // Phone only: a white bar docked to the bottom, with a curved cradle holding a round «+»
 // (Ali's pick among the light options).
@@ -40,6 +50,7 @@ const BottomNav = () => {
     lastShownSlot >= 0 && slot >= 0 && !prefersReducedMotion() ? lastShownSlot : slot
   );
   const [moving, setMoving] = useState(false);
+  const [fromSlot, setFromSlot] = useState(-1); // the tab the marker is leaving
 
   // Leaves room at the bottom of every page so the bar never hides the last row.
   useEffect(() => {
@@ -58,6 +69,7 @@ const BottomNav = () => {
     }
     let frame = requestAnimationFrame(() => {
       frame = requestAnimationFrame(() => {
+        setFromSlot(shownSlot);
         setShownSlot(slot);
         setMoving(true);
       });
@@ -71,44 +83,50 @@ const BottomNav = () => {
     return () => clearTimeout(timer);
   }, [moving]);
 
-  const plateW = moving ? PLATE_W_STRETCHED : PLATE_W;
-  const center = shownSlot >= 0 ? slotCenter(shownSlot) : 0;
+  const activeSide = slotSide(shownSlot);
+  if (activeSide) lastSideSlot[activeSide] = shownSlot;
+  // A slide (same side) stretches the plate; a hand-over to the other side does not.
+  const sliding = moving && slotSide(fromSlot) === activeSide;
 
   return (
     <nav
       aria-label="التنقل"
-      className="md:hidden fixed bottom-0 inset-x-0 z-40 drop-shadow-[0_-4px_14px_rgba(20,24,60,0.10)]"
+      className="md:hidden fixed bottom-0 inset-x-0 z-40 drop-shadow-[0_-4px_16px_rgba(20,24,60,0.16)]"
     >
-      {shownSlot >= 0 && (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 h-7"
-          style={{ top: -PEEK, WebkitMask: PLATE_MASK, mask: PLATE_MASK }}
-        >
+      {SIDES.map(side => {
+        const shown = side === activeSide;
+        const width = shown && sliding ? PLATE_W_STRETCHED : PLATE_W;
+        // A rising plate is placed under its new tab at once (it is hidden there), then rises.
+        const slide = shown && slotSide(fromSlot) === side;
+        return (
           <span
-            data-testid="nav-plate"
-            className="absolute top-0 h-full bg-brand-500 motion-reduce:!transition-none"
+            key={side}
+            aria-hidden="true"
+            data-testid={shown ? 'nav-plate' : undefined}
+            className="pointer-events-none absolute h-7 bg-brand-500 motion-reduce:!transition-none"
             style={{
-              insetInlineStart: `calc(${center}% - ${plateW / 2}px)`,
-              width: plateW,
+              top: -PEEK,
+              insetInlineStart: `calc(${slotCenter(lastSideSlot[side])}% - ${width / 2}px)`,
+              width,
               borderStartStartRadius: PLATE_RADIUS,
               borderStartEndRadius: PLATE_RADIUS,
+              transform: shown ? 'none' : `translateY(${PEEK + 2}px)`,
               transition: [
-                `inset-inline-start ${SLIDE_MS}ms ${SPRING}`,
-                `width ${moving ? STRETCH_MS : SLIDE_MS}ms ${moving ? 'ease-out' : SPRING}`,
+                slide ? `inset-inline-start ${SLIDE_MS}ms ${SPRING}` : 'inset-inline-start 0s',
+                `width ${sliding ? STRETCH_MS : SLIDE_MS}ms ${sliding ? 'ease-out' : SPRING}`,
+                shown
+                  ? `transform ${RISE_MS}ms ${SPRING} ${moving ? SINK_MS / 2 : 0}ms`
+                  : `transform ${SINK_MS}ms ease-in`,
               ].join(', '),
             }}
           />
-        </div>
-      )}
+        );
+      })}
+      <div className="absolute inset-0 rounded-t-[26px] bg-white dark:bg-night-card" />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-0 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-canvas dark:bg-night"
-        style={{ clipPath: CRADLE_FILL_CLIP }}
-      />
-      <div
-        className="absolute inset-0 rounded-t-[26px] bg-white dark:bg-night-card"
-        style={{ WebkitMask: CRADLE_MASK, mask: CRADLE_MASK }}
+        className={`pointer-events-none absolute left-1/2 top-0 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-canvas dark:bg-night ${CRADLE_SHADE}`}
+        style={{ clipPath: CRADLE_CLIP, boxShadow: CRADLE_SHADOW }}
       />
       <div
         className="relative grid grid-cols-5 items-center h-[72px]"

@@ -14,3 +14,10 @@ export const activeSlot = (pathname = '') =>
 
 // Centre of a slot, in % of the bar width measured from the inline start (the right in RTL).
 export const slotCenter = slot => ((slot + 0.5) * 100) / NAV_TABS.length;
+
+// Which side of the «+» a slot is on: 'start' (the right in RTL), 'end', or null for no tab.
+const ADD_SLOT = NAV_TABS.indexOf(null);
+export const slotSide = slot => {
+  if (slot < 0 || slot === ADD_SLOT) return null;
+  return slot < ADD_SLOT ? 'start' : 'end';
+};
