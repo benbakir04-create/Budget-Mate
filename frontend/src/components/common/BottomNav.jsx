@@ -8,41 +8,20 @@ import Icon from './Icon';
 const CRADLE_MASK = 'radial-gradient(circle 40px at 50% 0, transparent 39px, #000 40px)';
 
 // The active-tab marker (Ali's design): a small green plate with rounded top corners hidden
-// behind the white bar, raised just enough (PEEK) that its top edge shows as a fine line.
-// It slides from tab to tab. Its rounded corners make the line's ends dip slightly, and on
-// the two edge tabs it reaches the bar's side, so the bar's own rounded corner reveals it
-// bending around, thinning to nothing down the side. Nothing is drawn: it is one shape.
+// behind the white bar, raised just enough (PEEK) that its top edge shows as a fine line whose
+// ends dip slightly. It is the same size on every tab and slides from tab to tab.
 const SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)'; // slight overshoot, then settles
 const SLIDE_MS = 450;
 const STRETCH_MS = 260; // the plate widens while it travels, then returns to its size
 const PLATE_W = 34; // a little wider than the 22px icon under it
 const PLATE_W_STRETCHED = 50;
 const PEEK = 3; // how much of the plate shows above the bar
-const BAR_RADIUS = 26; // rounded-t-[26px] on the bar
 const PLATE_RADIUS = 8; // the line's ends dip over this length
-const EDGE_RADIUS = BAR_RADIUS + PEEK; // follows the bar's corner, PEEK px outside it
 // The plate is hidden inside the cradle too, so it never shows around the «+» as it passes.
 const PLATE_MASK = `radial-gradient(circle 40px at 50% ${PEEK}px, transparent 39px, #000 40px)`;
-const BEAM_W = 64;
-const BEAM_H = 52;
-// Very faint emerald light falling from the line onto the icon (brand-500 at 12%).
-const BEAM_BG = 'linear-gradient(to bottom, rgba(18,162,110,0.12), rgba(18,162,110,0))';
-const BEAM_SHAPE = 'polygon(28% 0, 72% 0, 100% 100%, 0 100%)';
-const LAST_SLOT = NAV_TABS.length - 1;
-
-// Where the plate sits for a slot, as inline-start offset and width (the bar is RTL, so
-// inline-start is the right side). Edge slots stretch the plate out to the bar's side.
-const plateBox = (slot, width) => {
-  const center = slotCenter(slot);
-  if (slot === 0) return { start: '0px', width: `calc(${center}% + ${width / 2}px)` };
-  if (slot === LAST_SLOT) {
-    return {
-      start: `calc(${center}% - ${width / 2}px)`,
-      width: `calc(${100 - center}% + ${width / 2}px)`,
-    };
-  }
-  return { start: `calc(${center}% - ${width / 2}px)`, width: `${width}px` };
-};
+// The part of the cradle below the bar's top edge is filled with the page colour, so the page
+// scrolling behind the bar never shows through the ring around the «+».
+const CRADLE_FILL_CLIP = 'inset(50% 0 0 0)';
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -92,7 +71,7 @@ const BottomNav = () => {
     return () => clearTimeout(timer);
   }, [moving]);
 
-  const plate = plateBox(shownSlot, moving ? PLATE_W_STRETCHED : PLATE_W);
+  const plateW = moving ? PLATE_W_STRETCHED : PLATE_W;
   const center = shownSlot >= 0 ? slotCenter(shownSlot) : 0;
 
   return (
@@ -110,19 +89,23 @@ const BottomNav = () => {
             data-testid="nav-plate"
             className="absolute top-0 h-full bg-brand-500 motion-reduce:!transition-none"
             style={{
-              insetInlineStart: plate.start,
-              width: plate.width,
-              borderStartStartRadius: shownSlot === 0 ? EDGE_RADIUS : PLATE_RADIUS,
-              borderStartEndRadius: shownSlot === LAST_SLOT ? EDGE_RADIUS : PLATE_RADIUS,
+              insetInlineStart: `calc(${center}% - ${plateW / 2}px)`,
+              width: plateW,
+              borderStartStartRadius: PLATE_RADIUS,
+              borderStartEndRadius: PLATE_RADIUS,
               transition: [
                 `inset-inline-start ${SLIDE_MS}ms ${SPRING}`,
                 `width ${moving ? STRETCH_MS : SLIDE_MS}ms ${moving ? 'ease-out' : SPRING}`,
-                `border-radius ${SLIDE_MS}ms ease`,
               ].join(', '),
             }}
           />
         </div>
       )}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-0 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-canvas dark:bg-night"
+        style={{ clipPath: CRADLE_FILL_CLIP }}
+      />
       <div
         className="absolute inset-0 rounded-t-[26px] bg-white dark:bg-night-card"
         style={{ WebkitMask: CRADLE_MASK, mask: CRADLE_MASK }}
@@ -131,26 +114,6 @@ const BottomNav = () => {
         className="relative grid grid-cols-5 items-center h-[72px]"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        {shownSlot >= 0 && (
-          <>
-            <span
-              aria-hidden="true"
-              data-testid="nav-beam"
-              className="pointer-events-none absolute top-0 motion-reduce:!transition-none"
-              style={{
-                width: BEAM_W,
-                height: BEAM_H,
-                insetInlineStart: `calc(${center}% - ${BEAM_W / 2}px)`,
-                background: BEAM_BG,
-                clipPath: BEAM_SHAPE,
-                opacity: moving ? 0 : 1,
-                transition: `inset-inline-start ${SLIDE_MS}ms ${SPRING}, opacity ${
-                  moving ? '120ms ease' : '260ms ease 150ms'
-                }`,
-              }}
-            />
-          </>
-        )}
         {NAV_TABS.map((tab, index) => {
           // Visuals follow the marker (not the URL) so the old tab fades as the new one lights up.
           const isActive = index === shownSlot;
