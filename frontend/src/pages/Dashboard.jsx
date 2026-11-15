@@ -11,6 +11,9 @@ import { budgetService } from '../services/budgetService';
 import { jointFundService } from '../services/jointFundService';
 import { categoryService } from '../services/categoryService';
 import { amountSign, budgetStatus, fundOutlook } from '../utils/money';
+import { smartInsight } from '../utils/insight';
+import useCountUp from '../hooks/useCountUp';
+import BalanceGauge from '../components/home/BalanceGauge';
 import { formatDate, formatDay } from '../utils/dates';
 
 const MONTH = new Intl.DateTimeFormat('ar-DZ-u-nu-latn', { month: 'long' });
@@ -65,6 +68,24 @@ const QuickAction = ({ icon, label, className, to, onClick }) => {
   );
 };
 
+const INSIGHT_TONE = {
+  alert: 'bg-alert-50 text-alert-700 dark:bg-alert-500/15 dark:text-alert-300',
+  warn: 'bg-sun-100 text-sun-900 dark:bg-sun-500/15 dark:text-sun-200',
+  info: 'bg-brand-50 text-brand-800 dark:bg-brand-500/15 dark:text-brand-200',
+};
+const INSIGHT_DOT = { alert: 'bg-alert-500', warn: 'bg-sun-400', info: 'bg-brand-500' };
+
+// The smart sentence under the balance: one reading of this month's numbers.
+const InsightCard = ({ insight }) => (
+  <p
+    role="status"
+    className={`flex items-start gap-3 rounded-[22px] px-4 py-3.5 text-sm leading-relaxed font-medium ${INSIGHT_TONE[insight.tone]}`}
+  >
+    <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${INSIGHT_DOT[insight.tone]}`} />
+    {insight.text}
+  </p>
+);
+
 const Dashboard = () => {
   const { user } = useAuth();
   const { openQuickAdd, savedCount } = useQuickAdd();
@@ -107,6 +128,8 @@ const Dashboard = () => {
 
   const isPartner = user?.role === 'partner';
   const currency = user?.currency;
+  // The big number counts up to the balance: the fund's when there is one, else the month's.
+  const shownBalance = useCountUp(data ? (data.fund ? data.fund.balance : data.month.balance) : 0);
 
   if (!data) {
     return (
@@ -142,6 +165,14 @@ const Dashboard = () => {
   const topCategories = (month.expenseByCategory || []).slice(0, 4);
   const outlook = fund ? fundOutlook({ balance: fund.balance, spent: fundSpent }) : null;
   const firstName = user?.name?.trim().split(/\s+/)[0] || '';
+  const insight = smartInsight({
+    budgets,
+    expenseByCategory: month.expenseByCategory,
+    expense: month.expense,
+    categories,
+    outlook,
+    currency,
+  });
 
   return (
     <div className="min-h-screen flex">
@@ -176,30 +207,26 @@ const Dashboard = () => {
                       </Link>
                     )}
                   </div>
-                  <p className="text-sm text-white/85">متاح الآن</p>
-                  <Money
-                    amount={fund.balance}
-                    currency={currency}
-                    className="block text-[42px] leading-tight font-bold tracking-tight"
-                    currencyClassName="text-white/85"
+                  <BalanceGauge
+                    pct={outlook.remainingPct}
+                    label={`بقي ${outlook.remainingPct}% من مال الصندوق هذا الشهر`}
                   />
-                  <div className="mt-4 space-y-1.5">
-                    <div className="h-2.5 rounded-full bg-white/25 overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-sun-300"
-                        style={{ width: `${outlook.remainingPct}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between gap-3 text-xs text-white/90">
-                      <span>
-                        بقي <span className="num">{outlook.remainingPct}%</span> من{' '}
-                        <Money amount={outlook.total} currency={currency} />
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Icon name="clock" className="h-3.5 w-3.5" />
-                        {outlookText(outlook)}
-                      </span>
-                    </div>
+                  <div className="text-center -mt-1">
+                    <p className="text-sm text-white/85">متاح الآن</p>
+                    <Money
+                      amount={shownBalance}
+                      currency={currency}
+                      className="block text-[40px] leading-tight font-bold tracking-tight"
+                      currencyClassName="text-white/85"
+                    />
+                    <p className="mt-1 text-xs text-white/85">
+                      بقي <span className="num">{outlook.remainingPct}%</span> من{' '}
+                      <Money amount={outlook.total} currency={currency} /> هذا الشهر
+                    </p>
+                    <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs">
+                      <Icon name="clock" className="h-3.5 w-3.5" />
+                      {outlookText(outlook)}
+                    </p>
                   </div>
                 </>
               ) : (
@@ -209,7 +236,7 @@ const Dashboard = () => {
                   </span>
                   <p className="text-sm text-white/85 mt-4">الباقي هذا الشهر</p>
                   <Money
-                    amount={month.balance}
+                    amount={Math.abs(shownBalance)}
                     currency={currency}
                     sign={month.balance < 0 ? '-' : ''}
                     className="block text-[42px] leading-tight font-bold tracking-tight"
@@ -222,6 +249,8 @@ const Dashboard = () => {
                 </>
               )}
             </section>
+
+            {insight && <InsightCard insight={insight} />}
 
             {/* Quick actions */}
             <nav aria-label="إجراءات سريعة" className="grid grid-cols-4 gap-2">
