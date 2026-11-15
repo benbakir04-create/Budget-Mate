@@ -1,1292 +1,904 @@
-import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useQuickAdd } from '../contexts/QuickAddContext';
 import Sidebar from '../components/common/Sidebar';
+import Money from '../components/common/Money';
+import Icon from '../components/common/Icon';
+import CategoryIcon from '../components/common/CategoryIcon';
+import Sheet, { AmountInput, TextField, SubmitButton } from '../components/common/Sheet';
 import { jointFundService } from '../services/jointFundService';
 import { shoppingOrderService } from '../services/shoppingOrderService';
 import { categoryService } from '../services/categoryService';
+import { transactionService } from '../services/transactionService';
 import { authService } from '../services/authService';
 import { currencyLabel } from '../utils/currency';
-import Money from '../components/common/Money';
+import { fundOutlook } from '../utils/money';
 import { formatDate, formatDay } from '../utils/dates';
 
+const MONTH = new Intl.DateTimeFormat('ar-DZ-u-nu-latn', { month: 'long' });
+
+const firstOfMonth = () => {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+};
+
+const outlookText = outlook => {
+  if (outlook.remainingPct === 0) return 'الصندوق فارغ. موّله لتكمل الشهر.';
+  if (outlook.coversMonth) return 'بهذا المعدّل يكفي حتى آخر الشهر';
+  return `بهذا المعدّل يكفي حتى ${formatDate(outlook.runsOutOn)}`;
+};
+
+const apiError = (err, fallback) => {
+  const code = err.response?.data?.error?.code;
+  const messages = {
+    INSUFFICIENT_FUNDS: 'رصيد الصندوق لا يكفي لهذا المبلغ.',
+    FORBIDDEN: 'لا تملك صلاحية هذا الإجراء.',
+    EMAIL_EXISTS: 'هذا البريد مستعمل في حساب آخر.',
+  };
+  return messages[code] || fallback;
+};
+
+const TABS = [
+  ['fund', 'الصندوق'],
+  ['orders', 'الطلبيات'],
+  ['partners', 'الشركاء'],
+];
+
+// The fund page: the shared fund and its latest movements, the shopping orders a partner sends
+// for approval, and (for the owner) adding a partner.
 const Funds = () => {
-  const { t } = useTranslation();
   const { user } = useAuth();
+  const { savedCount } = useQuickAdd();
+  const [params, setParams] = useSearchParams();
+  const isOwner = user?.role !== 'partner';
+  const currency = user?.currency;
+  const tab = TABS.some(([key]) => key === params.get('tab')) ? params.get('tab') : 'fund';
 
-  // Tab control: 'funds', 'orders', 'invite'
-  const [activeTab, setActiveTab] = useState('funds');
-
-  // Data states
   const [funds, setFunds] = useState([]);
   const [orders, setOrders] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [selectedFund, setSelectedFund] = useState(null);
-  const [fundDetails, setFundDetails] = useState(null);
-
-  // UI states
+  const [fundId, setFundId] = useState('');
+  const [details, setDetails] = useState(null);
+  const [fundSpent, setFundSpent] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [successMsg, setSuccessMsg] = useState(null);
+  const [notice, setNotice] = useState(null);
+  const [sheet, setSheet] = useState(null); // 'create' | 'deposit' | 'order' | order (to buy)
+  const [saving, setSaving] = useState(false);
 
-  // Modals state
-  const [showCreateFund, setShowCreateFund] = useState(false);
-  const [showAddMoney, setShowAddMoney] = useState(false);
-  const [showPurchaseOrder, setShowPurchaseOrder] = useState(false);
+  const fund = funds.find(f => f.id === fundId) || null;
 
-  // Form states
-  const [fundName, setFundName] = useState('');
-  const [fundInitialBalance, setFundInitialBalance] = useState('');
-
-  const [depositAmount, setDepositAmount] = useState('');
-  const [depositDesc, setDepositDesc] = useState('');
-
-  const [newOrderTitle, setNewOrderTitle] = useState('');
-  const [newOrderEstAmount, setNewOrderEstAmount] = useState('');
-  const [newOrderFundId, setNewOrderFundId] = useState('');
-
-  const [purchaseOrderId, setPurchaseOrderId] = useState('');
-  const [purchaseOrderTitle, setPurchaseOrderTitle] = useState('');
-  const [purchaseEstAmount, setPurchaseEstAmount] = useState('');
-  const [purchaseActualAmount, setPurchaseActualAmount] = useState('');
-  const [purchaseCategoryId, setPurchaseCategoryId] = useState('');
-  const [purchaseDesc, setPurchaseDesc] = useState('');
-
-  const [partnerName, setPartnerName] = useState('');
-  const [partnerEmail, setPartnerEmail] = useState('');
-  const [partnerPassword, setPartnerPassword] = useState('');
-
-  // Load basic data
-  useEffect(() => {
-    loadAllData();
+  const loadFund = useCallback(async id => {
+    if (!id) return;
+    const [fundDetails, month] = await Promise.all([
+      jointFundService.getJointFund(id),
+      transactionService.getSummary({ fundId: id, startDate: firstOfMonth() }),
+    ]);
+    setDetails(fundDetails);
+    setFundSpent(month?.expense || 0);
   }, []);
 
-  const loadAllData = async () => {
+  const loadAll = useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
-
-      const fundsList = await jointFundService.getJointFunds();
+      const [fundsList, ordersList, cats] = await Promise.all([
+        jointFundService.getJointFunds(),
+        shoppingOrderService.getShoppingOrders(),
+        categoryService.getCategories(),
+      ]);
       setFunds(fundsList);
-
-      const ordersList = await shoppingOrderService.getShoppingOrders();
       setOrders(ordersList);
-
-      const catsList = await categoryService.getCategories();
-      // Filter only expense categories
-      setCategories(catsList.filter(c => c.type === 'expense'));
-
-      // Auto-select first fund if available
-      if (fundsList.length > 0) {
-        handleSelectFund(fundsList[0]);
-      }
+      setCategories(cats.filter(c => c.type === 'expense'));
+      const current = fundsList.find(f => f.id === fundId) ? fundId : fundsList[0]?.id || '';
+      setFundId(current);
+      await loadFund(current);
     } catch (err) {
-      console.error(err);
-      setError('فشل في تحميل البيانات، يرجى المحاولة لاحقاً');
+      setNotice({ tone: 'error', text: 'تعذّر تحميل الصندوق، حاول مرة أخرى.' });
     } finally {
       setLoading(false);
     }
-  };
+    // fundId is read on purpose without being a dependency: it keeps the selection across reloads.
+  }, [loadFund]);
 
-  const handleSelectFund = async fund => {
-    setSelectedFund(fund);
-    try {
-      const details = await jointFundService.getJointFund(fund.id);
-      setFundDetails(details);
-    } catch (err) {
-      console.error('Error loading fund details:', err);
+  useEffect(() => {
+    loadAll();
+  }, [loadAll, savedCount]);
+
+  // Links from the home screen open a sheet directly (?do=deposit, ?do=order).
+  useEffect(() => {
+    if (loading) return;
+    const action = params.get('do');
+    if (action === 'deposit' && isOwner && fund) setSheet('deposit');
+    if (action === 'order' && funds.length) setSheet('order');
+    if (action) {
+      const next = new URLSearchParams(params);
+      next.delete('do');
+      setParams(next, { replace: true });
     }
+  }, [loading, params, setParams, isOwner, fund, funds.length]);
+
+  const setTab = key => {
+    const next = new URLSearchParams(params);
+    if (key === 'fund') next.delete('tab');
+    else next.set('tab', key);
+    setParams(next, { replace: true });
   };
 
-  // 1. Create Fund Submit
-  const handleCreateFundSubmit = async e => {
-    e.preventDefault();
-    if (!fundName) return;
+  const selectFund = async id => {
+    setFundId(id);
+    await loadFund(id);
+  };
 
+  const run = async (action, success, fallback) => {
+    setSaving(true);
+    setNotice(null);
     try {
-      setSubmitting(true);
-      setError(null);
-      await jointFundService.createJointFund({
-        name: fundName,
-        initialBalance: fundInitialBalance ? parseFloat(fundInitialBalance) : 0,
-      });
-
-      setSuccessMsg('تم إنشاء الصندوق بنجاح');
-      setFundName('');
-      setFundInitialBalance('');
-      setShowCreateFund(false);
-
-      // Reload
-      await loadAllData();
-
-      setTimeout(() => setSuccessMsg(null), 3000);
+      await action();
+      setSheet(null);
+      setNotice({ tone: 'success', text: success });
+      await loadAll();
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error?.message || 'فشل في إنشاء الصندوق');
+      setNotice({ tone: 'error', text: apiError(err, fallback) });
     } finally {
-      setSubmitting(false);
+      setSaving(false);
     }
   };
 
-  // 2. Deposit Money Submit
-  const handleDepositSubmit = async e => {
-    e.preventDefault();
-    if (!selectedFund || !depositAmount) return;
-
-    try {
-      setSubmitting(true);
-      setError(null);
-      await jointFundService.addMoneyToFund(selectedFund.id, {
-        amount: parseFloat(depositAmount),
-        description: depositDesc,
-      });
-
-      setSuccessMsg('تم ضخ التمويل للصندوق بنجاح');
-      setDepositAmount('');
-      setDepositDesc('');
-      setShowAddMoney(false);
-
-      // Reload Details
-      await handleSelectFund(selectedFund);
-      // Reload All Funds List
-      const fundsList = await jointFundService.getJointFunds();
-      setFunds(fundsList);
-
-      setTimeout(() => setSuccessMsg(null), 3000);
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error?.message || 'فشل في عملية الإيداع');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // 3. Request Shopping Order Submit
-  const handleRequestOrderSubmit = async e => {
-    e.preventDefault();
-    const fundId = newOrderFundId || (funds.length > 0 ? funds[0].id : '');
-    if (!newOrderTitle || !newOrderEstAmount || !fundId) {
-      setError('يرجى ملء جميع الحقول المطلوبة');
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      setError(null);
-      await shoppingOrderService.createShoppingOrder({
-        title: newOrderTitle,
-        estAmount: parseFloat(newOrderEstAmount),
-        fundId: fundId,
-      });
-
-      setSuccessMsg('تم إرسال طلب الشراء بنجاح بانتظار موافقة المالك');
-      setNewOrderTitle('');
-      setNewOrderEstAmount('');
-
-      // Reload
-      const ordersList = await shoppingOrderService.getShoppingOrders();
-      setOrders(ordersList);
-
-      if (selectedFund && selectedFund.id === fundId) {
-        await handleSelectFund(selectedFund);
-      }
-
-      setTimeout(() => setSuccessMsg(null), 3000);
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error?.message || 'فشل في إرسال طلب الشراء');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // 4. Approve Order
-  const handleApproveOrder = async orderId => {
-    try {
-      setError(null);
-      await shoppingOrderService.approveShoppingOrder(orderId);
-      setSuccessMsg('تم اعتماد طلب الشراء بنجاح');
-
-      // Reload
-      const ordersList = await shoppingOrderService.getShoppingOrders();
-      setOrders(ordersList);
-      if (selectedFund) {
-        await handleSelectFund(selectedFund);
-      }
-
-      setTimeout(() => setSuccessMsg(null), 3000);
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error?.message || 'فشل في اعتماد الطلب');
-    }
-  };
-
-  // 5. Delete Order
-  const handleDeleteOrder = async orderId => {
-    if (!window.confirm('هل أنت متأكد من رغبتك في حذف/إلغاء هذا الطلب؟')) return;
-    try {
-      setError(null);
-      await shoppingOrderService.deleteShoppingOrder(orderId);
-      setSuccessMsg('تم إلغاء الطلب بنجاح');
-
-      // Reload
-      const ordersList = await shoppingOrderService.getShoppingOrders();
-      setOrders(ordersList);
-      if (selectedFund) {
-        await handleSelectFund(selectedFund);
-      }
-
-      setTimeout(() => setSuccessMsg(null), 3000);
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error?.message || 'فشل في حذف الطلب');
-    }
-  };
-
-  // 6. Open Purchase Dialog
-  const openPurchaseDialog = order => {
-    setPurchaseOrderId(order.id);
-    setPurchaseOrderTitle(order.title);
-    setPurchaseEstAmount(order.estAmount);
-    setPurchaseActualAmount(order.estAmount);
-    setPurchaseDesc(`شراء طلب: ${order.title}`);
-
-    // Choose first category as default
-    if (categories.length > 0) {
-      setPurchaseCategoryId(categories[0].id);
-    } else {
-      setPurchaseCategoryId('');
-    }
-
-    setShowPurchaseOrder(true);
-  };
-
-  // 7. Purchase (Debit Joint Fund & convert to transaction)
-  const handlePurchaseSubmit = async e => {
-    e.preventDefault();
-    if (!purchaseOrderId || !purchaseActualAmount || !purchaseCategoryId) {
-      setError('يرجى تحديد المبلغ الفعلي والتصنيف');
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      setError(null);
-      await shoppingOrderService.purchaseShoppingOrder(purchaseOrderId, {
-        actualAmount: parseFloat(purchaseActualAmount),
-        categoryId: purchaseCategoryId,
-        description: purchaseDesc,
-      });
-
-      setSuccessMsg('تم تسجيل عملية الشراء وخصم المبلغ من الصندوق بنجاح');
-      setShowPurchaseOrder(false);
-
-      // Reload All
-      await loadAllData();
-      if (selectedFund) {
-        const updatedFund = funds.find(f => f.id === selectedFund.id);
-        if (updatedFund) {
-          await handleSelectFund(updatedFund);
-        }
-      }
-
-      setTimeout(() => setSuccessMsg(null), 3000);
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error?.message || 'فشل في إتمام عملية الشراء');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // 8. Invite Partner Submit
-  const handleInvitePartnerSubmit = async e => {
-    e.preventDefault();
-    if (!partnerName || !partnerEmail || !partnerPassword) {
-      setError('يرجى إدخال جميع معلومات الشريك');
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      setError(null);
-      await authService.registerPartner(partnerName, partnerEmail, partnerPassword);
-
-      setSuccessMsg(`تم تسجيل الشريك "${partnerName}" بنجاح! يمكنه الآن تسجيل الدخول.`);
-      setPartnerName('');
-      setPartnerEmail('');
-      setPartnerPassword('');
-
-      setTimeout(() => setSuccessMsg(null), 5000);
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const pending = orders.filter(o => o.status === 'pending_approval');
+  const approved = orders.filter(o => o.status === 'approved');
+  const outlook = fund ? fundOutlook({ balance: fund.balance, spent: fundSpent }) : null;
+  const movements = details?.transactions || [];
+  const visibleTabs = TABS.filter(([key]) => key !== 'partners' || isOwner);
 
   return (
-    <div className="min-h-screen bg-canvas dark:bg-night flex transition-colors duration-300">
+    <div className="min-h-screen flex">
       <Sidebar />
-      <div className="flex-1 max-w-7xl mx-auto p-4 md:p-8 md:mr-64 transition-all duration-300">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 space-y-4 md:space-y-0">
-          <div>
-            <h1 className="text-3xl font-extrabold text-stone-900 dark:text-white mb-1">
-              إدارة الصناديق والطلبيات المشتركة
-            </h1>
-            <p className="text-stone-500 dark:text-stone-400 font-medium text-sm md:text-base">
-              إدارة المصاريف العائلية والعهد المالية المشتركة مع شركائك بكل شفافية وفخامة.
-            </p>
-          </div>
-        </div>
-
-        {/* Global Notifications */}
-        {error && (
-          <div className="mb-6 p-4 bg-alert-50 dark:bg-alert-500/10 border-r-4 border-alert-500 text-alert-800 dark:text-alert-400 rounded-xl font-bold flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 ml-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2.5}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            {error}
-          </div>
-        )}
-
-        {successMsg && (
-          <div className="mb-6 p-4 bg-brand-50 dark:bg-brand-500/10 border-r-4 border-brand-500 text-brand-800 dark:text-brand-400 rounded-xl font-bold flex items-center animate-fade-in">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 ml-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2.5}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            {successMsg}
-          </div>
-        )}
-
-        {/* Tab Navigation Menu */}
-        <div className="flex space-x-2 space-x-reverse mb-8 p-1.5 bg-stone-100 dark:bg-white/[0.02] border border-stone-200/50 dark:border-white/[0.05] rounded-2xl w-max">
-          <button
-            onClick={() => setActiveTab('funds')}
-            className={`px-6 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 ${
-              activeTab === 'funds'
-                ? 'bg-white dark:bg-night-card text-stone-900 dark:text-white shadow-md'
-                : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
-            }`}
-          >
-            الصناديق المشتركة
-          </button>
-
-          <button
-            onClick={() => setActiveTab('orders')}
-            className={`px-6 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 ${
-              activeTab === 'orders'
-                ? 'bg-white dark:bg-night-card text-stone-900 dark:text-white shadow-md'
-                : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
-            }`}
-          >
-            طلبيات الشراء ({orders.filter(o => o.status !== 'purchased').length})
-          </button>
-
-          {user.role === 'owner' && (
+      <main className="flex-1 min-w-0 md:mr-64 p-4 md:p-8 pt-20 md:pt-8 w-full max-w-5xl">
+        <header className="flex items-center justify-between gap-3 mb-4">
+          <h1 className="text-2xl font-bold text-ink dark:text-white">الصندوق</h1>
+          {isOwner && funds.length > 0 && (
             <button
-              onClick={() => setActiveTab('invite')}
-              className={`px-6 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 ${
-                activeTab === 'invite'
-                  ? 'bg-white dark:bg-night-card text-stone-900 dark:text-white shadow-md'
-                  : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
-              }`}
+              type="button"
+              onClick={() => setSheet('create')}
+              className="min-h-[44px] px-4 inline-flex items-center gap-1.5 rounded-full bg-white dark:bg-night-card text-sm font-medium text-stone-700 dark:text-stone-200 shadow-[0_4px_14px_rgba(20,24,60,0.07)]"
             >
-              دعوة الشركاء
+              <Icon name="plus" className="h-4 w-4" strokeWidth={2.4} />
+              صندوق جديد
             </button>
           )}
+        </header>
+
+        <div
+          role="tablist"
+          aria-label="أقسام الصندوق"
+          className={`grid ${visibleTabs.length === 3 ? 'grid-cols-3' : 'grid-cols-2'} bg-white dark:bg-night-card rounded-2xl p-1.5 mb-5 shadow-[0_4px_14px_rgba(20,24,60,0.05)]`}
+        >
+          {visibleTabs.map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={tab === key}
+              onClick={() => setTab(key)}
+              className={`min-h-[40px] rounded-xl text-sm font-medium transition-colors inline-flex items-center justify-center gap-1.5 ${
+                tab === key
+                  ? 'bg-brand-500 text-white shadow-sm'
+                  : 'text-stone-500 dark:text-stone-400'
+              }`}
+            >
+              {label}
+              {key === 'orders' && pending.length > 0 && (
+                <span
+                  className={`num min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-semibold grid place-items-center ${
+                    tab === key ? 'bg-white text-brand-600' : 'bg-sun-400 text-ink'
+                  }`}
+                >
+                  {pending.length}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
 
-        {/* Content Loading State */}
+        {notice && (
+          <p
+            role="status"
+            className={`mb-4 rounded-2xl px-4 py-3 text-sm font-medium ${
+              notice.tone === 'success'
+                ? 'bg-mint-100 text-mint-700 dark:bg-mint-500/15 dark:text-mint-300'
+                : 'bg-alert-50 text-alert-600 dark:bg-alert-500/15 dark:text-alert-400'
+            }`}
+          >
+            {notice.text}
+          </p>
+        )}
+
         {loading ? (
-          <div className="py-20 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-stone-500 dark:text-stone-400">جاري تحميل البيانات...</p>
+          <div className="space-y-4 animate-pulse" aria-label="جارٍ التحميل">
+            <div className="h-52 rounded-[30px] bg-soft dark:bg-white/5" />
+            <div className="h-24 rounded-[24px] bg-soft dark:bg-white/5" />
           </div>
+        ) : funds.length === 0 ? (
+          <EmptyState
+            icon="wallet"
+            title="لا صندوق بعد"
+            text={
+              isOwner
+                ? 'أنشئ صندوق البيت وموّله، فيصرف منه شريكك وتظهر كل عملية هنا.'
+                : 'لم يُنشئ المالك صندوقًا بعد. حين ينشئه سيظهر هنا.'
+            }
+            action={isOwner ? ['أنشئ أول صندوق', () => setSheet('create')] : null}
+          />
         ) : (
           <>
-            {/* TAB 1: FUNDS LIST */}
-            {activeTab === 'funds' && (
-              <div className="space-y-10">
-                {/* Header Action inside tab */}
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-extrabold text-stone-900 dark:text-white">
-                    الصناديق المتاحة
-                  </h2>
-                  {user.role === 'owner' && (
-                    <button
-                      onClick={() => setShowCreateFund(true)}
-                      className="bg-primary hover:bg-brand-600 text-white px-5 py-3 rounded-full font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all flex items-center space-x-2 space-x-reverse"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2.5}
-                          d="M12 4v16m8-8H4"
+            {tab === 'fund' && (
+              <div className="grid gap-5 lg:grid-cols-[1.05fr_1fr] items-start">
+                <div className="space-y-4 min-w-0">
+                  {funds.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1">
+                      {funds.map(f => (
+                        <button
+                          key={f.id}
+                          type="button"
+                          aria-pressed={f.id === fundId}
+                          onClick={() => selectFund(f.id)}
+                          className={`shrink-0 min-h-[38px] px-4 rounded-full text-sm font-medium transition-colors ${
+                            f.id === fundId
+                              ? 'bg-ink text-white dark:bg-white dark:text-ink'
+                              : 'bg-white dark:bg-night-card text-stone-600 dark:text-stone-300 shadow-[0_3px_10px_rgba(20,24,60,0.05)]'
+                          }`}
+                        >
+                          {f.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <section className="luxury-gradient rounded-[30px] p-5 md:p-6 text-white shadow-[0_18px_34px_rgba(18,162,110,0.30)]">
+                    <div className="flex items-center justify-between gap-2 mb-4">
+                      <span className="text-[13px] bg-white/20 rounded-full px-3 py-1 truncate">
+                        {fund.name} · {MONTH.format(new Date())}
+                      </span>
+                      <span className="text-[12px] text-white/85 shrink-0">
+                        {isOwner ? 'أنت المالك' : 'تصرف منه'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-white/85">متاح الآن</p>
+                    <Money
+                      amount={fund.balance}
+                      currency={currency}
+                      className="block text-[42px] leading-tight font-bold tracking-tight"
+                      currencyClassName="text-white/85"
+                    />
+                    <div className="mt-4 space-y-1.5">
+                      <div className="h-2.5 rounded-full bg-white/25 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-sun-300"
+                          style={{ width: `${outlook.remainingPct}%` }}
                         />
-                      </svg>
-                      <span>إنشاء صندوق جديد</span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-3 text-xs text-white/90">
+                        <span>
+                          صُرف <Money amount={fundSpent} currency={currency} /> هذا الشهر
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Icon name="clock" className="h-3.5 w-3.5" />
+                          {outlookText(outlook)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mt-5">
+                      {isOwner && (
+                        <button
+                          type="button"
+                          onClick={() => setSheet('deposit')}
+                          className="min-h-[46px] rounded-2xl bg-white text-brand-700 font-semibold inline-flex items-center justify-center gap-1.5"
+                        >
+                          <Icon name="down" className="h-4 w-4 rotate-180" strokeWidth={2.4} />
+                          تمويل
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setSheet('order')}
+                        className={`min-h-[46px] rounded-2xl bg-white/20 hover:bg-white/25 text-white font-semibold inline-flex items-center justify-center gap-1.5 ${isOwner ? '' : 'col-span-2'}`}
+                      >
+                        <Icon name="bag" className="h-4 w-4" />
+                        طلبية
+                      </button>
+                    </div>
+                  </section>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <Stat label="عمليات" value={fund._count?.transactions ?? movements.length} />
+                    <Stat
+                      label="بانتظار الموافقة"
+                      value={pending.filter(o => o.fundId === fund.id).length}
+                      tone="sun"
+                    />
+                    <Stat
+                      label="معتمدة للشراء"
+                      value={approved.filter(o => o.fundId === fund.id).length}
+                      tone="brand"
+                    />
+                  </div>
+
+                  {isOwner && pending.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setTab('orders')}
+                      className="w-full flex items-center gap-3 rounded-[24px] bg-sun-100 dark:bg-sun-500/15 p-4 text-right"
+                    >
+                      <span className="h-11 w-11 grid place-items-center rounded-2xl bg-white/70 dark:bg-white/10 text-sun-700 dark:text-sun-300">
+                        <Icon name="bag" className="h-5 w-5" />
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block font-semibold text-ink dark:text-white">
+                          {pending.length === 1
+                            ? 'طلبية واحدة تنتظر موافقتك'
+                            : `${pending.length} طلبيات تنتظر موافقتك`}
+                        </span>
+                        <span className="block text-sm text-stone-600 dark:text-stone-300 truncate">
+                          {pending[0].title}
+                        </span>
+                      </span>
+                      <Icon name="chevron" className="h-5 w-5 text-stone-500" />
                     </button>
                   )}
                 </div>
 
-                {/* Funds Grid */}
-                {funds.length === 0 ? (
-                  <div className="premium-card p-12 text-center text-stone-500 dark:text-stone-400">
-                    <div className="bg-stone-100 dark:bg-night-card h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-5 border border-stone-200 dark:border-white/[0.05]">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-10 w-10 text-stone-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                        />
-                      </svg>
-                    </div>
-                    <p className="font-extrabold text-lg text-stone-800 dark:text-stone-200">
-                      لا توجد صناديق مشتركة حالياً
-                    </p>
-                    <p className="text-sm mt-1">الرجاء الضغط على زر "إنشاء صندوق جديد" للبدء.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column: Funds List cards */}
-                    <div className="lg:col-span-1 space-y-4">
-                      {funds.map(fund => {
-                        const isSelected = selectedFund && selectedFund.id === fund.id;
+                <section className="min-w-0">
+                  <h2 className="font-semibold text-ink dark:text-white mb-2 px-1">
+                    آخر الحركات على الصندوق
+                  </h2>
+                  {movements.length ? (
+                    <div className="premium-card divide-y divide-stone-100 dark:divide-white/5 overflow-hidden">
+                      {movements.map(tx => {
+                        const isIn = tx.type !== 'expense';
                         return (
-                          <div
-                            key={fund.id}
-                            onClick={() => handleSelectFund(fund)}
-                            className={`p-6 rounded-[2rem] cursor-pointer transition-all duration-300 border ${
-                              isSelected
-                                ? 'bg-gradient-to-br from-stone-900 to-stone-800 text-white shadow-xl scale-[1.02] border-stone-700 dark:border-white/10'
-                                : 'bg-white dark:bg-night-card text-stone-900 dark:text-white border-stone-100 dark:border-white/[0.05] hover:border-primary/40 hover:-translate-y-1 shadow-[0_4px_20px_rgb(0,0,0,0.02)]'
-                            }`}
-                          >
-                            <div className="flex justify-between items-start mb-6">
-                              <span
-                                className={`px-3 py-1 rounded-full text-xs font-extrabold ${
-                                  isSelected
-                                    ? 'bg-white/20 text-white'
-                                    : 'bg-stone-100 dark:bg-white/5 text-stone-500 dark:text-stone-400'
-                                }`}
-                              >
-                                {fund.ownerId === user.id ? 'أنت المالك' : 'شريك'}
+                          <div key={tx.id} className="flex items-center gap-3 px-4 py-3">
+                            {tx.type === 'transfer' ? (
+                              <span className="h-11 w-11 shrink-0 grid place-items-center rounded-2xl bg-brand-50 dark:bg-brand-500/10 text-brand-600">
+                                <Icon name="down" className="h-5 w-5 rotate-180" />
                               </span>
-
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className={`h-6 w-6 ${isSelected ? 'text-white/60' : 'text-stone-400'}`}
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                                />
-                              </svg>
-                            </div>
-
-                            <p
-                              className={`text-xs font-bold uppercase tracking-wider mb-1 ${isSelected ? 'text-stone-400' : 'text-stone-400'}`}
-                            >
-                              الرصيد المتاح
-                            </p>
-                            <div className="flex items-end mb-4">
-                              <p className="text-3xl font-extrabold tracking-tight">
-                                {fund.balance.toLocaleString()}
+                            ) : (
+                              <CategoryIcon category={tx.category} />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-ink dark:text-white truncate">
+                                {tx.type === 'transfer'
+                                  ? tx.description || 'تمويل الصندوق'
+                                  : tx.description || tx.category?.nameAr || tx.category?.name}
                               </p>
-                              <span className="text-sm font-medium mr-1.5 mb-1 opacity-70">
-                                {currencyLabel(user.currency)}
-                              </span>
+                              <p className="text-xs text-stone-500 dark:text-stone-400 truncate">
+                                {[tx.user?.name, formatDay(tx.date)].filter(Boolean).join(' · ')}
+                              </p>
                             </div>
-
-                            <h3 className="text-lg font-extrabold truncate">{fund.name}</h3>
+                            <Money
+                              amount={tx.amount}
+                              currency={currency}
+                              sign={isIn ? '+' : '-'}
+                              className={`font-semibold ${isIn ? 'text-mint-600 dark:text-mint-400' : 'text-ink dark:text-white'}`}
+                              currencyClassName="text-stone-400"
+                            />
                           </div>
                         );
                       })}
                     </div>
-
-                    {/* Right Column: Selected Fund Details Panel */}
-                    <div className="lg:col-span-2">
-                      {selectedFund ? (
-                        <div className="premium-card p-8 space-y-8">
-                          {/* Top Detail Card Header */}
-                          <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-stone-100 dark:border-white/[0.05] pb-6 space-y-4 md:space-y-0">
-                            <div>
-                              <div className="flex items-center space-x-3 space-x-reverse mb-1">
-                                <h3 className="text-2xl font-extrabold text-stone-900 dark:text-white">
-                                  {selectedFund.name}
-                                </h3>
-                                <span className="bg-brand-50 dark:bg-brand-500/10 text-brand-500 px-3 py-1 rounded-full text-xs font-bold border border-brand-100 dark:border-transparent">
-                                  نشط
-                                </span>
-                              </div>
-                              <p className="text-stone-500 dark:text-stone-400 text-sm">
-                                أُنشئ في {formatDate(selectedFund.createdAt)}
-                              </p>
-                            </div>
-
-                            {user.role === 'owner' && (
-                              <div className="flex space-x-2 space-x-reverse">
-                                <button
-                                  onClick={() => setShowAddMoney(true)}
-                                  className="bg-primary hover:bg-brand-600 text-white px-5 py-3 rounded-full font-bold shadow-md shadow-primary/10 hover:shadow-primary/20 transition-all flex items-center space-x-1.5 space-x-reverse"
-                                >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2.5}
-                                      d="M12 4v16m8-8H4"
-                                    />
-                                  </svg>
-                                  <span>ضخ تمويل للصندوق</span>
-                                </button>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Stats Info Grid inside fund */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="p-6 bg-stone-50 dark:bg-white/[0.01] rounded-2xl border border-stone-100 dark:border-white/[0.03]">
-                              <span className="text-stone-400 text-xs font-bold uppercase">
-                                الرصيد الكلي
-                              </span>
-                              <p className="text-3xl font-extrabold text-stone-900 dark:text-white mt-2">
-                                <Money
-                                  amount={selectedFund.balance}
-                                  currency={user.currency}
-                                  currencyClassName="font-medium text-stone-500"
-                                />
-                              </p>
-                            </div>
-                            <div className="p-6 bg-stone-50 dark:bg-white/[0.01] rounded-2xl border border-stone-100 dark:border-white/[0.03]">
-                              <span className="text-stone-400 text-xs font-bold uppercase">
-                                إجمالي العمليات المسجلة
-                              </span>
-                              <p className="text-3xl font-extrabold text-stone-900 dark:text-white mt-2">
-                                {fundDetails?.transactions?.length || 0} عملية
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Recent Transactions inside this Joint Fund */}
-                          <div>
-                            <h4 className="text-lg font-extrabold text-stone-900 dark:text-white mb-4">
-                              آخر العمليات على الصندوق
-                            </h4>
-                            {fundDetails?.transactions && fundDetails.transactions.length > 0 ? (
-                              <div className="divide-y divide-stone-100 dark:divide-white/[0.05]">
-                                {fundDetails.transactions.map(tx => (
-                                  <div
-                                    key={tx.id}
-                                    className="py-4 flex items-center justify-between"
-                                  >
-                                    <div className="flex items-center space-x-3 space-x-reverse">
-                                      <div
-                                        className={`p-3 rounded-xl ${tx.type !== 'expense' ? 'bg-mint-50 dark:bg-mint-500/10 text-mint-500' : 'bg-alert-50 dark:bg-alert-500/10 text-alert-500'}`}
-                                      >
-                                        <svg
-                                          xmlns="http://www.w3.org/2000/svg"
-                                          className="h-5 w-5"
-                                          fill="none"
-                                          viewBox="0 0 24 24"
-                                          stroke="currentColor"
-                                        >
-                                          {tx.type !== 'expense' ? (
-                                            <path
-                                              strokeLinecap="round"
-                                              strokeLinejoin="round"
-                                              strokeWidth={2.5}
-                                              d="M12 4v16m8-8l-8 8-8-8"
-                                            />
-                                          ) : (
-                                            <path
-                                              strokeLinecap="round"
-                                              strokeLinejoin="round"
-                                              strokeWidth={2.5}
-                                              d="M12 20V4m8 8l-8-8-8 8"
-                                            />
-                                          )}
-                                        </svg>
-                                      </div>
-                                      <div>
-                                        <p className="font-bold text-stone-900 dark:text-white text-sm">
-                                          {tx.description}
-                                        </p>
-                                        <div className="flex items-center space-x-2 space-x-reverse text-xs text-stone-400 font-medium">
-                                          <span>بواسطة {tx.user?.name}</span>
-                                          <span>•</span>
-                                          <span>{formatDay(tx.date)}</span>
-                                          <span>•</span>
-                                          <span className="bg-stone-100 dark:bg-stone-800 px-1.5 py-0.5 rounded">
-                                            {tx.category?.nameAr || tx.category?.name}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <span
-                                      className={`font-extrabold text-sm ${tx.type !== 'expense' ? 'text-mint-500' : 'text-stone-900 dark:text-white'}`}
-                                    >
-                                      {tx.type !== 'expense' ? '+' : '-'}
-                                      <Money
-                                        amount={parseFloat(tx.amount)}
-                                        currency={user.currency}
-                                      />
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-stone-400 text-sm py-4">
-                                لا توجد عمليات مسجلة على هذا الصندوق حتى الآن.
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="premium-card p-12 text-center text-stone-400">
-                          يرجى اختيار صندوق من القائمة الجانبية لعرض تفاصيله وإدارته.
-                        </div>
-                      )}
+                  ) : (
+                    <div className="premium-card p-6 text-center text-sm text-stone-500 dark:text-stone-400">
+                      لا حركات على هذا الصندوق بعد. أول مصروف من «+» يظهر هنا.
                     </div>
-                  </div>
+                  )}
+                </section>
+              </div>
+            )}
+
+            {tab === 'orders' && (
+              <div className="space-y-5 max-w-3xl">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm text-stone-500 dark:text-stone-400">
+                    {isOwner
+                      ? 'يطلب شريكك شراء شيء، فتوافق، ثم يُخصم من الصندوق حين يشتريه.'
+                      : 'اطلب شراء شيء من الصندوق، وحين يوافق المالك تشتريه وتسجّل ثمنه.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setSheet('order')}
+                    className="shrink-0 min-h-[44px] px-4 inline-flex items-center gap-1.5 rounded-full bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold shadow-lg shadow-brand-500/25"
+                  >
+                    <Icon name="plus" className="h-4 w-4" strokeWidth={2.6} />
+                    طلبية جديدة
+                  </button>
+                </div>
+
+                {pending.length === 0 && approved.length === 0 ? (
+                  <EmptyState
+                    icon="bag"
+                    title="لا طلبيات مفتوحة"
+                    text="كل الطلبيات اشتُريت أو لم يُطلب شيء بعد."
+                  />
+                ) : (
+                  <>
+                    {pending.length > 0 && (
+                      <OrderGroup title={isOwner ? 'تنتظر موافقتك' : 'تنتظر موافقة المالك'}>
+                        {pending.map(order => (
+                          <OrderRow key={order.id} order={order} currency={currency} tone="sun">
+                            {isOwner ? (
+                              <>
+                                <RowButton
+                                  primary
+                                  onClick={() =>
+                                    run(
+                                      () => shoppingOrderService.approveShoppingOrder(order.id),
+                                      `وافقتَ على «${order.title}».`,
+                                      'تعذّرت الموافقة على الطلبية.'
+                                    )
+                                  }
+                                >
+                                  موافقة
+                                </RowButton>
+                                <RowButton
+                                  onClick={() =>
+                                    window.confirm(`رفض طلبية «${order.title}»؟`) &&
+                                    run(
+                                      () => shoppingOrderService.deleteShoppingOrder(order.id),
+                                      'رُفضت الطلبية.',
+                                      'تعذّر رفض الطلبية.'
+                                    )
+                                  }
+                                >
+                                  رفض
+                                </RowButton>
+                              </>
+                            ) : (
+                              <RowButton
+                                onClick={() =>
+                                  window.confirm(`إلغاء طلبية «${order.title}»؟`) &&
+                                  run(
+                                    () => shoppingOrderService.deleteShoppingOrder(order.id),
+                                    'أُلغيت الطلبية.',
+                                    'تعذّر إلغاء الطلبية.'
+                                  )
+                                }
+                              >
+                                إلغاء
+                              </RowButton>
+                            )}
+                          </OrderRow>
+                        ))}
+                      </OrderGroup>
+                    )}
+                    {approved.length > 0 && (
+                      <OrderGroup title="معتمدة، بانتظار الشراء">
+                        {approved.map(order => (
+                          <OrderRow key={order.id} order={order} currency={currency} tone="brand">
+                            <RowButton primary onClick={() => setSheet(order)}>
+                              اشتريتُها
+                            </RowButton>
+                            <RowButton
+                              onClick={() =>
+                                window.confirm(`حذف طلبية «${order.title}»؟`) &&
+                                run(
+                                  () => shoppingOrderService.deleteShoppingOrder(order.id),
+                                  'حُذفت الطلبية.',
+                                  'تعذّر حذف الطلبية.'
+                                )
+                              }
+                            >
+                              حذف
+                            </RowButton>
+                          </OrderRow>
+                        ))}
+                      </OrderGroup>
+                    )}
+                  </>
                 )}
               </div>
             )}
 
-            {/* TAB 2: SHOPPING ORDERS */}
-            {activeTab === 'orders' && (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left side: request shopping order form */}
-                <div className="lg:col-span-1 space-y-6">
-                  <div className="premium-card p-7">
-                    <h3 className="text-xl font-extrabold text-stone-900 dark:text-white mb-5">
-                      طلب شراء جديد
-                    </h3>
-
-                    {funds.length === 0 ? (
-                      <p className="text-sm text-stone-400">
-                        يرجى إنشاء صندوق مشترك أولاً قبل طلب الشراء.
-                      </p>
-                    ) : (
-                      <form onSubmit={handleRequestOrderSubmit} className="space-y-4">
-                        <div>
-                          <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
-                            اسم الطلب / الغرض
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            placeholder="مثال: مقاضي السوبرماركت للشهر"
-                            value={newOrderTitle}
-                            onChange={e => setNewOrderTitle(e.target.value)}
-                            className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm transition-all"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
-                            المبلغ التقريبي المطلق ({currencyLabel(user.currency)})
-                          </label>
-                          <input
-                            type="number"
-                            required
-                            placeholder="0.00"
-                            value={newOrderEstAmount}
-                            onChange={e => setNewOrderEstAmount(e.target.value)}
-                            className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm transition-all"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
-                            الصندوق التمويلي المشترك
-                          </label>
-                          <select
-                            value={newOrderFundId}
-                            onChange={e => setNewOrderFundId(e.target.value)}
-                            className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm transition-all"
-                          >
-                            <option value="">-- اختر الصندوق المشترك --</option>
-                            {funds.map(f => (
-                              <option key={f.id} value={f.id}>
-                                {f.name} (رصيد:{' '}
-                                <Money amount={f.balance} currency={user.currency} />)
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <button
-                          type="submit"
-                          disabled={submitting}
-                          className="w-full bg-primary hover:bg-brand-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm mt-2"
-                        >
-                          {submitting ? 'جاري الإرسال...' : 'إرسال طلب الشراء'}
-                        </button>
-                      </form>
-                    )}
-                  </div>
-                </div>
-
-                {/* Right side: Shopping orders list */}
-                <div className="lg:col-span-2 space-y-6">
-                  <div className="premium-card p-7">
-                    <h3 className="text-xl font-extrabold text-stone-900 dark:text-white mb-6">
-                      قائمة الطلبات الجارية
-                    </h3>
-
-                    {orders.length === 0 ? (
-                      <div className="py-12 text-center text-stone-400">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-16 w-16 mx-auto mb-4 text-stone-300"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1.5}
-                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                          />
-                        </svg>
-                        <p className="font-bold">لا توجد طلبات شراء مسجلة حالياً</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {orders.map(order => {
-                          const isPending = order.status === 'pending_approval';
-                          const isApproved = order.status === 'approved';
-                          return (
-                            <div
-                              key={order.id}
-                              className="p-5 bg-stone-50 dark:bg-white/[0.01] border border-stone-100 dark:border-white/[0.03] rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0"
-                            >
-                              <div>
-                                <div className="flex items-center space-x-2 space-x-reverse mb-2">
-                                  <h4 className="font-extrabold text-stone-900 dark:text-white text-base">
-                                    {order.title}
-                                  </h4>
-
-                                  {isPending && (
-                                    <span className="bg-sun-50 dark:bg-sun-500/10 text-sun-500 px-2 py-0.5 border border-sun-100 dark:border-transparent rounded-full text-xs font-bold">
-                                      بانتظار موافقة المالك
-                                    </span>
-                                  )}
-                                  {isApproved && (
-                                    <span className="bg-mint-50 dark:bg-mint-500/10 text-mint-500 px-2 py-0.5 border border-mint-100 dark:border-transparent rounded-full text-xs font-bold">
-                                      معتمد للشراء
-                                    </span>
-                                  )}
-                                </div>
-
-                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-500 dark:text-stone-400 font-medium">
-                                  <span>
-                                    الصندوق:{' '}
-                                    <strong className="text-stone-700 dark:text-stone-200">
-                                      {order.fund?.name}
-                                    </strong>
-                                  </span>
-                                  <span>•</span>
-                                  <span>
-                                    المبلغ المقدر:{' '}
-                                    <strong className="text-stone-700 dark:text-stone-200">
-                                      <Money amount={order.estAmount} currency={user.currency} />
-                                    </strong>
-                                  </span>
-                                  <span>•</span>
-                                  <span>تاريخ الطلب: {formatDay(order.createdAt)}</span>
-                                </div>
-                              </div>
-
-                              <div className="flex space-x-2 space-x-reverse w-full md:w-auto">
-                                {/* Owner Actions on Pending */}
-                                {isPending && user.role === 'owner' && (
-                                  <>
-                                    <button
-                                      onClick={() => handleApproveOrder(order.id)}
-                                      className="bg-primary hover:bg-brand-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm"
-                                    >
-                                      اعتماد
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteOrder(order.id)}
-                                      className="bg-alert-50 dark:bg-alert-500/15 text-alert-500 hover:bg-alert-100 px-4 py-2 rounded-xl text-xs font-bold transition-all"
-                                    >
-                                      رفض الطلب
-                                    </button>
-                                  </>
-                                )}
-
-                                {/* Partner Action on pending (only delete own) */}
-                                {isPending && user.role !== 'owner' && (
-                                  <button
-                                    onClick={() => handleDeleteOrder(order.id)}
-                                    className="bg-alert-50 dark:bg-alert-500/15 text-alert-500 hover:bg-alert-100 px-4 py-2 rounded-xl text-xs font-bold transition-all w-full md:w-auto text-center"
-                                  >
-                                    إلغاء الطلب
-                                  </button>
-                                )}
-
-                                {/* Purchase Action on Approved */}
-                                {isApproved && (
-                                  <>
-                                    <button
-                                      onClick={() => openPurchaseDialog(order)}
-                                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center space-x-1 space-x-reverse"
-                                    >
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-3.5 w-3.5"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2.5}
-                                          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                                        />
-                                      </svg>
-                                      <span>تأكيد الشراء الفعلي</span>
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteOrder(order.id)}
-                                      className="bg-stone-100 dark:bg-white/5 text-stone-500 hover:bg-stone-200 dark:hover:bg-white/10 px-4 py-2 rounded-xl text-xs font-bold transition-all"
-                                    >
-                                      حذف
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* TAB 3: PARTNER INVITATION (Owner Only) */}
-            {activeTab === 'invite' && user.role === 'owner' && (
-              <div className="max-w-2xl mx-auto">
-                <div className="premium-card p-8">
-                  <div className="text-center max-w-md mx-auto mb-8">
-                    <div className="bg-primary/10 dark:bg-primary/20 h-16 w-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-8 w-8 text-primary"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2.5}
-                          d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                        />
-                      </svg>
-                    </div>
-                    <h3 className="text-2xl font-extrabold text-stone-900 dark:text-white">
-                      تسجيل شريك مالي جديد
-                    </h3>
-                    <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">
-                      سجل حساباً لشريكك لكي يدخل للتطبيق ويطلب طلبيات شرائية ويتحكم في الصناديق
-                      المشتركة.
-                    </p>
-                  </div>
-
-                  <form onSubmit={handleInvitePartnerSubmit} className="space-y-4">
-                    <div>
-                      <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
-                        اسم الشريك الكامل
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="اسم الشريك (مثال: نورة أو محمد)"
-                        value={partnerName}
-                        onChange={e => setPartnerName(e.target.value)}
-                        className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
-                        البريد الإلكتروني للشريك
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        placeholder="partner@example.com"
-                        value={partnerEmail}
-                        onChange={e => setPartnerEmail(e.target.value)}
-                        className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
-                        كلمة المرور للشريك
-                      </label>
-                      <input
-                        type="password"
-                        required
-                        placeholder="••••••••"
-                        value={partnerPassword}
-                        onChange={e => setPartnerPassword(e.target.value)}
-                        className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="w-full bg-primary hover:bg-brand-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm mt-4"
-                    >
-                      {submitting ? 'جاري التسجيل...' : 'تسجيل الشريك الآن'}
-                    </button>
-                  </form>
-                </div>
-              </div>
+            {tab === 'partners' && isOwner && (
+              <PartnerForm
+                saving={saving}
+                onSubmit={(name, email, password) =>
+                  run(
+                    () => authService.registerPartner(name, email, password),
+                    `أُضيف «${name}». يدخل الآن ببريده وكلمة المرور التي اخترتها.`,
+                    'تعذّرت إضافة الشريك.'
+                  )
+                }
+              />
             )}
           </>
         )}
-      </div>
+      </main>
 
-      {/* ========================================================================= */}
-      {/* MODALS SECTION */}
-      {/* ========================================================================= */}
-
-      {/* 1. Create Joint Fund Modal */}
-      {showCreateFund && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-sm"
-          dir="rtl"
-        >
-          <div className="bg-white dark:bg-night-card rounded-[2rem] w-full max-w-md p-8 shadow-2xl border border-stone-100 dark:border-white/5 animate-scale-up">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-extrabold text-stone-900 dark:text-white">
-                إنشاء صندوق جديد
-              </h3>
-              <button
-                onClick={() => setShowCreateFund(false)}
-                className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-white/5 text-stone-400"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.5}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateFundSubmit} className="space-y-4">
-              <div>
-                <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
-                  اسم الصندوق
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="مثال: ميزانية البقالة / مصروف المنزل"
-                  value={fundName}
-                  onChange={e => setFundName(e.target.value)}
-                  className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
-                  التمويل الأولي (اختياري)
-                </label>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  value={fundInitialBalance}
-                  onChange={e => setFundInitialBalance(e.target.value)}
-                  className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
-                />
-              </div>
-
-              <div className="flex space-x-2 space-x-reverse pt-4">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex-1 bg-primary hover:bg-brand-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm"
-                >
-                  {submitting ? 'جاري الإنشاء...' : 'تأكيد الإنشاء'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCreateFund(false)}
-                  className="px-6 py-3.5 bg-stone-100 dark:bg-white/5 text-stone-500 hover:bg-stone-200 rounded-2xl font-bold text-sm"
-                >
-                  إلغاء
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* 2. Deposit Money Modal */}
-      {showAddMoney && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-sm"
-          dir="rtl"
-        >
-          <div className="bg-white dark:bg-night-card rounded-[2rem] w-full max-w-md p-8 shadow-2xl border border-stone-100 dark:border-white/5 animate-scale-up">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-extrabold text-stone-900 dark:text-white">
-                ضخ تمويل إضافي
-              </h3>
-              <button
-                onClick={() => setShowAddMoney(false)}
-                className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-white/5 text-stone-400"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.5}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleDepositSubmit} className="space-y-4">
-              <p className="text-sm text-stone-500 dark:text-stone-400">
-                أنت تقوم بضخ تمويل مالي مباشر إلى صندوق:{' '}
-                <strong className="text-stone-900 dark:text-white font-extrabold">
-                  {selectedFund?.name}
-                </strong>
-              </p>
-
-              <div>
-                <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
-                  المبلغ المراد إضافته ({currencyLabel(user.currency)})
-                </label>
-                <input
-                  type="number"
-                  required
-                  placeholder="0.00"
-                  value={depositAmount}
-                  onChange={e => setDepositAmount(e.target.value)}
-                  className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
-                  الوصف / التفاصيل
-                </label>
-                <input
-                  type="text"
-                  placeholder="مثال: تمويل دورة البقالة الجديدة"
-                  value={depositDesc}
-                  onChange={e => setDepositDesc(e.target.value)}
-                  className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
-                />
-              </div>
-
-              <div className="flex space-x-2 space-x-reverse pt-4">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex-1 bg-primary hover:bg-brand-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm"
-                >
-                  {submitting ? 'جاري التمويل...' : 'تأكيد التمويل'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAddMoney(false)}
-                  className="px-6 py-3.5 bg-stone-100 dark:bg-white/5 text-stone-500 hover:bg-stone-200 rounded-2xl font-bold text-sm"
-                >
-                  إلغاء
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* 3. Confirm Purchase Order Modal */}
-      {showPurchaseOrder && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-sm"
-          dir="rtl"
-        >
-          <div className="bg-white dark:bg-night-card rounded-[2rem] w-full max-w-md p-8 shadow-2xl border border-stone-100 dark:border-white/5 animate-scale-up">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-extrabold text-stone-900 dark:text-white">
-                تأكيد عملية الشراء
-              </h3>
-              <button
-                onClick={() => setShowPurchaseOrder(false)}
-                className="p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-white/5 text-stone-400"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.5}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handlePurchaseSubmit} className="space-y-4">
-              <p className="text-sm text-stone-500 dark:text-stone-400">
-                تسجيل شراء غرض:{' '}
-                <strong className="text-stone-900 dark:text-white font-extrabold">
-                  {purchaseOrderTitle}
-                </strong>
-              </p>
-
-              <div>
-                <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
-                  المبلغ الفعلي المدفوع ({currencyLabel(user.currency)})
-                </label>
-                <input
-                  type="number"
-                  required
-                  placeholder={purchaseEstAmount}
-                  value={purchaseActualAmount}
-                  onChange={e => setPurchaseActualAmount(e.target.value)}
-                  className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
-                  تصنيف المصروف
-                </label>
-                <select
-                  required
-                  value={purchaseCategoryId}
-                  onChange={e => setPurchaseCategoryId(e.target.value)}
-                  className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm transition-all"
-                >
-                  <option value="">-- اختر التصنيف --</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.nameAr || cat.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-stone-700 dark:text-stone-300 text-sm font-bold mb-2">
-                  الوصف
-                </label>
-                <input
-                  type="text"
-                  placeholder="الوصف أو اسم المحل"
-                  value={purchaseDesc}
-                  onChange={e => setPurchaseDesc(e.target.value)}
-                  className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-white/5 rounded-2xl focus:outline-none focus:border-primary text-stone-900 dark:text-white text-sm"
-                />
-              </div>
-
-              <div className="flex space-x-2 space-x-reverse pt-4">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex-1 bg-primary hover:bg-brand-600 disabled:bg-stone-400 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all text-sm"
-                >
-                  {submitting ? 'جاري التسجيل والخصم...' : 'تأكيد الشراء والخصم'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowPurchaseOrder(false)}
-                  className="px-6 py-3.5 bg-stone-100 dark:bg-white/5 text-stone-500 hover:bg-stone-200 rounded-2xl font-bold text-sm"
-                >
-                  إلغاء
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <CreateFundSheet
+        open={sheet === 'create'}
+        onClose={() => setSheet(null)}
+        currency={currencyLabel(currency)}
+        saving={saving}
+        onSubmit={(name, amount) =>
+          run(
+            () => jointFundService.createJointFund({ name, initialBalance: amount || 0 }),
+            `أُنشئ «${name}».`,
+            'تعذّر إنشاء الصندوق.'
+          )
+        }
+      />
+      <DepositSheet
+        open={sheet === 'deposit'}
+        onClose={() => setSheet(null)}
+        fund={fund}
+        currency={currencyLabel(currency)}
+        saving={saving}
+        onSubmit={(amount, description) =>
+          run(
+            () => jointFundService.addMoneyToFund(fund.id, { amount, description }),
+            `موّلتَ «${fund.name}» بـ ${amount.toLocaleString('en-US')} ${currencyLabel(currency)}.`,
+            'تعذّر التمويل.'
+          )
+        }
+      />
+      <OrderSheet
+        open={sheet === 'order'}
+        onClose={() => setSheet(null)}
+        funds={funds}
+        defaultFundId={fundId}
+        currency={currencyLabel(currency)}
+        saving={saving}
+        onSubmit={(title, estAmount, orderFundId) =>
+          run(
+            () =>
+              shoppingOrderService.createShoppingOrder({ title, estAmount, fundId: orderFundId }),
+            isOwner ? `أُضيفت طلبية «${title}».` : `أُرسلت «${title}» إلى المالك للموافقة.`,
+            'تعذّر إرسال الطلبية.'
+          )
+        }
+      />
+      <PurchaseSheet
+        order={sheet && typeof sheet === 'object' ? sheet : null}
+        onClose={() => setSheet(null)}
+        categories={categories}
+        currency={currencyLabel(currency)}
+        saving={saving}
+        onSubmit={(order, actualAmount, categoryId, description) =>
+          run(
+            () =>
+              shoppingOrderService.purchaseShoppingOrder(order.id, {
+                actualAmount,
+                categoryId,
+                description,
+              }),
+            `سُجّل شراء «${order.title}» وخُصم من الصندوق.`,
+            'تعذّر تسجيل الشراء.'
+          )
+        }
+      />
     </div>
+  );
+};
+
+const EmptyState = ({ icon, title, text, action }) => (
+  <div className="premium-card p-8 text-center">
+    <span className="mx-auto mb-4 h-16 w-16 grid place-items-center rounded-3xl bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-300">
+      <Icon name={icon} className="h-8 w-8" />
+    </span>
+    <h2 className="text-lg font-bold text-ink dark:text-white mb-1">{title}</h2>
+    <p className="text-sm text-stone-500 dark:text-stone-400 mb-5 max-w-sm mx-auto">{text}</p>
+    {action && (
+      <button
+        type="button"
+        onClick={action[1]}
+        className="min-h-[48px] px-6 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-semibold"
+      >
+        {action[0]}
+      </button>
+    )}
+  </div>
+);
+
+const STAT_TONE = {
+  ink: 'text-ink dark:text-white',
+  sun: 'text-sun-700 dark:text-sun-300',
+  brand: 'text-brand-600 dark:text-brand-300',
+};
+
+const Stat = ({ label, value, tone = 'ink' }) => (
+  <div className="premium-card p-3 text-center">
+    <p className={`num text-2xl font-bold ${STAT_TONE[tone]}`}>{value}</p>
+    <p className="text-[11px] leading-tight text-stone-500 dark:text-stone-400">{label}</p>
+  </div>
+);
+
+const OrderGroup = ({ title, children }) => (
+  <section>
+    <h2 className="font-semibold text-ink dark:text-white mb-2 px-1">{title}</h2>
+    <div className="premium-card divide-y divide-stone-100 dark:divide-white/5 overflow-hidden">
+      {children}
+    </div>
+  </section>
+);
+
+const ORDER_TILE = {
+  sun: 'bg-sun-100 text-sun-700 dark:bg-sun-500/15 dark:text-sun-300',
+  brand: 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-300',
+};
+
+const OrderRow = ({ order, currency, tone, children }) => (
+  <div className="p-4">
+    <div className="flex items-center gap-3">
+      <span
+        className={`h-11 w-11 shrink-0 grid place-items-center rounded-2xl ${ORDER_TILE[tone]}`}
+      >
+        <Icon name="bag" className="h-5 w-5" />
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-ink dark:text-white truncate">{order.title}</p>
+        <p className="text-xs text-stone-500 dark:text-stone-400 truncate">
+          {[order.fund?.name, formatDay(order.createdAt)].filter(Boolean).join(' · ')}
+        </p>
+      </div>
+      <Money
+        amount={order.estAmount}
+        currency={currency}
+        className="font-semibold text-ink dark:text-white"
+        currencyClassName="text-stone-400"
+      />
+    </div>
+    <div className="flex gap-2 mt-3 pr-14">{children}</div>
+  </div>
+);
+
+const RowButton = ({ primary, onClick, children }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`min-h-[38px] px-4 rounded-xl text-sm font-semibold transition-colors ${
+      primary
+        ? 'bg-brand-500 hover:bg-brand-600 text-white'
+        : 'bg-soft dark:bg-white/5 text-stone-600 dark:text-stone-300 hover:bg-alert-50 hover:text-alert-600'
+    }`}
+  >
+    {children}
+  </button>
+);
+
+const PartnerForm = ({ saving, onSubmit }) => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const canSave = name.trim() && email.trim() && password.length >= 8 && !saving;
+
+  return (
+    <form
+      onSubmit={e => {
+        e.preventDefault();
+        if (canSave) onSubmit(name.trim(), email.trim(), password);
+      }}
+      className="premium-card p-5 md:p-6 max-w-lg"
+    >
+      <div className="flex items-center gap-3 mb-5">
+        <span className="h-12 w-12 grid place-items-center rounded-2xl bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300 text-xl font-bold">
+          +
+        </span>
+        <div>
+          <h2 className="font-bold text-ink dark:text-white">أضف شريكك</h2>
+          <p className="text-sm text-stone-500 dark:text-stone-400">
+            يصرف من الصندوق ويطلب طلبيات، ولا يرى أقسامك الخاصة.
+          </p>
+        </div>
+      </div>
+      <TextField
+        label="الاسم"
+        value={name}
+        onChange={e => setName(e.target.value)}
+        placeholder="مثال: سارة"
+        autoComplete="off"
+      />
+      <TextField
+        label="البريد الإلكتروني"
+        type="email"
+        dir="ltr"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        placeholder="name@example.com"
+        autoComplete="off"
+      />
+      <TextField
+        label="كلمة المرور (8 أحرف على الأقل)"
+        type="password"
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+        autoComplete="new-password"
+      />
+      <SubmitButton disabled={!canSave}>{saving ? 'جارٍ الإضافة...' : 'أضف الشريك'}</SubmitButton>
+    </form>
+  );
+};
+
+const CreateFundSheet = ({ open, onClose, currency, saving, onSubmit }) => {
+  const [name, setName] = useState('');
+  const [amount, setAmount] = useState('');
+  useEffect(() => {
+    if (open) {
+      setName('');
+      setAmount('');
+    }
+  }, [open]);
+  const canSave = name.trim() && !saving;
+  return (
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title="صندوق جديد"
+      onSubmit={e => {
+        e.preventDefault();
+        if (canSave) onSubmit(name.trim(), parseFloat(amount) || 0);
+      }}
+    >
+      <TextField
+        label="اسم الصندوق"
+        value={name}
+        onChange={e => setName(e.target.value)}
+        placeholder="مثال: مصروف البيت"
+        autoFocus
+      />
+      <AmountInput
+        value={amount}
+        onChange={setAmount}
+        currency={currency}
+        label="تمويل أولي (اختياري)"
+        autoFocus={false}
+      />
+      <SubmitButton disabled={!canSave}>{saving ? 'جارٍ الإنشاء...' : 'أنشئ الصندوق'}</SubmitButton>
+    </Sheet>
+  );
+};
+
+const DepositSheet = ({ open, onClose, fund, currency, saving, onSubmit }) => {
+  const [amount, setAmount] = useState('');
+  const [note, setNote] = useState('');
+  useEffect(() => {
+    if (open) {
+      setAmount('');
+      setNote('');
+    }
+  }, [open]);
+  const value = parseFloat(amount);
+  const canSave = value > 0 && !saving;
+  return (
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title={`تمويل ${fund?.name || 'الصندوق'}`}
+      onSubmit={e => {
+        e.preventDefault();
+        if (canSave) onSubmit(value, note.trim() || undefined);
+      }}
+    >
+      <AmountInput value={amount} onChange={setAmount} currency={currency} />
+      <TextField
+        label="ملاحظة (اختياري)"
+        value={note}
+        onChange={e => setNote(e.target.value)}
+        placeholder="مثال: مصروف أول الشهر"
+        maxLength={200}
+      />
+      <SubmitButton disabled={!canSave}>{saving ? 'جارٍ التمويل...' : 'موّل الصندوق'}</SubmitButton>
+    </Sheet>
+  );
+};
+
+const OrderSheet = ({ open, onClose, funds, defaultFundId, currency, saving, onSubmit }) => {
+  const [title, setTitle] = useState('');
+  const [amount, setAmount] = useState('');
+  const [orderFundId, setOrderFundId] = useState('');
+  useEffect(() => {
+    if (open) {
+      setTitle('');
+      setAmount('');
+      setOrderFundId(defaultFundId || funds[0]?.id || '');
+    }
+  }, [open, defaultFundId, funds]);
+  const value = parseFloat(amount);
+  const canSave = title.trim() && value > 0 && orderFundId && !saving;
+  return (
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title="طلبية جديدة"
+      onSubmit={e => {
+        e.preventDefault();
+        if (canSave) onSubmit(title.trim(), value, orderFundId);
+      }}
+    >
+      <AmountInput value={amount} onChange={setAmount} currency={currency} label="الثمن التقريبي" />
+      <TextField
+        label="ماذا تحتاج؟"
+        value={title}
+        onChange={e => setTitle(e.target.value)}
+        placeholder="مثال: حليب أطفال، علبتان"
+        maxLength={120}
+      />
+      {funds.length > 1 && (
+        <div className="flex flex-wrap gap-2 mb-3" role="group" aria-label="من أي صندوق">
+          {funds.map(f => (
+            <button
+              key={f.id}
+              type="button"
+              aria-pressed={orderFundId === f.id}
+              onClick={() => setOrderFundId(f.id)}
+              className={`min-h-[40px] px-4 rounded-full text-sm font-medium ${
+                orderFundId === f.id
+                  ? 'bg-ink text-white dark:bg-white dark:text-ink'
+                  : 'bg-soft dark:bg-white/5 text-stone-600 dark:text-stone-300'
+              }`}
+            >
+              {f.name}
+            </button>
+          ))}
+        </div>
+      )}
+      <SubmitButton disabled={!canSave}>{saving ? 'جارٍ الإرسال...' : 'أرسل الطلبية'}</SubmitButton>
+    </Sheet>
+  );
+};
+
+const PurchaseSheet = ({ order, onClose, categories, currency, saving, onSubmit }) => {
+  const [amount, setAmount] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [note, setNote] = useState('');
+  useEffect(() => {
+    if (order) {
+      setAmount(String(order.estAmount ?? ''));
+      setCategoryId('');
+      setNote(order.title);
+    }
+  }, [order]);
+  const value = parseFloat(amount);
+  const canSave = value > 0 && categoryId && !saving;
+  return (
+    <Sheet
+      open={!!order}
+      onClose={onClose}
+      title="كم دفعتَ فعلًا؟"
+      onSubmit={e => {
+        e.preventDefault();
+        if (canSave) onSubmit(order, value, categoryId, note.trim() || order.title);
+      }}
+    >
+      <AmountInput value={amount} onChange={setAmount} currency={currency} />
+      <div className="grid grid-cols-4 gap-2 mb-4" role="group" aria-label="القسم">
+        {categories.map(category => {
+          const selected = category.id === categoryId;
+          return (
+            <button
+              key={category.id}
+              type="button"
+              aria-pressed={selected}
+              onClick={() => setCategoryId(selected ? '' : category.id)}
+              className={`flex flex-col items-center gap-1.5 rounded-2xl p-2 text-xs font-medium leading-tight border-2 transition-all ${
+                selected
+                  ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10 text-ink dark:text-white'
+                  : 'border-transparent text-stone-600 dark:text-stone-300'
+              }`}
+            >
+              <CategoryIcon category={category} className="h-11 w-11 text-xl" />
+              <span className="line-clamp-2">{category.nameAr || category.name}</span>
+            </button>
+          );
+        })}
+      </div>
+      <TextField
+        label="الوصف"
+        value={note}
+        onChange={e => setNote(e.target.value)}
+        maxLength={200}
+      />
+      <SubmitButton disabled={!canSave}>
+        {saving ? 'جارٍ التسجيل...' : 'سجّل الشراء واخصم من الصندوق'}
+      </SubmitButton>
+    </Sheet>
   );
 };
 

@@ -1,106 +1,71 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import AuthLayout, { authError } from '../components/auth/AuthLayout';
+import { TextField, SubmitButton } from '../components/common/Sheet';
 
 const Login = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const handleChange = e => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError('');
-  };
 
   const handleSubmit = async e => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
-      await login(formData.email, formData.password);
+      await login(email.trim(), password);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error?.message || t('auth.invalidCredentials'));
+      setError(authError(err, 'تعذّر تسجيل الدخول، حاول مرة أخرى.'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-stone-50 flex">
-      <div
-        className="flex-1 flex items-center justify-center px-4"
-        style={{ minHeight: 'calc(100vh - 64px)' }}
-      >
-        <div className="max-w-md w-full space-y-8">
-          <div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-stone-900">
-              {t('auth.login')}
-            </h2>
-          </div>
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="bg-alert-50 border border-alert-400 text-alert-700 px-4 py-3 rounded">
-                {error}
-              </div>
-            )}
-            <div className="rounded-md shadow-sm -space-y-px">
-              <div>
-                <label htmlFor="email" className="sr-only">
-                  {t('auth.email')}
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-stone-300 placeholder-stone-500 text-stone-900 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                  placeholder={t('auth.email')}
-                  value={formData.email}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <label htmlFor="password" className="sr-only">
-                  {t('auth.password')}
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-stone-300 placeholder-stone-500 text-stone-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                  placeholder={t('auth.password')}
-                  value={formData.password}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
-              >
-                {loading ? t('common.loading') : t('auth.login')}
-              </button>
-            </div>
-
-            <div className="text-center">
-              <Link to="/register" className="font-medium text-primary hover:text-brand-500">
-                {t('auth.noAccount')}
-              </Link>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+    <AuthLayout title="أهلًا بعودتك" subtitle="ادخل لترى صندوق البيت وآخر المصاريف.">
+      <form onSubmit={handleSubmit}>
+        <TextField
+          label="البريد الإلكتروني"
+          type="email"
+          dir="ltr"
+          required
+          autoComplete="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder="name@example.com"
+        />
+        <TextField
+          label="كلمة المرور"
+          type="password"
+          required
+          autoComplete="current-password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+        />
+        {error && (
+          <p
+            role="alert"
+            className="mb-3 rounded-2xl bg-alert-50 dark:bg-alert-500/15 px-4 py-3 text-sm font-medium text-alert-600 dark:text-alert-400"
+          >
+            {error}
+          </p>
+        )}
+        <SubmitButton disabled={loading || !email || !password}>
+          {loading ? 'جارٍ الدخول...' : 'تسجيل الدخول'}
+        </SubmitButton>
+      </form>
+      <p className="mt-5 text-center text-sm text-stone-500 dark:text-stone-400">
+        ليس لديك حساب؟{' '}
+        <Link to="/register" className="font-semibold text-brand-600 dark:text-brand-300">
+          أنشئ حسابك
+        </Link>
+      </p>
+    </AuthLayout>
   );
 };
 

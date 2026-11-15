@@ -1,5 +1,5 @@
 import api from './api';
-import { DEMO_FUNDS } from './demoData';
+import { DEMO_FUNDS, DEMO_TRANSACTIONS } from './demoData';
 
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
@@ -35,7 +35,7 @@ export const jointFundService = {
 
       // Simulate transactions and orders for this fund
       const storedTransactions = localStorage.getItem('demo_transactions');
-      const transactions = storedTransactions ? JSON.parse(storedTransactions) : [];
+      const transactions = storedTransactions ? JSON.parse(storedTransactions) : DEMO_TRANSACTIONS;
       // Normalize fund reference check
       const fundTransactions = transactions.filter(
         t => t.fund && (t.fund.id === id || t.fundId === id)
@@ -47,7 +47,9 @@ export const jointFundService = {
 
       return {
         ...fund,
-        transactions: fundTransactions.slice(0, 10),
+        transactions: [...fundTransactions]
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
+          .slice(0, 10),
         orders: fundOrders,
       };
     }
