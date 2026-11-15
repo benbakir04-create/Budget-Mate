@@ -4,7 +4,8 @@ import { useQuickAdd } from '../contexts/QuickAddContext';
 import Sidebar from '../components/common/Sidebar';
 import Money from '../components/common/Money';
 import Icon from '../components/common/Icon';
-import CategoryIcon from '../components/common/CategoryIcon';
+import CategoryIcon, { categoryEmoji } from '../components/common/CategoryIcon';
+import Ring from '../components/common/Ring';
 import { budgetService } from '../services/budgetService';
 import { categoryService } from '../services/categoryService';
 import { currencyLabel } from '../utils/currency';
@@ -16,23 +17,22 @@ const PERIODS = [
   ['monthly', 'شهرية'],
   ['yearly', 'سنوية'],
 ];
-const PERIOD_LABEL = Object.fromEntries(PERIODS);
 
 const STATE_STYLE = {
   ok: {
     label: 'مريح',
     pill: 'bg-mint-100 text-mint-700 dark:bg-mint-500/15 dark:text-mint-300',
-    bar: 'bg-brand-500',
+    ring: 'text-brand-500',
   },
   near: {
     label: 'اقترب',
     pill: 'bg-sun-100 text-sun-700 dark:bg-sun-500/15 dark:text-sun-300',
-    bar: 'bg-sun-500',
+    ring: 'text-sun-400',
   },
   over: {
     label: 'تجاوز',
     pill: 'bg-alert-50 text-alert-600 dark:bg-alert-500/15 dark:text-alert-400',
-    bar: 'bg-alert-500',
+    ring: 'text-alert-500',
   },
 };
 const STATE_ORDER = { over: 0, near: 1, ok: 2 };
@@ -206,31 +206,43 @@ const Budget = () => {
           <>
             {/* Summary */}
             <section className="luxury-gradient rounded-[28px] p-5 md:p-6 text-white mb-5 shadow-xl shadow-brand-700/20">
-              <p className="text-sm text-white/80 mb-1">صرفتم من مجموع الميزانيات</p>
-              <p className="text-3xl md:text-4xl font-bold mb-1">
-                <Money
-                  amount={totalSpent}
-                  currency={currency}
-                  currencyClassName="text-lg text-white/80"
-                />
-              </p>
-              <p className="text-sm text-white/80 mb-4">
-                من{' '}
-                <Money amount={totalLimit} currency={currency} currencyClassName="text-white/70" />
-              </p>
-              <div className="h-2.5 rounded-full bg-white/25 overflow-hidden mb-3">
-                <div
-                  className={`h-full rounded-full ${total.state === 'over' ? 'bg-alert-500' : 'bg-sun-300'}`}
-                  style={{ width: `${Math.min(total.pct, 100)}%` }}
-                />
+              <div className="flex items-center gap-5">
+                <Ring
+                  pct={total.pct}
+                  size={104}
+                  stroke={9}
+                  colorClass={total.state === 'over' ? 'text-alert-400' : 'text-sun-300'}
+                  trackClass="text-white/20"
+                  label={`صُرف ${total.pct}% من مجموع الميزانيات`}
+                >
+                  <span className="num block text-2xl font-bold leading-none">{total.pct}%</span>
+                </Ring>
+                <div className="min-w-0">
+                  <p className="text-sm text-white/80 mb-1">صرفتم من مجموع الميزانيات</p>
+                  <p className="text-3xl md:text-4xl font-bold mb-1">
+                    <Money
+                      amount={totalSpent}
+                      currency={currency}
+                      currencyClassName="text-lg text-white/80"
+                    />
+                  </p>
+                  <p className="text-sm text-white/80 mb-4">
+                    من{' '}
+                    <Money
+                      amount={totalLimit}
+                      currency={currency}
+                      currencyClassName="text-white/70"
+                    />
+                  </p>
+                  <p className="text-sm font-medium">
+                    {overCount > 0
+                      ? `${overCount === 1 ? 'ميزانية واحدة تجاوزت' : `${overCount} ميزانيات تجاوزت`} سقفها${nearCount > 0 ? `، و${nearCount} تقترب منه` : ''}.`
+                      : nearCount > 0
+                        ? `${nearCount === 1 ? 'ميزانية واحدة تقترب' : `${nearCount} ميزانيات تقترب`} من سقفها، والباقي مريح.`
+                        : 'كل الميزانيات مريحة حتى الآن.'}
+                  </p>
+                </div>
               </div>
-              <p className="text-sm font-medium">
-                {overCount > 0
-                  ? `${overCount === 1 ? 'ميزانية واحدة تجاوزت' : `${overCount} ميزانيات تجاوزت`} سقفها${nearCount > 0 ? `، و${nearCount} تقترب منه` : ''}.`
-                  : nearCount > 0
-                    ? `${nearCount === 1 ? 'ميزانية واحدة تقترب' : `${nearCount} ميزانيات تقترب`} من سقفها، والباقي مريح.`
-                    : 'كل الميزانيات مريحة حتى الآن.'}
-              </p>
             </section>
 
             {/* Budgets */}
@@ -238,55 +250,48 @@ const Budget = () => {
               {rows.map(({ budget, status }) => {
                 const style = STATE_STYLE[status.state];
                 return (
-                  <article key={budget.id} className="premium-card p-4 group">
-                    <div className="flex items-start gap-3 mb-3">
-                      <CategoryIcon category={budget.category} className="h-12 w-12 text-2xl" />
-                      <div className="flex-1 min-w-0">
+                  <article
+                    key={budget.id}
+                    className="premium-card p-4 group flex items-center gap-4"
+                  >
+                    <Ring
+                      pct={status.pct}
+                      size={68}
+                      colorClass={style.ring}
+                      label={`صُرف ${status.pct}% من ميزانية ${categoryName(budget.category)}`}
+                    >
+                      <span className="text-2xl" aria-hidden="true">
+                        {categoryEmoji(budget.category?.icon)}
+                      </span>
+                    </Ring>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-ink dark:text-white truncate">
                           {categoryName(budget.category)}
                         </h3>
-                        <p className="text-xs text-stone-500 dark:text-stone-400">
-                          {PERIOD_LABEL[budget.period] || budget.period} · حتى{' '}
-                          {formatDate(budget.endDate)}
-                        </p>
+                        <span
+                          className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${style.pill}`}
+                        >
+                          {style.label}
+                        </span>
                       </div>
-                      <span
-                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${style.pill}`}
-                      >
-                        {style.label}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(budget)}
-                        aria-label={`حذف ميزانية ${categoryName(budget.category)}`}
-                        className="h-8 w-8 -mt-1 -ml-1 grid place-items-center rounded-full text-stone-300 hover:text-alert-600 hover:bg-alert-50 dark:hover:bg-alert-500/10 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition"
-                      >
-                        <Icon name="trash" className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div
-                      className="h-2.5 rounded-full bg-soft dark:bg-white/5 overflow-hidden mb-2"
-                      role="progressbar"
-                      aria-valuenow={status.pct}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-label={`صُرف ${status.pct}%`}
-                    >
-                      <div
-                        className={`h-full rounded-full ${style.bar}`}
-                        style={{ width: `${Math.min(status.pct, 100)}%` }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between text-sm text-stone-500 dark:text-stone-400">
-                      <span>
+                      <p className="mt-0.5 text-sm text-stone-500 dark:text-stone-400">
                         <BudgetLine status={status} currency={currency} />
-                      </span>
-                      <span className="text-xs">
-                        <span className="num">{formatAmount(status.spent)}</span> /{' '}
-                        <Money amount={status.limit} currency={currency} /> ·{' '}
-                        <span className="num">{status.pct}%</span>
-                      </span>
+                      </p>
+                      <p className="mt-0.5 text-xs text-stone-400 truncate">
+                        <span className="num">{status.pct}%</span> من{' '}
+                        <Money amount={status.limit} currency={currency} /> · حتى{' '}
+                        {formatDate(budget.endDate)}
+                      </p>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(budget)}
+                      aria-label={`حذف ميزانية ${categoryName(budget.category)}`}
+                      className="h-9 w-9 self-start -mt-1 -ml-1 grid place-items-center rounded-full text-stone-300 hover:text-alert-600 hover:bg-alert-50 dark:hover:bg-alert-500/10 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition"
+                    >
+                      <Icon name="trash" className="h-4 w-4" />
+                    </button>
                   </article>
                 );
               })}
