@@ -19,6 +19,16 @@ const BEAM_H = 52;
 const BEAM_BG = 'linear-gradient(to bottom, rgba(18,162,110,0.12), rgba(18,162,110,0))';
 const BEAM_SHAPE = 'polygon(28% 0, 72% 0, 100% 100%, 0 100%)';
 
+// On the two edge tabs the line runs on past the icon and bends down with the bar's rounded
+// corner (radius 26px), drawn as if it were part of the bar's rim. The path is for the left
+// corner and is mirrored for the right one; it starts under the line so the two read as one.
+const BAR_RADIUS = 26;
+const LINE_Y = 3.5; // middle of the 3px line at top-[2px]
+const HOOK_R = BAR_RADIUS - LINE_Y;
+const HOOK_PATH = `M 40 ${LINE_Y} H ${BAR_RADIUS} A ${HOOK_R} ${HOOK_R} 0 0 0 ${LINE_Y} ${BAR_RADIUS} V 34`;
+// Slot → which physical corner it touches (the bar is right-to-left: slot 0 is on the right).
+const EDGE_SIDE = { 0: 'right', [NAV_TABS.length - 1]: 'left' };
+
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -68,6 +78,7 @@ const BottomNav = () => {
   }, [moving]);
 
   const lineWidth = moving ? LINE_W_STRETCHED : LINE_W;
+  const edge = EDGE_SIDE[shownSlot];
   const center = shownSlot >= 0 ? slotCenter(shownSlot) : 0;
 
   return (
@@ -101,6 +112,39 @@ const BottomNav = () => {
                 }`,
               }}
             />
+            {['left', 'right'].map(side => {
+              const on = edge === side && !moving;
+              return (
+                <svg
+                  key={side}
+                  aria-hidden="true"
+                  data-testid={`nav-hook-${side}`}
+                  width="44"
+                  height="36"
+                  viewBox="0 0 44 36"
+                  className="pointer-events-none absolute top-0 overflow-visible text-brand-500"
+                  style={{ [side]: 0, transform: side === 'right' ? 'scaleX(-1)' : undefined }}
+                >
+                  <path
+                    d={HOOK_PATH}
+                    pathLength="100"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeDasharray="100"
+                    strokeDashoffset={on ? 0 : 100}
+                    opacity={on ? 1 : 0}
+                    className="motion-reduce:!transition-none"
+                    style={{
+                      transition: on
+                        ? 'stroke-dashoffset 380ms cubic-bezier(0.22, 1, 0.36, 1) 120ms, opacity 0ms linear 120ms'
+                        : 'stroke-dashoffset 140ms ease-in, opacity 0ms linear 140ms',
+                    }}
+                  />
+                </svg>
+              );
+            })}
             <span
               aria-hidden="true"
               data-testid="nav-line"
