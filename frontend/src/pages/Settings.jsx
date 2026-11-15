@@ -13,6 +13,13 @@ import {
   categoryName,
   manageableCategories,
 } from '../utils/categories';
+import { readTheme, saveTheme, watchTheme } from '../utils/theme';
+
+const THEME_OPTIONS = [
+  { value: 'light', label: 'فاتح', icon: 'sun' },
+  { value: 'dark', label: 'ليلي', icon: 'moon' },
+  { value: 'system', label: 'حسب الهاتف', icon: 'phone' },
+];
 
 const TYPES = [
   ['expense', 'المصروف'],
@@ -28,6 +35,8 @@ const SectionTitle = ({ children, hint }) => (
 
 const Settings = () => {
   const { user, updateUser } = useAuth();
+  const [theme, setTheme] = useState(() => readTheme(localStorage));
+  useEffect(() => watchTheme(({ theme: current }) => setTheme(current)), []);
   const isOwner = user?.role !== 'partner';
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -116,6 +125,39 @@ const Settings = () => {
           >
             {isOwner ? 'المالك' : 'شريك'}
           </span>
+        </section>
+
+        {/* Appearance */}
+        <section className="mb-7">
+          <SectionTitle hint="«حسب الهاتف» يجعل التطبيق ليليًا متى صار هاتفك ليليًا.">
+            المظهر
+          </SectionTitle>
+          <div
+            className="premium-card p-2 grid grid-cols-3 gap-2"
+            role="radiogroup"
+            aria-label="المظهر"
+          >
+            {THEME_OPTIONS.map(option => {
+              const selected = theme === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => saveTheme(option.value)}
+                  className={`min-h-[64px] flex flex-col items-center justify-center gap-1 rounded-2xl text-sm font-semibold transition-colors ${
+                    selected
+                      ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/25'
+                      : 'text-stone-600 dark:text-stone-300 hover:bg-soft dark:hover:bg-white/5'
+                  }`}
+                >
+                  <Icon name={option.icon} className="h-5 w-5" />
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
         </section>
 
         {/* Currency */}
