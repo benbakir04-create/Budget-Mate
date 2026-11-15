@@ -6,6 +6,7 @@ import BrandMark from './BrandMark';
 import BottomNav from './BottomNav';
 import Icon from './Icon';
 import { APP_NAME } from '../../brand';
+import { saveTheme, watchTheme } from '../../utils/theme';
 
 const LINKS = [
   { to: '/dashboard', icon: 'home', label: 'الرئيسية' },
@@ -28,12 +29,12 @@ const Sidebar = () => {
   const { user, logout, isDemoMode } = useAuth();
   const { openQuickAdd } = useQuickAdd();
   const [open, setOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
+  const [darkMode, setDarkMode] = useState(() =>
+    document.documentElement.classList.contains('dark')
+  );
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode);
-    localStorage.setItem('theme', darkMode ? 'dark' : 'light');
-  }, [darkMode]);
+  // Follows the saved choice, the phone's own setting, and changes made in Settings.
+  useEffect(() => watchTheme(({ dark }) => setDarkMode(dark)), []);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -136,7 +137,7 @@ const Sidebar = () => {
             )}
             <button
               type="button"
-              onClick={() => setDarkMode(v => !v)}
+              onClick={() => saveTheme(darkMode ? 'light' : 'dark')}
               className={`${rowClass(false)} w-full`}
             >
               <Icon name={darkMode ? 'sun' : 'moon'} className="h-5 w-5" />
