@@ -148,7 +148,7 @@ const Dashboard = () => {
       <Sidebar />
       <main className="flex-1 md:mr-64 p-4 md:p-8 pt-20 md:pt-8 w-full max-w-6xl">
         <header className="flex items-center gap-3 mb-5">
-          <span className="h-11 w-11 rounded-full grid place-items-center bg-sun-300 text-sun-900 font-semibold text-lg">
+          <span className="hidden md:grid h-11 w-11 rounded-full place-items-center bg-sun-300 text-sun-900 font-semibold text-lg">
             {user?.name?.trim().charAt(0) || '؟'}
           </span>
           <div>
@@ -225,11 +225,12 @@ const Dashboard = () => {
 
             {/* Quick actions */}
             <nav aria-label="إجراءات سريعة" className="grid grid-cols-4 gap-2">
+              {/* The «+» in the bottom bar records an expense, so this one records income. */}
               <QuickAction
-                icon="plus"
-                label="مصروف"
-                onClick={openQuickAdd}
-                className="bg-brand-500 text-white shadow-[0_8px_18px_rgba(18,162,110,0.35)]"
+                icon="down"
+                label="دخل"
+                onClick={() => openQuickAdd('income')}
+                className="bg-mint-100 text-mint-700 dark:bg-mint-500/15 dark:text-mint-300"
               />
               {isPartner ? (
                 <QuickAction
@@ -242,14 +243,14 @@ const Dashboard = () => {
                 <QuickAction
                   icon="down"
                   label="تمويل"
-                  to="/funds"
+                  to="/funds?do=deposit"
                   className="bg-sun-100 text-sun-700 dark:bg-sun-500/15 dark:text-sun-300"
                 />
               )}
               <QuickAction
                 icon="bag"
                 label="طلبية"
-                to="/funds"
+                to="/funds?tab=orders&do=order"
                 className="bg-pink-100 text-pink-700 dark:bg-pink-500/15 dark:text-pink-300"
               />
               <QuickAction
