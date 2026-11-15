@@ -19,13 +19,14 @@ const BEAM_H = 52;
 const BEAM_BG = 'linear-gradient(to bottom, rgba(18,162,110,0.12), rgba(18,162,110,0))';
 const BEAM_SHAPE = 'polygon(28% 0, 72% 0, 100% 100%, 0 100%)';
 
-// On the two edge tabs the line runs on past the icon and bends down with the bar's rounded
-// corner (radius 26px), drawn as if it were part of the bar's rim. The path is for the left
-// corner and is mirrored for the right one; it starts under the line so the two read as one.
+// On the two edge tabs the line stays straight for most of its length and only its outer
+// end bends a little (about 30°) along the bar's rounded corner (radius 26px), like a rim.
+// Ali's ask: 70–80% straight, a slight curve at the end. The path is for the left corner and
+// is mirrored for the right one; it starts under the line so the two read as one stroke.
 const BAR_RADIUS = 26;
 const LINE_Y = 3.5; // middle of the 3px line at top-[2px]
 const HOOK_R = BAR_RADIUS - LINE_Y;
-const HOOK_PATH = `M 40 ${LINE_Y} H ${BAR_RADIUS} A ${HOOK_R} ${HOOK_R} 0 0 0 ${LINE_Y} ${BAR_RADIUS} V 34`;
+const HOOK_PATH = `M 34 ${LINE_Y} H ${BAR_RADIUS} A ${HOOK_R} ${HOOK_R} 0 0 0 14.08 6.92`;
 // Slot → which physical corner it touches (the bar is right-to-left: slot 0 is on the right).
 const EDGE_SIDE = { 0: 'right', [NAV_TABS.length - 1]: 'left' };
 
@@ -119,9 +120,9 @@ const BottomNav = () => {
                   key={side}
                   aria-hidden="true"
                   data-testid={`nav-hook-${side}`}
-                  width="44"
-                  height="36"
-                  viewBox="0 0 44 36"
+                  width="40"
+                  height="12"
+                  viewBox="0 0 40 12"
                   className="pointer-events-none absolute top-0 overflow-visible text-brand-500"
                   style={{ [side]: 0, transform: side === 'right' ? 'scaleX(-1)' : undefined }}
                 >
