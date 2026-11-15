@@ -7,28 +7,42 @@ import Icon from './Icon';
 // The bar's white shape with a round cradle cut out of its top edge for the «+».
 const CRADLE_MASK = 'radial-gradient(circle 40px at 50% 0, transparent 39px, #000 40px)';
 
-// Motion of the active-tab marker (Ali's pick: a fine line over the icon).
+// The active-tab marker (Ali's design): a small green plate with rounded top corners hidden
+// behind the white bar, raised just enough (PEEK) that its top edge shows as a fine line.
+// It slides from tab to tab. Its rounded corners make the line's ends dip slightly, and on
+// the two edge tabs it reaches the bar's side, so the bar's own rounded corner reveals it
+// bending around, thinning to nothing down the side. Nothing is drawn: it is one shape.
 const SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)'; // slight overshoot, then settles
 const SLIDE_MS = 450;
-const STRETCH_MS = 260; // the line stretches while it travels, then returns to its length
-const LINE_W = 30; // a little wider than the 22px icon under it
-const LINE_W_STRETCHED = 46;
+const STRETCH_MS = 260; // the plate widens while it travels, then returns to its size
+const PLATE_W = 34; // a little wider than the 22px icon under it
+const PLATE_W_STRETCHED = 50;
+const PEEK = 3; // how much of the plate shows above the bar
+const BAR_RADIUS = 26; // rounded-t-[26px] on the bar
+const PLATE_RADIUS = 8; // the line's ends dip over this length
+const EDGE_RADIUS = BAR_RADIUS + PEEK; // follows the bar's corner, PEEK px outside it
+// The plate is hidden inside the cradle too, so it never shows around the «+» as it passes.
+const PLATE_MASK = `radial-gradient(circle 40px at 50% ${PEEK}px, transparent 39px, #000 40px)`;
 const BEAM_W = 64;
 const BEAM_H = 52;
 // Very faint emerald light falling from the line onto the icon (brand-500 at 12%).
 const BEAM_BG = 'linear-gradient(to bottom, rgba(18,162,110,0.12), rgba(18,162,110,0))';
 const BEAM_SHAPE = 'polygon(28% 0, 72% 0, 100% 100%, 0 100%)';
+const LAST_SLOT = NAV_TABS.length - 1;
 
-// On the two edge tabs the line stays straight for most of its length and only its outer
-// end bends a little (about 30°) along the bar's rounded corner (radius 26px), like a rim.
-// Ali's ask: 70–80% straight, a slight curve at the end. The path is for the left corner and
-// is mirrored for the right one; it starts under the line so the two read as one stroke.
-const BAR_RADIUS = 26;
-const LINE_Y = 3.5; // middle of the 3px line at top-[2px]
-const HOOK_R = BAR_RADIUS - LINE_Y;
-const HOOK_PATH = `M 34 ${LINE_Y} H ${BAR_RADIUS} A ${HOOK_R} ${HOOK_R} 0 0 0 14.08 6.92`;
-// Slot → which physical corner it touches (the bar is right-to-left: slot 0 is on the right).
-const EDGE_SIDE = { 0: 'right', [NAV_TABS.length - 1]: 'left' };
+// Where the plate sits for a slot, as inline-start offset and width (the bar is RTL, so
+// inline-start is the right side). Edge slots stretch the plate out to the bar's side.
+const plateBox = (slot, width) => {
+  const center = slotCenter(slot);
+  if (slot === 0) return { start: '0px', width: `calc(${center}% + ${width / 2}px)` };
+  if (slot === LAST_SLOT) {
+    return {
+      start: `calc(${center}% - ${width / 2}px)`,
+      width: `calc(${100 - center}% + ${width / 2}px)`,
+    };
+  }
+  return { start: `calc(${center}% - ${width / 2}px)`, width: `${width}px` };
+};
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -78,8 +92,7 @@ const BottomNav = () => {
     return () => clearTimeout(timer);
   }, [moving]);
 
-  const lineWidth = moving ? LINE_W_STRETCHED : LINE_W;
-  const edge = EDGE_SIDE[shownSlot];
+  const plate = plateBox(shownSlot, moving ? PLATE_W_STRETCHED : PLATE_W);
   const center = shownSlot >= 0 ? slotCenter(shownSlot) : 0;
 
   return (
@@ -87,6 +100,29 @@ const BottomNav = () => {
       aria-label="التنقل"
       className="md:hidden fixed bottom-0 inset-x-0 z-40 drop-shadow-[0_-4px_14px_rgba(20,24,60,0.10)]"
     >
+      {shownSlot >= 0 && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 h-7"
+          style={{ top: -PEEK, WebkitMask: PLATE_MASK, mask: PLATE_MASK }}
+        >
+          <span
+            data-testid="nav-plate"
+            className="absolute top-0 h-full bg-brand-500 motion-reduce:!transition-none"
+            style={{
+              insetInlineStart: plate.start,
+              width: plate.width,
+              borderStartStartRadius: shownSlot === 0 ? EDGE_RADIUS : PLATE_RADIUS,
+              borderStartEndRadius: shownSlot === LAST_SLOT ? EDGE_RADIUS : PLATE_RADIUS,
+              transition: [
+                `inset-inline-start ${SLIDE_MS}ms ${SPRING}`,
+                `width ${moving ? STRETCH_MS : SLIDE_MS}ms ${moving ? 'ease-out' : SPRING}`,
+                `border-radius ${SLIDE_MS}ms ease`,
+              ].join(', '),
+            }}
+          />
+        </div>
+      )}
       <div
         className="absolute inset-0 rounded-t-[26px] bg-white dark:bg-night-card"
         style={{ WebkitMask: CRADLE_MASK, mask: CRADLE_MASK }}
@@ -111,49 +147,6 @@ const BottomNav = () => {
                 transition: `inset-inline-start ${SLIDE_MS}ms ${SPRING}, opacity ${
                   moving ? '120ms ease' : '260ms ease 150ms'
                 }`,
-              }}
-            />
-            {['left', 'right'].map(side => {
-              const on = edge === side && !moving;
-              return (
-                <svg
-                  key={side}
-                  aria-hidden="true"
-                  data-testid={`nav-hook-${side}`}
-                  width="40"
-                  height="12"
-                  viewBox="0 0 40 12"
-                  className="pointer-events-none absolute top-0 overflow-visible text-brand-500"
-                  style={{ [side]: 0, transform: side === 'right' ? 'scaleX(-1)' : undefined }}
-                >
-                  <path
-                    d={HOOK_PATH}
-                    pathLength="100"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeDasharray="100"
-                    strokeDashoffset={on ? 0 : 100}
-                    opacity={on ? 1 : 0}
-                    className="motion-reduce:!transition-none"
-                    style={{
-                      transition: on
-                        ? 'stroke-dashoffset 380ms cubic-bezier(0.22, 1, 0.36, 1) 120ms, opacity 0ms linear 120ms'
-                        : 'stroke-dashoffset 140ms ease-in, opacity 0ms linear 140ms',
-                    }}
-                  />
-                </svg>
-              );
-            })}
-            <span
-              aria-hidden="true"
-              data-testid="nav-line"
-              className="pointer-events-none absolute top-[2px] h-[3px] rounded-full bg-brand-500 motion-reduce:!transition-none"
-              style={{
-                width: lineWidth,
-                insetInlineStart: `calc(${center}% - ${lineWidth / 2}px)`,
-                transition: `inset-inline-start ${SLIDE_MS}ms ${SPRING}, width ${STRETCH_MS}ms ease-out`,
               }}
             />
           </>
