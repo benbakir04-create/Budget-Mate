@@ -4,8 +4,10 @@ import { useQuickAdd } from '../../contexts/QuickAddContext';
 import { NAV_TABS, activeSlot, slotCenter } from '../../utils/nav';
 import Icon from './Icon';
 
-// The bar's white shape with a round cradle cut out of its top edge for the «+».
-const CRADLE_MASK = 'radial-gradient(circle 40px at 50% 0, transparent 39px, #000 40px)';
+// The bar is one solid shape, so nothing scrolling behind it ever shows through. The cradle
+// holding the «+» is painted on it (Ali's idea): a disc in the page colour, cut at the bar's top
+// edge, with a soft inner shadow along its rim so it reads as a dip in the bar.
+const CRADLE_SHADOW = 'inset 0 -5px 8px -3px rgba(20,24,60,0.16)';
 
 // The active-tab marker (Ali's design): a small green plate with rounded top corners hidden
 // behind the white bar, raised just enough (PEEK) that its top edge shows as a fine line whose
@@ -19,9 +21,7 @@ const PEEK = 3; // how much of the plate shows above the bar
 const PLATE_RADIUS = 8; // the line's ends dip over this length
 // The plate is hidden inside the cradle too, so it never shows around the «+» as it passes.
 const PLATE_MASK = `radial-gradient(circle 40px at 50% ${PEEK}px, transparent 39px, #000 40px)`;
-// The part of the cradle below the bar's top edge is filled with the page colour, so the page
-// scrolling behind the bar never shows through the ring around the «+».
-const CRADLE_FILL_CLIP = 'inset(50% 0 0 0)';
+const CRADLE_CLIP = 'inset(50% 0 0 0)'; // only the half below the bar's top edge
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -77,7 +77,7 @@ const BottomNav = () => {
   return (
     <nav
       aria-label="التنقل"
-      className="md:hidden fixed bottom-0 inset-x-0 z-40 drop-shadow-[0_-4px_14px_rgba(20,24,60,0.10)]"
+      className="md:hidden fixed bottom-0 inset-x-0 z-40 drop-shadow-[0_-4px_16px_rgba(20,24,60,0.16)]"
     >
       {shownSlot >= 0 && (
         <div
@@ -101,14 +101,11 @@ const BottomNav = () => {
           />
         </div>
       )}
+      <div className="absolute inset-0 rounded-t-[26px] bg-white dark:bg-night-card" />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-1/2 top-0 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-canvas dark:bg-night"
-        style={{ clipPath: CRADLE_FILL_CLIP }}
-      />
-      <div
-        className="absolute inset-0 rounded-t-[26px] bg-white dark:bg-night-card"
-        style={{ WebkitMask: CRADLE_MASK, mask: CRADLE_MASK }}
+        style={{ clipPath: CRADLE_CLIP, boxShadow: CRADLE_SHADOW }}
       />
       <div
         className="relative grid grid-cols-5 items-center h-[72px]"
