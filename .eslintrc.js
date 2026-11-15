@@ -1,4 +1,6 @@
 module.exports = {
+  // Stop here: do not merge configs from folders above the repo (e.g. a checkout that holds this one).
+  root: true,
   env: {
     browser: true,
     es2021: true,

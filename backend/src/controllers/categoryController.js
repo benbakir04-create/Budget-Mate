@@ -180,6 +180,28 @@ const deleteCategory = async (req, res, next) => {
       });
     }
 
+    // The funding category is attached by the server to every fund deposit.
+    if (existing.type === 'transfer') {
+      return res.status(409).json({
+        success: false,
+        error: { code: 'CATEGORY_LOCKED', message: 'The funding category cannot be deleted' },
+      });
+    }
+
+    // Deleting a used category would orphan its transactions (the database refuses it), and
+    // the money history must stay intact. The owner can rename the category instead.
+    const used = await prisma.transaction.count({ where: { categoryId: id } });
+    if (used > 0) {
+      return res.status(409).json({
+        success: false,
+        error: {
+          code: 'CATEGORY_IN_USE',
+          message: 'Category has transactions',
+          details: { transactions: used },
+        },
+      });
+    }
+
     await prisma.category.delete({ where: { id } });
 
     return res.json({ success: true, data: { message: 'Category deleted' } });
