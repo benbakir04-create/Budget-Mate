@@ -9,6 +9,9 @@ import { transactionService } from '../services/transactionService';
 import { currencyLabel, DEFAULT_CURRENCY } from '../utils/currency';
 import { amountSign, typeLabel } from '../utils/money';
 import { formatDay } from '../utils/dates';
+import { dailySpending } from '../utils/daily';
+import DailyChart from '../components/transactions/DailyChart';
+import SwipeRow from '../components/transactions/SwipeRow';
 
 const MONTH_YEAR = new Intl.DateTimeFormat('ar-DZ-u-nu-latn', { month: 'long', year: 'numeric' });
 const PAGE_SIZE = 100;
@@ -83,6 +86,7 @@ const Transactions = () => {
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [notice, setNotice] = useState(null);
+  const [day, setDay] = useState(null);
 
   const range = useMemo(() => monthRange(offset), [offset]);
 
@@ -109,6 +113,13 @@ const Transactions = () => {
     load();
   }, [load, savedCount]);
 
+  useEffect(() => setDay(null), [offset]);
+
+  const dailyTotals = useMemo(
+    () => dailySpending(transactions, range.start),
+    [transactions, range]
+  );
+
   const people = useMemo(() => {
     const seen = new Map();
     (transactions || []).forEach(tx => tx.user && seen.set(tx.user.id, tx.user));
@@ -122,12 +133,13 @@ const Transactions = () => {
       if (filter === 'income' && tx.type !== 'income') return false;
       if (filter === 'fund' && !tx.fund) return false;
       if (person !== 'all' && tx.user?.id !== person) return false;
+      if (day && new Date(tx.date).getDate() !== day) return false;
       if (!q) return true;
       return [tx.description, tx.category?.nameAr, tx.category?.name, tx.fund?.name]
         .filter(Boolean)
         .some(text => text.toLowerCase().includes(q));
     });
-  }, [transactions, filter, person, search]);
+  }, [transactions, filter, person, search, day]);
 
   const days = useMemo(() => {
     const groups = [];
@@ -287,6 +299,16 @@ const Transactions = () => {
           </div>
         </div>
 
+        {transactions && transactions.length > 0 && (
+          <DailyChart
+            totals={dailyTotals}
+            today={offset === 0 ? new Date().getDate() : null}
+            selected={day}
+            onSelect={setDay}
+            currency={currency}
+          />
+        )}
+
         {/* Filters */}
         <div
           className="flex gap-2 overflow-x-auto pb-2 mb-2 -mx-4 px-4 md:mx-0 md:px-0"
@@ -349,7 +371,9 @@ const Transactions = () => {
         ) : days.length === 0 ? (
           <div className="premium-card p-8 text-center">
             <p className="text-stone-500 dark:text-stone-400 mb-4">
-              {transactions.length ? 'لا عمليات تطابق التصفية.' : 'لا عمليات في هذا الشهر.'}
+              {transactions.length
+                ? 'لا عمليات تطابق التصفية أو اليوم المختار.'
+                : 'لا عمليات في هذا الشهر.'}
             </p>
             <div className="flex justify-center gap-2">
               <button
@@ -382,40 +406,47 @@ const Transactions = () => {
                 </div>
                 <div className="premium-card divide-y divide-stone-100 dark:divide-white/5 overflow-hidden">
                   {day.items.map(tx => (
-                    <div key={tx.id} className="group flex items-center gap-3 px-4 py-3">
-                      <CategoryIcon category={tx.category} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-ink dark:text-white truncate">
-                          {tx.description || tx.category?.nameAr || tx.category?.name}
-                        </p>
-                        <p className="text-xs text-stone-500 dark:text-stone-400 truncate">
-                          {[
-                            firstName(tx.user?.name),
-                            tx.description ? tx.category?.nameAr || tx.category?.name : null,
-                            tx.fund?.name,
-                          ]
-                            .filter(Boolean)
-                            .join(' · ')}
-                        </p>
+                    <SwipeRow
+                      key={tx.id}
+                      disabled={tx.type === 'transfer'}
+                      onDelete={() => handleDelete(tx)}
+                      label={tx.description || tx.category?.nameAr || ''}
+                    >
+                      <div className="group flex items-center gap-3 px-4 py-3">
+                        <CategoryIcon category={tx.category} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-ink dark:text-white truncate">
+                            {tx.description || tx.category?.nameAr || tx.category?.name}
+                          </p>
+                          <p className="text-xs text-stone-500 dark:text-stone-400 truncate">
+                            {[
+                              firstName(tx.user?.name),
+                              tx.description ? tx.category?.nameAr || tx.category?.name : null,
+                              tx.fund?.name,
+                            ]
+                              .filter(Boolean)
+                              .join(' · ')}
+                          </p>
+                        </div>
+                        <Money
+                          amount={tx.amount}
+                          currency={tx.currency || currency}
+                          sign={amountSign(tx.type)}
+                          className={`text-[15px] font-semibold ${amountTone(tx.type)}`}
+                          currencyClassName="text-stone-400"
+                        />
+                        {tx.type !== 'transfer' && (
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(tx)}
+                            aria-label={`حذف ${tx.description || tx.category?.nameAr || ''}`}
+                            className="hidden md:grid h-9 w-9 place-items-center rounded-full text-stone-300 hover:text-alert-600 hover:bg-alert-50 dark:hover:bg-alert-500/10 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition"
+                          >
+                            <Icon name="close" className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
-                      <Money
-                        amount={tx.amount}
-                        currency={tx.currency || currency}
-                        sign={amountSign(tx.type)}
-                        className={`text-[15px] font-semibold ${amountTone(tx.type)}`}
-                        currencyClassName="text-stone-400"
-                      />
-                      {tx.type !== 'transfer' && (
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(tx)}
-                          aria-label={`حذف ${tx.description || tx.category?.nameAr || ''}`}
-                          className="h-9 w-9 grid place-items-center rounded-full text-stone-300 hover:text-alert-600 hover:bg-alert-50 dark:hover:bg-alert-500/10 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition"
-                        >
-                          <Icon name="close" className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
+                    </SwipeRow>
                   ))}
                 </div>
               </section>
