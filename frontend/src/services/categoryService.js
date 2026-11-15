@@ -1,5 +1,5 @@
 import api from './api';
-import { DEMO_CATEGORIES } from './demoData';
+import { DEMO_CATEGORIES, DEMO_TRANSACTIONS } from './demoData';
 
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
@@ -53,6 +53,15 @@ export const categoryService = {
 
   async deleteCategory(id) {
     if (DEMO_MODE) {
+      // Same refusal as the server: a category with transactions stays.
+      const used = DEMO_TRANSACTIONS.filter(t => t.categoryId === id).length;
+      if (used > 0) {
+        const error = new Error('Category has transactions');
+        error.response = {
+          data: { error: { code: 'CATEGORY_IN_USE', details: { transactions: used } } },
+        };
+        throw error;
+      }
       const categories = await this.getCategories();
       const filtered = categories.filter(c => c.id !== id);
       localStorage.setItem('demo_categories', JSON.stringify(filtered));
