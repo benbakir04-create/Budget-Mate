@@ -1,7 +1,7 @@
 # 0005: منهجية «ركيزة»: واجهة ثابتة على GitHub Pages + Supabase، بلا خادم تطبيقات
 
 **التاريخ:** 16 نوفمبر 2026 · **الحالة:** معتمد (منهجية علي «ركيزة»)
-**يحلّ محل:** خادم Express + Prisma المستقل الموصوف في `TECHNICAL_ARCHITECTURE.md`. ADR 0001 (Next.js) و0003 (Supabase مع Next.js) صارتا تاريخًا.
+**يحلّ محل:** خادم Express + Prisma المستقل الموصوف في `docs/archive/TECHNICAL_ARCHITECTURE.md`. ADR 0001 (Next.js) و0003 (Supabase مع Next.js) صارتا تاريخًا (في `docs/archive/ADR/`).
 
 ## السياق
 

@@ -520,5 +520,19 @@ ok('BR-31 the audit log cannot be deleted', !r.ok || r.rows.length === 0, r);
 r = await q(A, `select public.audit($1, 'fake', 'fund', null, null, null)`, [A]);
 ok('BR-31 nobody writes to the audit log by hand', !r.ok, r);
 
+// ---- hardening (Supabase security advisor) ---------------------------------------
+for (const fn of ['require_owner()', "fail('X')", "fund_effect('expense', 1)"]) {
+  r = await q(A, `select public.${fn}`);
+  ok(
+    `internal helper ${fn.split('(')[0]} is not callable from the browser`,
+    !r.ok && r.error.includes('permission denied'),
+    r
+  );
+}
+r = await db.query(`select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                     where n.nspname = 'public' and p.prokind = 'f'
+                       and not coalesce(p.proconfig, '{}') @> array['search_path=""']`);
+ok('every public function pins search_path', r.rows.length === 0, r.rows);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
