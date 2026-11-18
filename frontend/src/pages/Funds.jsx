@@ -15,6 +15,7 @@ import { authService } from '../services/authService';
 import { currencyLabel } from '../utils/currency';
 import { fundOutlook } from '../utils/money';
 import { formatDate, formatDay } from '../utils/dates';
+import { USE_SUPABASE } from '../lib/supabase';
 
 const MONTH = new Intl.DateTimeFormat('ar-DZ-u-nu-latn', { month: 'long' });
 
@@ -34,7 +35,11 @@ const apiError = (err, fallback) => {
   const messages = {
     INSUFFICIENT_FUNDS: 'رصيد الصندوق لا يكفي لهذا المبلغ.',
     FORBIDDEN: 'لا تملك صلاحية هذا الإجراء.',
-    EMAIL_EXISTS: 'هذا البريد مستعمل في حساب آخر.',
+    EMAIL_EXISTS: 'هذا البريد مستعمل في حساب آخر أو مدعوّ من قبل.',
+    ORDER_ALREADY_PURCHASED: 'هذه الطلبية اشتُريت من قبل.',
+    ORDER_NOT_APPROVED: 'الطلبية تنتظر موافقة صاحب الحساب.',
+    INVALID_FUND: 'هذا الصندوق غير متاح.',
+    INVALID_AMOUNT: 'المبلغ يجب أن يكون أكبر من صفر.',
   };
   return messages[code] || fallback;
 };
@@ -496,18 +501,31 @@ const Funds = () => {
               </div>
             )}
 
-            {tab === 'partners' && isOwner && (
-              <PartnerForm
-                saving={saving}
-                onSubmit={(name, email, password) =>
-                  run(
-                    () => authService.registerPartner(name, email, password),
-                    `أُضيف «${name}». يدخل الآن ببريده وكلمة المرور التي اخترتها.`,
-                    'تعذّرت إضافة الشريك.'
-                  )
-                }
-              />
-            )}
+            {tab === 'partners' &&
+              isOwner &&
+              (USE_SUPABASE ? (
+                <InviteForm
+                  saving={saving}
+                  onSubmit={email =>
+                    run(
+                      () => authService.invitePartner(email),
+                      `أُرسلت الدعوة. ليُنشئ شريكك حسابه بالبريد ${email} فينضم إلى صندوقك.`,
+                      'تعذّرت دعوة الشريك.'
+                    )
+                  }
+                />
+              ) : (
+                <PartnerForm
+                  saving={saving}
+                  onSubmit={(name, email, password) =>
+                    run(
+                      () => authService.registerPartner(name, email, password),
+                      `أُضيف «${name}». يدخل الآن ببريده وكلمة المرور التي اخترتها.`,
+                      'تعذّرت إضافة الشريك.'
+                    )
+                  }
+                />
+              ))}
           </>
         )}
       </main>
@@ -662,6 +680,47 @@ const RowButton = ({ primary, onClick, children }) => (
     {children}
   </button>
 );
+
+// Supabase (Q-04): the owner invites by email, and the partner signs up with that email.
+const InviteForm = ({ saving, onSubmit }) => {
+  const [email, setEmail] = useState('');
+  const canSave = /.+@.+\..+/.test(email.trim()) && !saving;
+
+  return (
+    <form
+      onSubmit={e => {
+        e.preventDefault();
+        if (canSave) onSubmit(email.trim().toLowerCase());
+      }}
+      className="premium-card p-5 md:p-6 max-w-lg"
+    >
+      <div className="flex items-center gap-3 mb-5">
+        <span className="h-12 w-12 grid place-items-center rounded-2xl bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300 text-xl font-bold">
+          +
+        </span>
+        <div>
+          <h2 className="font-bold text-ink dark:text-white">ادعُ شريكك</h2>
+          <p className="text-sm text-stone-500 dark:text-stone-400">
+            يصرف من الصندوق ويطلب طلبيات، ولا يرى أقسامك الخاصة.
+          </p>
+        </div>
+      </div>
+      <TextField
+        label="بريد شريكك"
+        type="email"
+        dir="ltr"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        placeholder="name@example.com"
+        autoComplete="off"
+      />
+      <p className="text-sm text-stone-500 dark:text-stone-400 mb-4">
+        بعد الدعوة، يُنشئ شريكك حسابه من صفحة «إنشاء حساب» بهذا البريد نفسه.
+      </p>
+      <SubmitButton disabled={!canSave}>{saving ? 'جارٍ الإرسال...' : 'أرسل الدعوة'}</SubmitButton>
+    </form>
+  );
+};
 
 const PartnerForm = ({ saving, onSubmit }) => {
   const [name, setName] = useState('');

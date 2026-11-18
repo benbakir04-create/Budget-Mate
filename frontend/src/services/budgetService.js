@@ -1,9 +1,11 @@
 import api from './api';
 import { DEMO_BUDGETS } from './demoData';
+import { USE_SUPABASE } from '../lib/supabase';
+import { sbBudgets } from './supabase/api';
 
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
-export const budgetService = {
+const legacyBudgetService = {
   async getBudgets() {
     if (DEMO_MODE) return DEMO_BUDGETS;
     const response = await api.get('/budgets');
@@ -33,3 +35,6 @@ export const budgetService = {
     await api.delete(`/budgets/${id}`);
   },
 };
+
+// Supabase when configured (ROADMAP phase 4), the old Express server otherwise.
+export const budgetService = USE_SUPABASE ? sbBudgets : legacyBudgetService;
