@@ -454,6 +454,32 @@ ok(
   r
 );
 
+// ---- BR-33: rejecting or cancelling an order ---------------------------------------
+const oP = (await newOrder(P, 'سكر', 300)).rows[0].id;
+const oA = (await newOrder(A, 'شاي', 100)).rows[0].id;
+r = await q(P, 'select public.delete_order($1)', [oA]);
+ok(
+  "BR-33 a partner cannot cancel someone else's order",
+  failedWith(r, 'FORBIDDEN_NOT_YOUR_ORDER'),
+  r
+);
+r = await q(B, 'select public.delete_order($1)', [oP]);
+ok('BR-01 another network cannot touch the order', failedWith(r, 'NOT_FOUND'), r);
+r = await q(A, 'delete from public.orders where id = $1 returning id', [oP]);
+ok('BR-33 orders are not deleted directly', !r.ok || r.rows.length === 0, r);
+r = await q(P, 'select public.delete_order($1)', [oP]);
+ok(
+  'BR-33 a partner cancels their own order',
+  r.ok && !(await one('select 1 from public.orders where id = $1', [oP])),
+  r
+);
+r = await q(A, 'select public.delete_order($1)', [oA]);
+ok('BR-33 the owner rejects an order', r.ok, r);
+r = await q(A, 'select public.delete_order($1)', [o1]);
+ok('BR-33 a purchased order stays', failedWith(r, 'ORDER_ALREADY_PURCHASED'), r);
+r = await q(A, `select 1 from public.audit_log where action = 'delete' and entity = 'order'`);
+ok('BR-31 / BR-33 rejecting an order is audited', r.ok && r.rows.length === 2, r);
+
 // ---- BR-28: summary --------------------------------------------------------------
 const range = [`2000-01-01`, `2100-01-01`];
 r = await q(A, `select public.transaction_summary($1, $2) s`, range);

@@ -1,9 +1,11 @@
 import api from './api';
 import { DEMO_CATEGORIES, DEMO_TRANSACTIONS } from './demoData';
+import { USE_SUPABASE } from '../lib/supabase';
+import { sbCategories } from './supabase/api';
 
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
-export const categoryService = {
+const legacyCategoryService = {
   async getCategories() {
     if (DEMO_MODE) {
       const stored = localStorage.getItem('demo_categories');
@@ -70,3 +72,6 @@ export const categoryService = {
     await api.delete(`/categories/${id}`);
   },
 };
+
+// Supabase when configured (ROADMAP phase 4), the old Express server otherwise.
+export const categoryService = USE_SUPABASE ? sbCategories : legacyCategoryService;

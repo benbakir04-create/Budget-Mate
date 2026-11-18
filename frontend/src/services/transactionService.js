@@ -1,10 +1,12 @@
 import api from './api';
 import { DEMO_TRANSACTIONS } from './demoData';
 import { summarizeTotals } from '../utils/money';
+import { USE_SUPABASE } from '../lib/supabase';
+import { sbTransactions } from './supabase/api';
 
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
-export const transactionService = {
+const legacyTransactionService = {
   async getTransactions(params = {}) {
     if (DEMO_MODE) {
       let data = [...DEMO_TRANSACTIONS];
@@ -84,3 +86,6 @@ export const transactionService = {
     await api.delete(`/transactions/${id}`);
   },
 };
+
+// Supabase when configured (ROADMAP phase 4), the old Express server otherwise.
+export const transactionService = USE_SUPABASE ? sbTransactions : legacyTransactionService;

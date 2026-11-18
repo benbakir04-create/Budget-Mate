@@ -1,9 +1,11 @@
 import api from './api';
 import { DEMO_ORDERS } from './demoData';
+import { USE_SUPABASE } from '../lib/supabase';
+import { sbOrders } from './supabase/api';
 
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
-export const shoppingOrderService = {
+const legacyShoppingOrderService = {
   async getShoppingOrders(params = {}) {
     if (DEMO_MODE) {
       const stored = localStorage.getItem('demo_orders');
@@ -151,3 +153,6 @@ export const shoppingOrderService = {
     await api.delete(`/orders/${id}`);
   },
 };
+
+// Supabase when configured (ROADMAP phase 4), the old Express server otherwise.
+export const shoppingOrderService = USE_SUPABASE ? sbOrders : legacyShoppingOrderService;

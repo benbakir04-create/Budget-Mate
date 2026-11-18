@@ -37,7 +37,10 @@ const Register = () => {
   };
 
   return (
-    <AuthLayout title="أنشئ حسابك" subtitle="أنت مالك الحساب: تنشئ صندوق البيت وتضيف شريكك لاحقًا.">
+    <AuthLayout
+      title="أنشئ حسابك"
+      subtitle="أنت مالك الحساب: تنشئ صندوق البيت وتدعو شريكك لاحقًا. وإن دعاك أحد، سجّل بالبريد نفسه فتنضم إلى صندوقه."
+    >
       <form onSubmit={handleSubmit}>
         <TextField
           label="الاسم"

@@ -1,5 +1,7 @@
 import api from './api';
 import { DEMO_FUNDS, DEMO_TRANSACTIONS } from './demoData';
+import { USE_SUPABASE } from '../lib/supabase';
+import { sbFunds } from './supabase/api';
 
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
@@ -13,7 +15,7 @@ const DEMO_FUNDING_CATEGORY = {
   type: 'transfer',
 };
 
-export const jointFundService = {
+const legacyJointFundService = {
   async getJointFunds() {
     if (DEMO_MODE) {
       const stored = localStorage.getItem('demo_funds');
@@ -156,3 +158,6 @@ export const jointFundService = {
     return response.data.data;
   },
 };
+
+// Supabase when configured (ROADMAP phase 4), the old Express server otherwise.
+export const jointFundService = USE_SUPABASE ? sbFunds : legacyJointFundService;

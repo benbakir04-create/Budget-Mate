@@ -1,6 +1,8 @@
 import api, { setAccessToken, refreshAccessToken } from './api';
+import { USE_SUPABASE } from '../lib/supabase';
+import { sbAuth } from './supabase/api';
 
-export const authService = {
+const legacyAuthService = {
   async login(email, password) {
     const response = await api.post('/auth/login', { email, password });
     const { token, user } = response.data.data;
@@ -58,3 +60,6 @@ export const authService = {
     return response.data.data.partner;
   },
 };
+
+// Supabase when configured (ROADMAP phase 4), the old Express server otherwise.
+export const authService = USE_SUPABASE ? sbAuth : legacyAuthService;

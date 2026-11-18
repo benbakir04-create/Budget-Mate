@@ -46,6 +46,10 @@ const AuthLayout = ({ title, subtitle, children }) => (
 );
 
 export const authError = (err, fallback) => {
+  if (err.confirmSent) {
+    return 'أرسلنا رابط تأكيد إلى بريدك. افتحه، ثم ادخل بالبريد وكلمة المرور.';
+  }
+  if (err.confirmEmail) return 'أكّد بريدك أولًا من الرابط الذي وصلك، ثم ادخل.';
   const status = err.response?.status;
   if (!err.response) return 'تعذّر الوصول إلى الخادم. تأكد من الاتصال وحاول مرة أخرى.';
   if (status === 401) return 'البريد أو كلمة المرور غير صحيحة.';
